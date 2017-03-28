@@ -3860,6 +3860,4 @@ function showLocalName($name = '', $type_id = 0, $show_full = false){
 }
 
 
-function abc(){
-	
-}
+ 
