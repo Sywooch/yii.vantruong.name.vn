@@ -1,5 +1,5 @@
 <?php 
-//view($v);
+//view(__SID__);
  
 ?> 
 <div class="table-responsive ">

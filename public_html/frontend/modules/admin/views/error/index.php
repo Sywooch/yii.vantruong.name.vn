@@ -1,0 +1,2 @@
+<div class="col-sm-12"><div class="alert alert-danger" role="alert"><p class="f12e " style="margin: 50px;font-size:20px;">Module không tồn tại hoặc không được phép truy cập.</p></div></div>
+<input class="auto_play_script_function" type="hidden" value="remove_list_btn();"/>

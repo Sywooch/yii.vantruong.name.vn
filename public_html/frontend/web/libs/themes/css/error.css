@@ -1,0 +1,252 @@
+ 
+.cerror-pages img {
+	border: none;
+}
+
+/* Warp around everything */
+.cerror-pages {
+	margin: 50px auto;
+	 
+	width: 960px;
+	font-family: Helvetica;
+	text-align: left;
+}
+
+/* Header */
+.cerror-pages #error-header_top {
+	background: url(../img/error/top.png) no-repeat;
+	width: 985px;
+	height: 30px;
+}
+
+/* Header content */
+.cerror-pages #error-header {
+	background: url(../img/error/box_bg.png) repeat-y;
+	width: 985px;
+	text-align: center;
+}
+
+/* Page title */
+.cerror-pages #error-header h2 {
+	padding-top: 10px;
+	margin: 0
+}
+
+/* Subtitle */
+.cerror-pages #error-header h5 {
+	margin-top: 5px;
+	padding-bottom: 15px;
+	color: #acacac;margin: 0
+}
+
+/* Content div */
+.cerror-pages #error-content {
+	background: url(../img/error/content_bg.png) repeat-y;
+	width: 985px;
+}
+
+/* The info text */
+.cerror-pages #text {
+	float: left;
+	margin: 60px 0px 40px 60px;;
+	width: 330px;
+	/* IE margin fix */
+	display: inline;
+}
+
+/* The info text P */
+.cerror-pages #text p {
+	margin-top: 30px;
+	font-size: 14px;
+	line-height: 20px;
+	color: #292929;
+}
+
+/* The links list */
+.cerror-pages #text ul {
+	margin-top: 30px;
+	margin-left: 0px;
+	list-style: none inside;
+	font-size: 12px;
+	font-weight: bold;
+	font-size: 15px;
+}
+
+/* The list items */
+.cerror-pages #text li {
+	padding: 5px 0px;
+	margin: 0;
+}
+
+/* The links */
+.cerror-pages #text a {
+	color: #292929;
+	text-decoration: none;
+}
+
+/* Link hover */
+.cerror-pages #text a:hover {
+	text-decoration: none;
+}
+
+/* The book icon */
+.cerror-pages #book {
+	float: right;
+	width: 472px;
+	height: 332px;
+	margin: 60px 60px 40px 0px;
+
+}
+
+/* Footer */
+.cerror-pages #error-footer {
+	background: url(../img/error/box_bg.png) repeat-y;
+	width: 985px;
+
+}
+
+/* Footer bottom */
+.cerror-pages #error-footer_bottom {
+	background: url(../img/error/bottom.png) no-repeat;
+	width: 985px;
+	height: 28px;
+
+}
+
+/* Twitter icon */
+.cerror-pages #twitter {
+	margin: 10px 0px 0px 60px;
+	float: left;
+}
+
+/* The tweet text */
+.cerror-pages #twitter_text {
+	float: left;
+	margin-left: 10px;
+	margin-top: 40px;
+	width: 400px;
+	color: #878787;
+	float: left;
+	font-size: 12px;
+}
+
+/* Twitter links */
+.cerror-pages #twitter_text a {
+	text-decoration: none;
+	font-weight: bold;
+}
+
+/* Search form */
+.cerror-pages #searchform {
+	float: right;
+	margin: 30px 60px 0px 0px;
+	/* IE margin fix */
+	display: inline;
+}
+
+/* Search input */
+.cerror-pages input#search {
+	background: url(../img/error/searchfield_bg.png) no-repeat;
+	border: none;
+	height: 31px;
+	width: 244px;
+	float: right;
+}
+
+/* The Send button */
+.cerror-pages input#submit {
+	border: none;
+	float: right;
+	margin-left: 5px;
+	height: 31px;
+	width: 74px;
+	color: #fff;
+}
+.cerror-pages  input#submit {
+    background: url(../img/error/searchbutton_bg.png) no-repeat;
+}
+/* Social media */
+.cerror-pages #socialmedia {
+	margin-top: 5px;
+	margin-right: 60px;
+	margin-bottom: 10px;
+	display: inline;
+	list-style: none;
+	float: right;
+}
+
+/* Social media list items */
+.cerror-pages #socialmedia li {
+	display: inline;
+}
+
+/* COLOR CHANGER */
+.cerror-pages #colorchanger {
+	text-align: left;
+}
+
+.cerror-pages #showChanger {
+	margin-left: 10px;
+}
+
+.cerror-pages #colors {
+	padding: 10px;
+	background: #425a5e;
+	height: 17px;
+}
+
+/* The div around the color change links */ 
+.cerror-pages .colorbox { 
+	width:15px; 
+	height:15px; 
+	border:1px solid #050505; 
+	float:left; 
+	margin:0px 2px; 
+	cursor:pointer; 
+	display:block; 
+}
+
+/* Blue */
+.cerror-pages .colorblue { 
+	background-color:#1e82ac; 
+}
+/* Blue Hover */
+.cerror-pages .colorblue:hover { 
+	background-color:#177197; 
+}
+
+/* Red */
+.colorred { 
+	background-color:#cc2b2b; 
+}
+/* Red Hover */
+.cerror-pages .colorred:hover { 
+	background-color:#af1a1a; 
+}
+
+/* Grey */
+.cerror-pages .colorgrey { 
+	background-color:#4d4d4d; 
+}
+/* Grey Hover */
+.cerror-pages .colorgrey:hover { 
+	background-color:#7c7c7c; 
+}
+
+/* Brown */
+.cerror-pages .colorbrown { 
+	background-color:#4b3a15; 
+}
+/* Brown Hover */
+.cerror-pages .colorbrown:hover { 
+	background-color:#5e4b20; 
+}
+
+/* Green */
+.cerror-pages .colorgreen { 
+	background-color:#6c8b2f; 
+}
+/* Green Hover */
+.cerror-pages .cologreen:hover { 
+	background-color:#7da137; 
+}
