@@ -1,0 +1,1 @@
+<img src="https://media.lenguyet.vn/medias/thumbs/250x250/cf623ee238ba5bd168a1aa7cd1b6acd6.jpg"/>

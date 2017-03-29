@@ -998,13 +998,13 @@ function getImage($o = array(),$absolute = false){
 		$href = $src;
 	}else{
 		//
-		if(0>1 && !isset(Yii::$site['settings']['medias']['domain'])){
+		if(0>1&& !isset(Yii::$site['settings']['medias']['domain'])){
 			$l = (new \yii\db\Query())->from(['server_config'])->where(['sid'=>[0,__SID__],'is_active'=>1])->select(['web_address'])->orderBy(['sid'=>SORT_DESC])->one();
 			if(!empty($l)){
 				$host_url = (dString($l['web_address']) . '/image.php?src='.$src.'&w='.$w.'&h='.$h);
-				 $href= $host_url;
+				$href= $host_url;
 				 
-				$sUrl = false;
+				$sUrl = true;
 			}else{
 				$host_url = Url::home($absolute) . 'image.php';
 			}

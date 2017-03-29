@@ -314,7 +314,10 @@ class SiteController extends Controller
     {    	
     	 return $this->render(__TEMP_NAME__ .DS . Yii::$app->controller->action->id . (__IS_DETAIL__ ? '_detail' : ""));
     }
-    
+    public function actionTags()
+    {
+    	return $this->render(__TEMP_NAME__ .DS . Yii::$app->controller->action->id . (__IS_DETAIL__ ? '_detail' : ""));
+    }
     public function actionNews()
     {
     	return $this->render(__TEMP_NAME__ .DS . Yii::$app->controller->action->id . (__IS_DETAIL__ ? '_detail' : ""));
