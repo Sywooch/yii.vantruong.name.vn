@@ -1,5 +1,6 @@
 <?php
 use yii\helpers\Url;
+use vakata\database\Query;
 function view($param = '',$exit = false){
 	//$_SESSION['configs']['adLogin']['ID']; exit;
 	if(Yii::$app->user->can([ROOT_USER])){
@@ -967,7 +968,8 @@ function parse_file_name($filename = ''){
 	return array(
 			'type'=>$file_type,
 			'name'=>$file_name,
-			'full_name'=>$filename
+			'full_name'=>$filename,
+			 
 	);
 }
 function getImage($o = array(),$absolute = false){
@@ -991,21 +993,36 @@ function getImage($o = array(),$absolute = false){
 	if(count($s)>0){
 		$src = $s[0];
 	}
-	 
+	$sUrl = false;
 	if($w==0 && $h==0 ){
 		$href = $src;
 	}else{
+		//
+		if(0>1 && !isset(Yii::$site['settings']['medias']['domain'])){
+			$l = (new \yii\db\Query())->from(['server_config'])->where(['sid'=>[0,__SID__],'is_active'=>1])->select(['web_address'])->orderBy(['sid'=>SORT_DESC])->one();
+			if(!empty($l)){
+				$host_url = (dString($l['web_address']) . '/image.php?src='.$src.'&w='.$w.'&h='.$h);
+				 $href= $host_url;
+				 
+				$sUrl = false;
+			}else{
+				$host_url = Url::home($absolute) . 'image.php';
+			}
+		}
+		$host_url = Url::home($absolute) . 'image.php';
+		//
+		if(!$sUrl){
 		$file = parse_file_name($src);
 		$hash_file = $rename ? md5($src) : unMark(str_replace('%20', '-', $file['name']));
 		$ext = $file['type'];
 		if($ext == 'jpeg') $ext = 'jpg';
-		if(0>1 && isset(Yii::$site['other_setting']['thumb_url']) && strlen(Yii::$site['other_setting']['thumb_url']) > 4){
-			$host_url = Yii::$site['other_setting']['thumb_url'];
-		}else{
-			$host_url = Url::home($absolute) . 'image.php';
-		}
+		//if(0>1 && isset(Yii::$site['other_setting']['thumb_url']) && strlen(Yii::$site['other_setting']['thumb_url']) > 4){
+		//	$host_url = Yii::$site['other_setting']['thumb_url'];
+		//}else{
+		//	$host_url = Url::home($absolute) . 'image.php';
+		//}
 		$fp =   '/medias/thumbs/'.$w.'x'.$h.DS.$hash_file.'.'.$ext;
-		//view(__ROOT_PATH__.$fp);
+		
 		if(@file_exists(__ROOT_PATH__.$fp)){
 			//}
 			//if(check_file_existed($fp)){
@@ -1025,6 +1042,7 @@ function getImage($o = array(),$absolute = false){
 				}
 			}else
 				$href = $host_url.'?src='.$src.'&w='.$w.'&h='.$h.'&rename='.(!$rename ? 'false' : 'true').'&hash_file='.$hash_file;
+		}
 		}
 	}
 	$hxx .= ' / '. ($href);

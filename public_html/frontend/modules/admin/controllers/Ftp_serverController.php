@@ -94,13 +94,13 @@ class Ftp_serverController extends CrsController
     		Yii::$app->db->createCommand()->insert(FtpServer::tableName(),$f)->execute();
     		$id = Yii::$app->db->createCommand("select max(id) from ".FtpServer::tableName())->queryScalar();
     		//
-    		if($f['update_source'] == 'on'){
+    		if($f['update_source'] == 1){
     		
     			$ftp = new \yii\web\FtpUpload($model);
-    		
+    		 
     			if($ftp->testConnected()){
     				$fp = Yii::getAlias('@webroot');
-    				$ftp->nfileupload($fp . DS .'image.php', '/image.php');
+    				(new \yii\web\FtpUpload($model))->nfileupload($fp . DS .'image.php', '/image.php');
     				$thumbs = __LIBS_PATH__ . DS . 'thumb';
     				$fps = (dirToArray($thumbs));
     				//$ftp = new \yii\web\FtpUpload($model);
@@ -166,18 +166,18 @@ class Ftp_serverController extends CrsController
     			}
     		}
     		$con = array('id'=> $id,'sid'=>__SID__);
-    		if($f['update_source'] == 'on'){
+    		if($f['update_source'] == 1){
     			 
     			$ftp = new \yii\web\FtpUpload($model);
     			 
     			if($ftp->testConnected()){
     				$fp = Yii::getAlias('@webroot');    				 
-    				$ftp->nfileupload($fp . DS .'image.php', '/image.php');
+    				(new \yii\web\FtpUpload($model))->nfileupload(__LIBS_PATH__ . DS .'thumb/image.php', '/image.php');
     				$thumbs = __LIBS_PATH__ . DS . 'thumb';
     				$fps = (dirToArray($thumbs));
     				//$ftp = new \yii\web\FtpUpload($model);
     				//$ftp2 = new \yii\web\FtpUpload($model);
-    				//view($model);
+    				 
     				if(!empty($fps)){
     					foreach ($fps as $file){
     						//view(file_exists($file));

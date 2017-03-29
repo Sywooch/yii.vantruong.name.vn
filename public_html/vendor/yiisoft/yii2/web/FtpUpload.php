@@ -637,8 +637,6 @@ function nfileupload($file_source,$file_dest){
 	//	$this->MkDir_($folder);
 	//}
 	$this->put($file_dest, $file_source);
-	view($file_source);
-	var_dump($file_dest); 
 	 
 	$this->close(); 
 }
