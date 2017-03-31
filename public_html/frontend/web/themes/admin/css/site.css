@@ -2426,3 +2426,5 @@ div.tagsinput span.tag, div.tagsinput input{padding-top:0; padding-bottom:0}
  .input-group-sm > .form-control, .input-group-sm > .input-group-addon, .input-group-sm > .input-group-btn > .btn{border-radius: 0}
  .bgreen{background-color: green}
  .tooltip{z-index: 9999999}
+ .dtags{padding: 5px 8px; margin: 0 2.5px; color: #fff} 
+ 

@@ -89,7 +89,7 @@ class Menus extends \yii\db\ActiveRecord
     	->select(['a.*'])
     	->innerJoin(['b'=>self::tableToCategory()],'a.id=b.category_id')
     //	->innerJoin(['c'=>FoodsCategorys::tableName()],'c.id=b.category_id')
-    	->where(['b.item_id'=>$menu_id])
+    	->where(['b.item_id'=>$menu_id,'a.sid'=>__SID__])
     	->asArray()->all();
     	$r = [];
     	if(!empty($l)){

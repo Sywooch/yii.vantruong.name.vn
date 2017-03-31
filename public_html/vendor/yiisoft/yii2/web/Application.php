@@ -186,6 +186,9 @@ class Application extends \yii\base\Application
 	private function check_ssl(){
 		if(isset(Yii::$site['other_setting']['ssl']) && cbool(Yii::$site['other_setting']['ssl']) == 1){
 			if(empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] == "off"){
+				if(strpos(DOMAIN, 'beta') !== false){
+					return true;
+				}
 				$redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 				header('HTTP/1.1 301 Moved Permanently');
 				header('Location: ' . $redirect);

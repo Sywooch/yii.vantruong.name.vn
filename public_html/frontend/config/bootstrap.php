@@ -4,6 +4,7 @@ Yii::setAlias('@views',dirname(__DIR__) . '/views');
 Yii::setAlias('@libs', '/libs');
 Yii::setAlias('@admin', '/themes/admin');
 Yii::setAlias('@modules', dirname(__DIR__) . '/modules');
+Yii::setAlias('@applications', dirname(__DIR__) . '/applications');
 define('NO_IMAGE', '');
 $d = array(
 		//'__ROOT_PATH__'=>$root_path,
@@ -69,6 +70,9 @@ $d = array(
 		'TYPE_CODE_ROOM_TRAIN'=>152,
 		'TYPE_CODE_ROOM_SHIP'=>151,
 		'TYPE_CODE_DISTANCE'=>153,
+		//
+		'FORM_TYPE_COURSES' => 'courses' ,
+		'FORM_TYPE_TESTIMONIALS' => 'testimonials'
 );
 foreach($d as $k=>$v){
 	defined($k) or define($k,$v);

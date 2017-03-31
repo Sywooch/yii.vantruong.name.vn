@@ -68,18 +68,15 @@ switch (post('action')){
 		break;
 	case 'set_subcribes':
 		$f = post('f',[]);
+		$f['email'] = strtolower($f['email']);
 		if(!empty($f)){
-			if((new Query())->from(['emails_subscribes'])->where(['email'=>$f['email'],'sid'=>__SID__])->count(1) == 0){
+			if((new Query())->from(['{{%emails_subscribes}}'])->where(['email'=>$f['email'],'sid'=>__SID__])->count(1) == 0){
 				$f['sid'] = __SID__;
 				$notis = [
 						'title'=>'<span class="bold underline italic green">'.$f['email'].'</span> đăng ký nhận tin từ hệ thống',
-						//'link'=>get_link_edit($id),
-						//'uid'=>__SID__
 				];
-				Yii::$app->db->createCommand()->insert('emails_subscribes',$f)->execute();
-				$multiple = false;
-				
-				//\app\models\Notifications::insertNotification($notis,$multiple); 
+				Yii::$app->db->createCommand()->insert('{{%emails_subscribes}}',$f)->execute();
+				$multiple = false;				 
 				\app\models\Notifications::insertNotification($notis,$multiple);
 			}
 		}

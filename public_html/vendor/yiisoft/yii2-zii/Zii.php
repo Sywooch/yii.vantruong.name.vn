@@ -750,6 +750,9 @@ class Zii extends yii\base\Object
 				break;
 		}
 		//
+		if(isset($o['course_id'])){
+			$query->andWhere(['a.id'=>(new Query())->from(['item_to_courses'])->where(['course_id'=>$o['course_id']])->select(['item_id'])]);
+		}
 		
 		switch ($action_detail){
 			case '{get_all_tour_1}': // Du lich trong nuoc
@@ -1495,6 +1498,7 @@ class Zii extends yii\base\Object
 	}
 	
 	private function getPriceInfoFromDate($supplier_id, $date){
+		// Check quotation
 		
 	}
 	
@@ -1690,7 +1694,8 @@ class Zii extends yii\base\Object
 		$lftx = isset($o['lftx']) ? $o['lftx'] : [];
 		$sid = isset($o['sid']) ? $o['sid'] : 0;
 		$level = isset($o['level']) && $o['level'] == true ? true : false;
-		foreach ((new Query())->from($table)->where(['parent_id'=>$id]+($sid>0 ? ['sid'=>$sid] : []))->orderBy(['title'=>SORT_ASC])->all() as $k=>$v){
+		$orderBy = isset($o['orderBy']) ? $o['orderBy'] : ['title'=>SORT_ASC]; 
+		foreach ((new Query())->from($table)->where(['parent_id'=>$id]+($sid>0 ? ['sid'=>$sid] : []))->orderBy($orderBy)->all() as $k=>$v){
 			$lftx[] = $table_lft;
 			$lft_c = $table_lft;
 			$childs = $this->count_all_child($table,$v['id'],$sid);
