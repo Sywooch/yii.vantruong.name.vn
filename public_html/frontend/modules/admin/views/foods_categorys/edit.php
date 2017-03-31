@@ -7,7 +7,8 @@
 <input type="hidden" name="_csrf-frontend" value="<?php echo Yii::$app->request->csrfToken;?>"  />
     <!-- Nav tabs -->
 <ul class="nav form-edit-tab nav-tabs" role="tablist">
-<?php 
+<?php
+ 
 echo '<li role="presentation" class="active"><a href="#tab-general" role="tab" data-toggle="tab">'.getTextTranslate(68,ADMIN_LANG).'</a></li>
    
  <li role="presentation" class=""><a href="#tab-help" role="tab" data-toggle="tab">'.getTextTranslate(73,ADMIN_LANG).'</a></li>';
@@ -48,11 +49,11 @@ echo Ad_edit_show_select_field($v,[
 		//'field_name'=>'type_id',
 		//'multiple'=>true,
 		'data'=>[
-				['id'=>0,'title'=>'Set menu'],
-				['id'=>1,'title'=>'Buffet'],
+				['id'=>1,'title'=>'Set menu'],
+				['id'=>2,'title'=>'Buffet'],
 ],
 		'data-disabled'=>[],
-		'data-selected'=>[isset($v['type_id']) ? $v['type_id'] : 0],
+		'data-selected'=>[isset($v['type_id']) ? $v['type_id'] : 1],
 		'option-value-field'=>'id',
 		'option-title-field'=>'title',
 ]);

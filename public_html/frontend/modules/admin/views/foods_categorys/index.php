@@ -38,7 +38,7 @@ if(!empty($l['listItem'])){
         		
         '.Ad_list_show_icon($v).'
         '.Ad_list_show_link_field($v,['field'=>'title','link'=>$link]). 
-        '<td class="center">'.($v['type_id'] == 0 ? 'Set menu' : 'Buffet').'</td>'.     
+        '<td class="center">'.($v['type_id'] == 1 ? 'Set menu' : 'Buffet').'</td>'.     
 		Ad_list_show_option_field($v,[
         		'role'=>$role,
         		'action'=>'Ad_quick_delete_item',

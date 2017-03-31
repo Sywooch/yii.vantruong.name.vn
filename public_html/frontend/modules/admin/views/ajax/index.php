@@ -215,6 +215,34 @@ switch (Yii::$app->request->post('action')){
 		Yii::$app->db->createCommand()->update(Yii::$app->zii->getTablePrice(post('controller_code'),post('price_type',1)),['currency'=>post('value')],$con)->execute();
 		exit;
 		break;
+	case 'quick_change_menus_price_default':
+		$a = [
+				'item_id',
+				//'season_id',
+				//'weekend_id',
+				//'group_id',
+				'supplier_id',
+				'package_id',
+				'quotation_id',
+				'nationality_id',
+					
+		];
+		$con = [];
+		foreach ($a as $b){
+			$$b = post($b,0);
+			$con[$b] = $$b;			
+		}
+		Yii::$app->db->createCommand()->update(Yii::$app->zii->getTablePrice(post('controller_code'),post('price_type',1)),['is_default'=>0],
+				[
+						'package_id'=>$package_id,
+						'supplier_id'=>$supplier_id,
+						'quotation_id'=>$quotation_id,
+						'nationality_id'=>$nationality_id
+				])->execute();
+		Yii::$app->db->createCommand()->update(Yii::$app->zii->getTablePrice(post('controller_code'),post('price_type',1)),['is_default'=>1],$con)->execute();
+		exit;
+		break;	
+		
 	case 'quick_change_menu_price':
 		$a = [
 			'item_id',
@@ -4106,7 +4134,7 @@ foreach(Yii::$app->zii->getUserCurrency()['list'] as $k2=>$v2){
 }
 //}
 
-$html .= '</select></th><th rowspan="5" class="w100p"></th>		
+$html .= '</select></th><th rowspan="5" class="w100p">Mặc định</th>		<th rowspan="5" class="w100p"></th>	  
 </tr>							
 							<tr class="'.(count($incurred_list) > 1 && $ckc_incurred ? '' : 'hide').'">';
 if(!empty($incurred_list)){
@@ -4235,7 +4263,10 @@ foreach(Yii::$app->zii->getUserCurrency()['list'] as $k2=>$v2){
 //}
 
 $html .= '</select>';
-$html .= '</td>';		
+$html .= '</td>';	
+
+$html .= '<td class="center"><input type="checkbox" name="set_default['.$quotation['id'].']['.$package['id'].']" value="'.$v1['id'].'"/></td>';
+
 $html .= '<td class="center">
 <i data-supplier_id="'.$supplier_id.'"
 					data-quotation_id="'.$quotation['id'].'"
@@ -4321,11 +4352,42 @@ $html .= '<td class="center">
 				Yii::$app->db->createCommand()->insert($foodModel->tableToMenu(),['menu_id'=>$menu_id,'food_id'=>$menu])->execute();
 			}
 		}
-		 
+		//
+		$category_id = post('category_id',[]);
+		Yii::$app->db->createCommand()->delete(\app\modules\admin\models\Menus::tableToCategory(),['and',
+				['not in', 'category_id',$category_id],
+				['item_id'=>$menu_id] 
+		])->execute();
+		if(!empty($category_id)){
+			foreach ($category_id as $c){
+				if((new Query())->from(\app\modules\admin\models\Menus::tableToCategory())->where(['category_id'=>$c])->count(1) == 0){
+					Yii::$app->db->createCommand()->insert(\app\modules\admin\models\Menus::tableToCategory(),[
+							'category_id'=>$c,
+							'item_id'=>$menu_id,
+					])->execute();
+				}
+			}
+		}
 		//
 		$r['event'] = $_POST['action'];
 		$r['supplier_id'] = $supplier_id;
 		echo json_encode($r);exit;
+		break;
+	case 'changeMenusType':
+		$type_id = post('type_id',0);
+		$item_id = post('item_id',0);
+		$html = '';
+		$categorys = \app\modules\admin\models\FoodsCategorys::getAll(['type_id'=>$type_id]);
+		$existed = \app\modules\admin\models\Menus::getItemCategorys($item_id);
+		if(!empty($categorys)){
+			foreach ($categorys as $k=>$v){
+				$html .= '<option '.(in_array($v['id'], $existed) ? 'selected' : '').' value="'.$v['id'].'">'.uh($v['title']).'</option>';
+			}
+		}
+		echo json_encode([
+				'html'=>$html,
+				
+		]);exit;
 		break;
 	case 'add-more-menu-supplier':
 		$r = array(); $r['html'] = '';
@@ -4340,7 +4402,7 @@ $html .= '<td class="center">
 		$r['html'] .= '<div class="form-group">
           <label class="col-sm-12 control-label aleft">Tiêu đề</label>
           <div class="col-sm-12">
-	<input name="f[title]" class="form-control input-sm required" value="'.(!empty($item) ? uh($item['title']) : '').'"/> 
+	<input name="f[title]" onkeypress="if (event.keyCode==13){return nextFocus(this);}" class="form-control input-sm required" value="'.(!empty($item) ? uh($item['title']) : '').'"/> 
         
             </div>
          </div>';
@@ -4348,13 +4410,13 @@ $html .= '<td class="center">
 		$r['html'] .= '<div class="form-group">
           <label class="col-sm-12 control-label aleft">Mô tả ngắn</label>
           <div class="col-sm-12">
-	<input name="biz[info]" class="form-control input-sm " value="'.(!empty($item) ? uh($item['info']) : '').'"/>
+	<input name="biz[info]" class="form-control input-sm " onkeypress="if (event.keyCode==13){return nextFocus(this);}" value="'.(!empty($item) ? uh($item['info']) : '').'"/>
 		
             </div>
          </div>';
-		$r['html'] .= '<div class="form-group edit-form-left"><div class="col-sm-6"><div class="row">
+		$r['html'] .= '<div class="form-group edit-form-left"><div class="col-sm-8"><div class="row">
    
-          <div class="col-sm-4">
+          <div class="col-sm-3">
 '.Ad_edit_show_select_field([],[
 			'field'=>'type_id',
 			'label'=>'Loại thực đơn',
@@ -4362,32 +4424,63 @@ $html .= '<td class="center">
 			//'field_name'=>'category_id[]',
 			//'multiple'=>true,
 			'attrs'=>[
-					'data-search'=>'hidden'
+					'data-search'=>'hidden',
+					'data-menu_id'=>!empty($item) ? $item['id'] : 0,
+					'data-item_id'=>!empty($item) ? $item['id'] : 0,
+					'data-target'=>'.group-select-menus-category',
+					'data-target2'=>'.group-menus-category',
+					'onchange'=>'changeMenusType(this)',
 			],
 			'data'=>[
-					['id'=>1,'title'=>'Set'],
+					['id'=>1,'title'=>'Set menu'],
 					['id'=>2,'title'=>'Buffet'],
 			],
-			'data-selected'=>[!empty($item) ? $item['type_id'] : 0],
+			'data-selected'=>[!empty($item) ? $item['type_id'] : 1],
 			'option-value-field'=>'id',
 			'option-title-field'=>'title',
 	]).'
 	
             </div>
-					<div class="col-sm-8">
-'.Ad_edit_show_select_field([],[
-			'field'=>'type_id',
+					<div class="col-sm-9">
+'.Ad_edit_show_select_field_group([],[
+			//'field'=>'type_id',
 			'label'=>'Danh mục món ăn',
-			'class'=>'select2 ',
-			//'field_name'=>'category_id[]',
-			//'multiple'=>true,
+			'class'=>'chosen-select group-menus-category group-select-menus-category',
+			'default_value'=>0,
+			'field_name'=>'category_id[]',
+			'multiple'=>true,
 			'attrs'=>[
-					'data-search'=>'hidden'
+					'data-search'=>'hidden',
+					'data-placeholder'=>'Chọn danh mục món ăn',
+					'data-type_id'=>!empty($item) ? $item['type_id'] : 0,
+					'data-menu_id'=>!empty($item) ? $item['id'] : 0,
+					'data-item_id'=>!empty($item) ? $item['id'] : 0,
+					'onchange'=>'addSelectedMenusCategory(this)',
+					'data-target'=>'.group-button-menus-category'
+					
 			],
-			'data'=>\app\modules\admin\models\FoodsCategorys::getAll(),
-			'data-selected'=>\app\modules\admin\models\FoodsCategorys::getItemCategorys(!empty($item) ? $item['id'] : 0),
+			'data'=>\app\modules\admin\models\FoodsCategorys::getAll(['type_id'=>!empty($item) ? $item['type_id'] :1]),
+			'data-selected'=>\app\modules\admin\models\Menus::getItemCategorys(!empty($item) ? $item['id'] : 0),
 			'option-value-field'=>'id',
 			'option-title-field'=>'title',
+		'groups'=>[
+				'attrs'=>[
+						'onclick'=>'',
+						'title'=>'Thêm danh mục món ăn',
+						'data-toggle'=>'tooltip',
+						'data-placement'=>'top',
+						'data-type_id'=>!empty($item) ? $item['type_id'] : 1,
+						'data-menu_id'=>!empty($item) ? $item['id'] : 0,
+						'data-item_id'=>!empty($item) ? $item['id'] : 0,
+						'onclick'=>'open_ajax_modal(this)',
+						'data-action'=>'add-more-menus-categorys',
+						'data-modal-target'=>'.mymodal1',
+						'data-title'=>'Thêm danh mục món ăn',
+						'data-existed'=>implode(',', \app\modules\admin\models\Menus::getItemCategorys(!empty($item) ? $item['id'] : 0)),
+				],
+				'class'=>'btn-success group-menus-category group-button-menus-category',
+				'label'=>'<i class="fa fa-plus"></i>',
+		],
 	]).'
 	
             </div>
@@ -4396,7 +4489,7 @@ $html .= '<td class="center">
 	
 	
 	
-				<div class="col-sm-6"><div class="row">
+				<div class="col-sm-4"><div class="row">
 	
 <div class="col-sm-12">
 		'. Ad_edit_show_select_field([],[
@@ -4460,9 +4553,94 @@ if(isset($item['foods']) && !empty($item['foods'])){
 			///
 				
 			$r['event'] = $_POST['action'];
-			//	$r['existed'] = $existed;
+			$r['callback'] = true;  $r['callback_function'] = 'reloadTooltip();';
 			echo json_encode($r);exit;
 			break;
+	case 'quick-add-more-menus-categorys':
+		$item_id = post('item_id',0);
+		$type_id = post('type_id',1);
+		$f = post('f',[]);
+		$biz = post('biz',[]);
+		$f['sid']= __SID__; $html = '';
+		$f['type_id']= $type_id;
+		$f['bizrule'] = json_encode($biz);
+		$selected = explode(',',  post('existed',[]));
+		if((new Query())->from(\app\modules\admin\models\FoodsCategorys::tableName())->where(['title'=>$f['title'],'type_id'=>$type_id,'sid'=>__SID__])->count(1) == 0){
+			$id = Yii::$app->zii->insert(\app\modules\admin\models\FoodsCategorys::tableName(),$f);
+			$item = \app\modules\admin\models\FoodsCategorys::getItem($id);
+			$s = true;
+			$html .= '<option value="'.$id.'">'.uh($f['title']).'</option>';
+		}else{
+			$s = false;
+			$item = (new Query())->from(\app\modules\admin\models\FoodsCategorys::tableName())->where(['title'=>$f['title'],'type_id'=>$type_id,'sid'=>__SID__])->one();
+			$id = $item['id'];
+		}
+		$selected[] = $id;
+		echo json_encode([
+			'event'=>'hide-modal',
+			'modal_target'=>'.mymodal1',	
+			'item'=>!empty($item) ? $item : false,
+			'callback'=>true,
+			'callback_function'=>'jQuery(\'.group-select-menus-category\').append(\''.$html.'\').val(['.implode(',', $selected).']).trigger(\'chosen:updated\')'
+		]);exit;
+		break;
+	case 'add-more-menus-categorys':
+		$r = array(); $r['html'] = '';
+		$menu_id = post('menu_id',0);
+		$menuModel = load_model('menus');
+		$supplier_id = post('supplier_id',0);
+		
+		
+		 
+	 
+		$r['html'] .= '<div class="form-group">
+          <label class="col-sm-12 control-label aleft">Tiêu đề</label>
+          <div class="col-sm-12">
+	<input name="f[title]" onkeypress="if (event.keyCode==13){return nextFocus(this);}" class="form-control input-sm required" value=""/> 
+        
+            </div>
+         </div>';
+		
+		$r['html'] .= '<div class="form-group">
+          <label class="col-sm-12 control-label aleft">Mô tả ngắn</label>
+          <div class="col-sm-12">
+	<input name="biz[info]" class="form-control input-sm " onkeypress="if (event.keyCode==13){return nextFocus(this);}" value=""/>
+		
+            </div>
+         </div>';
+		$r['html'] .= '<div class="form-group edit-form-left"><div class="col-sm-12"><div class="row">
+   
+           
+					 
+					</div></div>
+			 
+	
+	
+	
+				 
+	
+			 
+         </div>';
+	
+			 
+	
+	
+			$r['html'] .= '<div class="modal-footer">';
+			$r['html'] .= '<button type="submit" class="btn btn-primary"><i class="glyphicon glyphicon-floppy-save"></i> Lưu lại</button>';
+			$r['html'] .= '<button type="button" class="btn btn-danger" data-dismiss="modal"><i class="glyphicon glyphicon-remove"></i> Hủy</button>';
+			$r['html'] .= '</div>';
+			$_POST['action'] = 'quick-' . $_POST['action'];
+			foreach ($_POST as $k=>$v){
+				$r['html'] .= '<input type="hidden" name="'.$k.'" value="'.$v.'"/>';
+			}
+			///
+				
+			$r['event'] = $_POST['action'];
+			//$r['callback'] = true;  
+			//$r['callback_function'] = '';
+			echo json_encode($r);exit;
+			break;
+	
 	case 'quick-quick-edit-food':
 		$id = post('id',0);
 		$f = post('f',[]);

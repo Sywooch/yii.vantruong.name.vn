@@ -390,7 +390,7 @@ class Customers extends \yii\db\ActiveRecord
     		$t = 'supplier_to_prices_default';
     		 
     		$t = Yii::$app->zii->getTablePrice($supplier['type_id'],$price_type);
-    		$price = (new Query())->select(['a.price1','a.price2','a.currency'])->from(['a'=>$t])->where($condition)->one(); 
+    		$price = (new Query())->select(['a.price1','a.price2','a.currency','a.is_default'])->from(['a'=>$t])->where($condition)->one(); 
     		//view((new Query())->select(['a.price1','a.price2','a.currency'])->from(['a'=>$t])->where($condition)->createCommand()->getRawSql());
     	}
     	 

@@ -2371,6 +2371,50 @@ function Ad_edit_show_select_field($v=[],$o=[]){
     $html .= '</select></div></div>';
 	return $html;
 }
+
+function Ad_edit_show_select_field_group($v=[],$o=[]){
+	$label = isset($o['label']) ? $o['label'] : '';
+	$field = isset($o['field']) ? $o['field'] : false;
+	$field_name = isset($o['field_name']) ? $o['field_name'] : "f[$field]";
+	$class = isset($o['class']) ? $o['class'] : '';
+	$title = isset($o['title']) ? $o['title'] : '';
+	$multiple = isset($o['multiple']) ? $o['multiple'] : false;
+	$default_value = isset($o['default_value']) ? $o['default_value'] : false;
+	$data = isset($o['data']) ? $o['data'] : [];
+	$disabled = isset($o['data-disabled']) ? $o['data-disabled'] : [];
+	$selected = isset($o['data-selected']) ? $o['data-selected'] : [];
+	$option_value = isset($o['option-value-field']) ? $o['option-value-field'] : 'id';
+	$option_title = isset($o['option-title-field']) ? $o['option-title-field'] : 'title';
+	$attrs = isset($o['attrs']) ? $o['attrs'] : [];
+	$html= '<div class="form-group group-sm34"><label class="col-sm-12 control-label">'.$label.'</label>
+			
+			<div class="col-sm-12"><div class="input-group"><select';
+	if(!empty($attrs)){
+		foreach ($attrs as $k=>$v){
+			$html .= " $k=\"$v\"";
+		}
+	}
+	$html .= ' data-type="select" data-select="select2" name="'.$field_name.'" class="form-control input-sm '.$class.'" style="width: 100%" '.($multiple ? 'multiple="multiple"' : '').'>';
+	if(!empty($data)){
+		$html .= $default_value !== false ? '<option value="'.$default_value.'"> -- </option>' : '';
+		foreach($data as $k1=>$v1){
+			$html .= '<option '.(isset($v1[$option_value]) && in_array($v1[$option_value],$disabled) ? 'disabled="disabled"' : '').' '.(isset($v1[$option_value]) && in_array($v1[$option_value] ,$selected) ? 'selected="selected"' : '').' value="'.(isset($v1[$option_value]) ? $v1[$option_value] : '').'">'.(isset($v1['level']) ? spc($v1['level']) : '').(isset($v1[$option_title]) ? uh($v1[$option_title]) : '').'</option> ';
+		}
+	}
+	$html .= '</select><span class="input-group-btn"><button ';
+    $class = isset($o['groups']['class']) ? uh($o['groups']['class']) : '';
+    if(isset($o['groups']['attrs']) && !empty($o['groups']['attrs'])){
+    	foreach ($o['groups']['attrs'] as $k=>$v){
+    		if($k == 'class'){
+    			$class .= ' '.$v;
+    		}else {
+    			$html .= $k . '="'.$v .'" ';
+    		}
+    	}
+    }
+    $html .= 'class="btn btn-default '.$class.'" type="button">'.(isset($o['groups']['label']) ? uh($o['groups']['label']) : '').'</button></span></div></div></div>';
+	return $html;
+}
 function Ad_edit_show_image_field($v=[],$o=[]){
 	$label = isset($o['label']) ? $o['label'] : '';
 	$field = isset($o['field']) ? $o['field'] : false;
@@ -2783,7 +2827,7 @@ function getSupplierPricesList($supplier_id = 0, $o = []){
 						}
 						//}
 						//return json_encode($ckc_incurred);
-						$html .= '</select></th><th rowspan="5" class="w100p"></th>
+						$html .= '</select></th><th rowspan="5" class="w100p center">Mặc định</th><th rowspan="5" class="w100p"></th>
 </tr>
 							<tr class="'.(count($incurred_prices_list) > 1 && $ckc_incurred ? '' : 'hide').'">';
 						if(!empty($incurred_prices_list)){
@@ -2844,7 +2888,7 @@ function getSupplierPricesList($supplier_id = 0, $o = []){
 										foreach ($l as $k1=>$v1){
 											$existed[] = $v1['id'];
 											//$p = $menus->get_price($v1['id'],$id,$vb['id'],$package['id']);
-											$currency = 1;
+											$currency = 1; $isDefault = 0;
 											$tr = [
 													$supplier_id,
 													$quotation['id'],
@@ -2852,9 +2896,10 @@ function getSupplierPricesList($supplier_id = 0, $o = []){
 													$vb['id'],
 													$v1['id']
 											];
+											$cates = \app\modules\admin\models\Menus::getItemCategorys($v1['id'],0);
 											$html .= '<tr class="tr-price-'.implode('-', $tr).'">
 <td class="center">'.($k1+1).'</td>
-<td><a class="pointer" data-supplier_id="'.$supplier_id.'" data-menu_id="'.$v1['id'].'" data-title="Chỉnh sửa thực đơn" onclick="open_ajax_modal(this);" data-class="w90" data-action="add-more-menu-supplier">'.uh($v1['title']).'</a></td>';
+<td><a class="pointer" data-supplier_id="'.$supplier_id.'" data-menu_id="'.$v1['id'].'" data-title="Chỉnh sửa thực đơn" onclick="open_ajax_modal(this);" data-class="w90" data-action="add-more-menu-supplier">'.uh($v1['title']). ( !empty($cates) ? ' <i class="font-normal red">('.implode(' | ', $cates).')</i>' : '') .'</a></td>';
 											if(!empty($incurred_prices_list)){
 												foreach ($incurred_prices_list as $in){
 													if(!empty($room_groups)){
@@ -2876,7 +2921,10 @@ function getSupplierPricesList($supplier_id = 0, $o = []){
 																					'nationality_id'=>$vb['id']
 																			]);
 																			//return json_encode($incurred_prices_list); 
-																			if(!empty($price)) $currency = $price['currency'];
+																			if(!empty($price)){
+																				$currency = $price['currency'];
+																				$isDefault = $price['is_default'];
+																			}
 																			$html .= '<td class="center"><input
 											data-supplier_id="'.$supplier_id.'"
 											data-quotation_id="'.$quotation['id'].'"
@@ -2887,6 +2935,7 @@ function getSupplierPricesList($supplier_id = 0, $o = []){
 											data-group_id="'.$room['id'].'"
 											data-weekend_id="'.$w['id'].'"
 											data-time_id="'.$weekend_time['id'].'"
+													data-controller_code="'.$supplier_type.'"
 											data-supplier_type="'.$supplier['type_id'].'"		
 											onblur="quick_change_supplier_service_price(this);"
 											type="text" name="prices['.$package['id'].']['.$vb['id'].']['.$v1['id'].'][list_child]['.$in['id'].']['.$room['id'].']['.$w['id'].'][price1]"
@@ -2907,7 +2956,12 @@ function getSupplierPricesList($supplier_id = 0, $o = []){
 					data-package_id="'.$package['id'].'"
 					data-nationality_id="'.$vb['id'].'"
 					data-item_id="'.$v1['id'].'"
-					data-decimal="'.Yii::$app->zii->showCurrency($currency,3).'" data-target-input=".input-currency-price-'.$v1['id'].'" onchange="get_decimal_number(this);quick_change_menu_price_currency(this);" class="ajax-select2-no-search sl-cost-price-currency form-control ajax-select2 input-sm select-currency-'.$quotation['id'].'-'.$package['id'].'-'.$vb['id'].'" data-search="hidden" name="prices['.$package['id'].']['.$vb['id'].']['.$v1['id'].'][currency]">';
+					data-controller_code="'.$supplier_type.'"
+					data-decimal="'.Yii::$app->zii->showCurrency($currency,3).'" 
+					data-target-input=".input-currency-price-'.$v1['id'].'" 
+					onchange="get_decimal_number(this);quick_change_menu_price_currency(this);" 
+					class="ajax-select2-no-search sl-cost-price-currency form-control ajax-select2 input-sm select-currency-'.$quotation['id'].'-'.$package['id'].'-'.$vb['id'].'" 
+					data-search="hidden" name="prices['.$package['id'].']['.$vb['id'].']['.$v1['id'].'][currency]">';
 												//if(isset($v['currency']['list']) && !empty($v['currency']['list'])){
 												foreach(Yii::$app->zii->getUserCurrency()['list'] as $k2=>$v2){
 													$html .= '<option value="'.$v2['id'].'" '.($currency == $v2['id'] ? 'selected' : '').'>'.$v2['code'].'</option>';
@@ -2916,6 +2970,17 @@ function getSupplierPricesList($supplier_id = 0, $o = []){
 	
 												$html .= '</select>';
 												$html .= '</td>';
+$html .= '<td class="center"><input
+		data-supplier_id="'.$supplier_id.'" 
+		data-quotation_id="'.$quotation['id'].'"
+		data-package_id="'.$package['id'].'"
+		data-nationality_id="'.$vb['id'].'"
+		data-controller_code="'.$supplier_type.'"		
+		data-item_id="'.$v1['id'].'"
+		onchange="quick_change_menus_price_default(this);" 
+		type="radio" name="set_default['.$quotation['id'].']['.$package['id'].']['.$vb['id'].']" value="'.$v1['id'].'"
+				'.($isDefault == 1 ? ' checked' : '').'
+				/></td>';
 												$html .= '<td class="center">
 <i data-supplier_id="'.$supplier_id.'"
 					data-quotation_id="'.$quotation['id'].'"
@@ -3014,6 +3079,7 @@ function getSupplierVehiclePrices($supplier_id = 0, $o = []){
 			$h['vehicle'] = true;
 			break;
 	}
+	
 	$html .= getPriceHeaderButton($supplier_id,$h);
 	if(!empty($quotations)){
 		foreach ($quotations as $q=>$quotation){
@@ -3636,14 +3702,17 @@ function loadTourProgramDetail($o = []){
 	
 	$v = \app\modules\admin\models\ToursPrograms::getItem($id);
 	
+	$v['from_date'] = check_date_string($v['from_date']) ? $v['from_date'] : date('Y-m-d');
+	
 	for($i = 0; $i<$day;$i++){
 		$colspan2 = \app\modules\admin\models\ToursPrograms::countProgramServicesPerDay([
 				'item_id'=>$id,
 				'day'=>$i
 		]);
-			
+			//$date = date('Y-m-d',strtotime($v['from_date']) + ($i * 86400) );
+			$date =  date('Y-m-d', mktime(0, 0, 0, date("m",strtotime($v['from_date']))  , date("d",strtotime($v['from_date']))+$i, date("Y",strtotime($v['from_date']))));
 		$colspan2  += 9;
-		$html .= '<tr><td rowspan="'.$colspan2.'" class="center"><span class="label label-danger f12p">Ngày '.($i+1).'</span></td></tr>';
+		$html .= '<tr><td rowspan="'.$colspan2.'" class="center"><span class="label label-danger f12p">'.(check_date_string($v['from_date']) ? readDate($date,['spc'=>' - ']) : 'Ngày '.($i+1)).'</span></td></tr>';
 		for($j=0;$j<4;$j++){
 			$services = \app\modules\admin\models\ToursPrograms::getProgramServices($id,$i,$j);
 	
@@ -3654,7 +3723,7 @@ function loadTourProgramDetail($o = []){
 				case 3: $class='btn-warning';break;
 				default: $class='btn-primary';break;
 			}
-			$html .= '<tr><td rowspan="'.$rowspan1.'" class="center"><button data-class="w90" data-action="add-tours-services" data-title="Chọn thêm dịch vụ / Hành trình" data-id="'.$id.'" data-day="'.$i.'" data-time="'.$j.'" onclick="open_ajax_modal(this);" title="Chọn thêm / xóa dịch vụ" class="w50p btn '.$class.' btn-label btn-sm first-letter-upper" type="button">'.showPartDay($j).'</button></td></tr>';
+			$html .= '<tr><td rowspan="'.$rowspan1.'" class="center"><button data-class="w90" data-action="add-tours-services" data-title="Chọn thêm dịch vụ / Hành trình" data-id="'.$id.'" data-day="'.$i.'" data-time="'.$j.'" onclick="open_ajax_modal(this);" title="Chọn thêm / xóa dịch vụ" class="w50p btn '.$class.' btn-label btn-sm first-letter-upper" type="button">'.(showPartDay($j)).'</button></td></tr>'; 
 				
 			if(!empty($services)){
 				foreach ($services as $kv=>$sv){
@@ -3666,7 +3735,8 @@ function loadTourProgramDetail($o = []){
 							'service_id'=>$sv['id'],
 							'type_id'=>$sv['type_id'],
 							'nationality'=>$v['nationality'],
-							'total_pax'=>$v['guest']
+							'total_pax'=>$v['guest'],
+							'from_date'=>$date
 					]);
 					
 					if(!empty($prices) && isset($prices['price1'])){
@@ -3678,7 +3748,7 @@ function loadTourProgramDetail($o = []){
 						]);
 					}
 					
-					$html .= '<tr><td colspan="4"><p><a data-type_id="'.$sv['type_id'].'">' .(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
+					$html .= '<tr><td colspan="4"><p><a data-service_id="'.$sv['id'].'" data-type_id="'.$sv['type_id'].'">' .(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
 								<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$i.'_'.$j.'" name="selected_value[]"/>
 								<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>
 										</a></p></td>

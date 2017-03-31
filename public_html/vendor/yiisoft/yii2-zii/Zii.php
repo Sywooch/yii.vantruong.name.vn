@@ -1423,6 +1423,7 @@ class Zii extends yii\base\Object
 	}
 	public function getServiceDetailPrices($o = []){
 		//\\//\\ *.* //\\//\\
+		$from_date = isset($o['from_date']) && check_date_string($o['from_date']) ? $o['from_date'] : date('Y-m-d');
 		$day = isset($o['day']) ? $o['day'] : -1;
 		$time = isset($o['time']) ? $o['time'] : -1;
 		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
@@ -1466,7 +1467,7 @@ class Zii extends yii\base\Object
 			//
 			$r = $service_id > 0 ? $query->one() : $query->all();
 			if(!empty($r)){
-				$loadDefault = false;
+				//$loadDefault = false;
 			}
 		}
 		if($loadDefault){
@@ -1491,6 +1492,10 @@ class Zii extends yii\base\Object
 			
 		$r['quantity'] = isset($r['quantity']) ? $r['quantity'] : $total_pax;
 		return $r;
+	}
+	
+	private function getPriceInfoFromDate($supplier_id, $date){
+		
 	}
 	
 	public function getTablePrice($code,$price_type=1){

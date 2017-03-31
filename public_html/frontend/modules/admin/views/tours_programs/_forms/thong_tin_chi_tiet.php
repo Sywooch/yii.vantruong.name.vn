@@ -1,5 +1,16 @@
 <?php 
- 
+$prices = Yii::$app->zii->getServiceDetailPrices([
+		'item_id'=>$v['id'],
+		'day'=>0,
+		'time'=>0,
+		'service_id'=>68,
+		'type_id'=>4,
+		'nationality'=>$v['nationality'],
+		'total_pax'=>$v['guest'],
+		'from_date'=>$v['from_date']
+]);
+
+view($prices);
 
 ?>
 <div class="col-sm-12 bang-thong-tin-chung" style=""><div class="row">

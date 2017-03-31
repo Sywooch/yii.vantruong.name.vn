@@ -232,12 +232,12 @@ if(isset($v['id'])){
   
    <tr class="col-middle">
  <td >Ngày bắt đầu</td>
- <td colspan="3">
+ <td colspan="3" class="pr">
  <?php echo '<input type="text" data-id="'.(isset($v['id']) ? $v['id'] : 0).'" name="f[from_date]" class="form-control datepicker" data-format="DD/MM/YYYY" placeholder="" value="'.(isset($v['from_date']) ? date("d/m/Y",strtotime($v['from_date']))  : '').'" />';?>
   
  </td>
  <td class="center">Kết thúc</td>
- <td colspan="7">
+ <td colspan="7" class="pr">
  <?php echo '<input type="text" name="f[to_date]" class="form-control datepicker" data-format="DD/MM/YYYY" placeholder=" " value="'.(isset($v['to_date']) ? date("d/m/Y",strtotime($v['to_date']))  : '').'" />';?>
   
  </td> 

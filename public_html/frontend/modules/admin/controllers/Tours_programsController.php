@@ -70,7 +70,7 @@ class Tours_programsController extends CrsController
     {    	
     	if(Yii::$app->request->method == 'POST'){
     		FormActive::setBooleanFields($this->model->getBooleanFields());
-    		FormActive::setDateTimeFields($this->model->getDateTimeFields());
+    		FormActive::setDateTimeFields($this->model->getDateTimeFields()); 
     		$f = FormActive::getFormSubmit();
     		 
     		$f['sid'] = __SID__;
@@ -105,8 +105,10 @@ class Tours_programsController extends CrsController
     	$model = $this->model->getItem($id);
     	if(Yii::$app->request->method == 'POST'){
     		FormActive::setBooleanFields($this->model->getBooleanFields());
+    		FormActive::setDateTimeFields($this->model->getDateTimeFields());
     		$f = FormActive::getFormSubmit();    		     		
     		$con = array('id'=> $id,'sid'=>__SID__);
+    		//view($f,true);
     		// update with lang    		
     		Yii::$app->db->createCommand()->update(ToursPrograms::tableName(),$f,$con)->execute();
     		$this->model->setExchangeRateItem($id);

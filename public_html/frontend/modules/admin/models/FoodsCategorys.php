@@ -16,7 +16,7 @@ class FoodsCategorys extends \yii\db\ActiveRecord
     {
         return '{{%foods_categorys}}';
     }
-    public static function tableToMenu()
+    public static function tableToCategory()
     {
     	return '{{%menus_to_groups}}';
     }
@@ -53,26 +53,18 @@ class FoodsCategorys extends \yii\db\ActiveRecord
     	 
     	return $item;
     }
-    public static function getAll(){
-    	return static::find()
-    	->from(['a'=>self::tableName()])
-    	->where(['a.sid'=>__SID__])->orderBy(['a.title'=>SORT_ASC])
-    	->asArray()->all();
-    }
-    public static function getItemCategorys($food_id,$o = 1){
+    public static function getAll($o = []){
+    	$type_id = isset($o['type_id']) ? $o['type_id'] : -1;
     	$l = static::find()
-    	->from(['a'=>FoodsCategorys::tableName()])
-    	->innerJoin(['b'=>self::tableToCategory()],'a.id=b.category_id')
-    	->where(['b.food_id'=>$food_id])
-    	->asArray()->all();
-    	$r = [];
-    	if(!empty($l)){
-    		foreach($l as $k=>$v){
-    			$r[] = $o == 1 ? $v['id'] : uh($v['title']);
-    		}
+    	->from(['a'=>self::tableName()])
+    	->where(['a.sid'=>__SID__]);
+    	if($type_id > -1 ){
+    		$l->andWhere(['type_id'=>$type_id]);
     	}
-    	return $r;
+    	return $l->orderBy(['a.title'=>SORT_ASC])
+    	->asArray()->all();
     }
+    
     /*
      * 
      */
