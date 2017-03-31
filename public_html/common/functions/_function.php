@@ -983,7 +983,8 @@ function getImage($o = array(),$absolute = false){
 	$src = isset($o['src'])  ?   $o['src'] : false;
 	$src = str_replace(" ",'%20',$src);
 	if($src === false || $src == "") return false;
-	$op = isset($o['img_attr']) ?  $o['img_attr'] : (isset($o['attr']) ?  $o['attr'] : false);
+	$op = isset($o['img_attr']) ?  $o['img_attr'] : 
+	(isset($o['attr']) ?  $o['attr'] : (isset($o['attrs']) ?  $o['attrs'] : false));
 	$output = isset($o['output']) ? $o['output'] : 'img';
 	$save = isset($o['save']) && $o['save'] ? true : false;
 	$alt = isset($o['alt']) ? $o['alt'] : '';
@@ -2500,7 +2501,7 @@ function Ad_edit_show_dropdown_currency($v, $o = []){
 	$c = Yii::$app->zii->getCurrency(isset($v['currency']) ? $v['currency'] : 1);	 
 	$html = '';
 	$html .= !$show_group ? '<div class="form-group f12e"><label class="col-sm-12 control-label">'.$label.'</label><div class="col-sm-12">' : '';
-	$html .= '<div class="input-group"><input data-decimal="'.(isset($c['decimal_number']) ? $c['decimal_number'] : 1).'" type="text" name="'.$field_name.'" class="input-price-decimal-field form-control number-format aright '.$class.'" value="'.(isset($v[$field]) ? $v[$field] : '') .'" placeholder="'.$placeholder.'">
+	$html .= '<div class="input-group '.(isset($o['input-group-class']) ? $o['input-group-class'] : '').'" ><input data-decimal="'.(isset($c['decimal_number']) ? $c['decimal_number'] : 1).'" type="text" name="'.$field_name.'" class="input-price-decimal-field form-control number-format aright '.$class.'" value="'.(isset($v[$field]) ? $v[$field] : '') .'" placeholder="'.$placeholder.'">
       <span class="input-group-btn"><div class="btn-group">
   <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
   <b class="input-currency-symbol f12px">'.(Yii::$app->zii->showCurrency(isset($v['currency']) ? $v['currency'] : 1)).'</b> <span class="caret"></span>
@@ -2510,7 +2511,7 @@ function Ad_edit_show_dropdown_currency($v, $o = []){
 	if(!empty($c['list'])){
 		
 		foreach ($c['list'] as $k1=>$v1){
-			$html .= '<li><a data-decimal="'.$v1['decimal_number'].'" data-target="input.input-price-decimal-field" onclick="changeDropdownCurrency(this);" data-id="'.$v1['id'].'" data-symbol="'.Yii::$app->zii->showCurrency($v1['id']).'" href="#">'.$v1['code'] . ' - '. $v1['symbol'].'</a></li>';
+			$html .= '<li><a data-decimal="'.$v1['decimal_number'].'" data-target="input.input-price-decimal-field" onclick="changeDropdownCurrency(this);" data-id="'.$v1['id'].'" data-symbol="'.Yii::$app->zii->showCurrency($v1['id']).'" >'.$v1['code'] . ' - '. $v1['symbol'].'</a></li>';
 		}
  
   		

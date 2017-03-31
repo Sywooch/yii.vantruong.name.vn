@@ -648,7 +648,8 @@ class Zii extends yii\base\Object
 		if($box_id > -1){
 			$query->andWhere(['a.box_id'=>$box_id]);
 		}
-		//view($query->createCommand()->getRawSql());
+		
+		 
 		return $query->orderBy($orderBy)->all();
 		
 	}
@@ -1059,7 +1060,7 @@ class Zii extends yii\base\Object
 		}
 		
 		$query->addSelect(['post_by_name'=>'concat(z.lname, \' \' , z.fname)']);
-		$query->leftJoin(['z'=>'{{%users}}'],'a.post_by=z.id');
+		$query->leftJoin(['z'=>'{{%users}}'],'a.owner=z.id');
 		
 		 
 		$query->offset($offset);
@@ -1824,6 +1825,21 @@ class Zii extends yii\base\Object
 				'p'=>$p,
 		];
 	}
+	
+	
+	
+	
+	public function getDateInfo($date = ''){
+		if(!check_date_string($date)){
+			$date = date('Y-m-d');
+		}else{
+			$date = ctime(['string'=>$date,'format'=>'Y-m-d']);
+		}
+		//
+		
+	}
+	
+	
 	
 }
 
