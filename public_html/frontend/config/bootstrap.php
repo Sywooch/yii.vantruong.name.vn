@@ -72,7 +72,12 @@ $d = array(
 		'TYPE_CODE_DISTANCE'=>153,
 		//
 		'FORM_TYPE_COURSES' => 'courses' ,
-		'FORM_TYPE_TESTIMONIALS' => 'testimonials'
+		'FORM_TYPE_TESTIMONIALS' => 'testimonials',
+		'SEASON_TYPE_NORMAL' => 1, // Ngày nghỉ thường
+		'SEASON_TYPE_SERVICE' => 2, // Mùa dịch vụ
+		'SEASON_TYPE_WEEKEND' => 3, // Cuối tuần
+		'SEASON_TYPE_WEEKDAY' => 4, // Ngày thường
+		'SEASON_TYPE_TIME' => 5, // Buổi trong ngày (sáng, trưa, chiều, tối)
 );
 foreach($d as $k=>$v){
 	defined($k) or define($k,$v);

@@ -3429,14 +3429,9 @@ function add_more_holidays_categorys($t){
 	$html = '<tr><th scope="row">'+($c+1)+'</th>';
 	$html += '<td><input type="text" name="fx['+$c+'][title]" value="" class="form-control input-sm"/></td>'; 
 	$html += '<td><input type="text" name="fx['+$c+'][code]" value="" class="form-control input-sm"/></td>';  
-	//$html += '<td class="center"><input type="text" name="f['+$c+'][seats]" value="" class="form-control input-sm center numberFormat mw100p inline-block"/></td>';  
-	//$html += '<td class="center"><input type="text" name="f['+$c+'][position]" value="9" class="form-control input-sm center numberFormat mw100p inline-block"/></td>'; 
-	//$html += '<td class="center"><input type="text" name="x['+$c+'][pmax]" value="" class="form-control input-sm center numberFormat mw100p inline-block"/></td>'; 		
-	//$html += '<td class="center"><input type="text" name="f['+$c+'][pmin]" value="" class="form-control input-sm center numberFormat mw100p inline-block"/></td>'; 
-	//$html += '<td class="center"><input type="text" name="f['+$c+'][pmax]" value="" class="form-control input-sm center numberFormat mw100p inline-block"/></td>'; 		
-    
-	$html += $type == 2 ? '<td class="center"><select class="form-control input-sm" name="fx['+$c+'][type_id]"><option value="2">Mùa cao điểm / Ngày lễ</option><option value="3">Cuối tuần</option></select></td>' : ''; 
-	$html += '<td><input type="text" name="fx['+$c+'][incurred]" value="" class="form-control aright bold red input-sm ajax-number-format" data-decimal="2"/></td>';
+	 
+	$html += $type == 2 ? '<td class="center"><select class="form-control input-sm" name="fx['+$c+'][type_id]"><option value="0">Khác</option><option value="2" selected="">Mùa dịch vụ</option><option value="3">Nhóm cuối tuần</option><option value="4">Nhóm ngày trong tuần</option></select></td>' : ''; 
+	//$html += '<td><input type="text" name="fx['+$c+'][incurred]" value="" class="form-control aright bold red input-sm ajax-number-format" data-decimal="2"/></td>';
 	$html += '<td></td>'; 
 	$html += '<td class="center"><i title="Xóa" class="glyphicon glyphicon-trash pointer" onclick="removeTrItem(this);"></i></td>';
 	$html += '</tr>';$this.attr('data-count',++$c);

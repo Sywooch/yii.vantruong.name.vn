@@ -95,13 +95,17 @@ switch (Yii::$app->request->post('action')){
 		$f = post('f',[]);
 		$supplier_id = post('supplier_id');
 		$new = post('new',[]);
+		
 		if(!empty($new)){
 			foreach ($new as $n){
+				if($n['title'] != ""){
 				$n['sid'] = __SID__;
 				$n['type_id'] = post('controller_code');
 				$f[] = Yii::$app->zii->insert('distances',$n);
+				}
 			}
 		}
+		 
 		if(!empty($f)){
 			foreach ($f as $n){
 				//distances_to_suppliers
@@ -518,6 +522,7 @@ switch (Yii::$app->request->post('action')){
 					$v['supplier_id'] = $supplier_id;
 					$v['from_date'] = ctime(['string'=>$v['from_date']]);
 					$v['to_date'] = ctime(['string'=>$v['to_date']]);
+					$v['to_date'] = date('Y-m-d 23:59:59',strtotime($v['to_date']));
 					$quotation_id = Yii::$app->zii->insert('supplier_quotations',$v);
 					$child_id[] = $quotation_id;
 					 
@@ -596,10 +601,10 @@ switch (Yii::$app->request->post('action')){
 			$html .= '<tr>
     				<td class="pr"><input onblur="check_input_required(this);" type="text" class="sui-input w100 form-control input-sm input-condition-required input-destination-required" value="" name="new['.$i.'][title]" placeholder="Tiêu đề"/></td>
     		<td>
-    						<input onblur="check_input_required(this);" type="text" class="sui-input w100 form-control input-sm ajax-datetimepicker input-condition-required input-destination-required" value="" name="new['.$i.'][from_date]" placeholder="Thời gian bắt đầu">
+    						<input data-format="DD/MM/YYYY" onblur="check_input_required(this);" type="text" class="sui-input w100 form-control input-sm ajax-datepicker input-condition-required input-destination-required" value="" name="new['.$i.'][from_date]" placeholder="Thời gian bắt đầu">
     						</td> 	
     						<td>
-    						<input onblur="check_input_required(this);" type="text" class="sui-input w100 form-control input-sm ajax-datetimepicker input-condition-required input-destination-required" value="" name="new['.$i.'][to_date]" placeholder="Thời gian kết thúc">
+    						<input data-format="DD/MM/YYYY" onblur="check_input_required(this);" type="text" class="sui-input w100 form-control input-sm ajax-datepicker input-condition-required input-destination-required" value="" name="new['.$i.'][to_date]" placeholder="Thời gian kết thúc">
     						</td> 			
     						';
 			$html .= '</tr>';
@@ -676,6 +681,7 @@ switch (Yii::$app->request->post('action')){
 					
 				 
 			}
+			
 			$c = (new Query())->from(Yii::$app->zii->getTablePrice(post('controller_code'),post('price_type',1)))->where([
 					'quotation_id'=>0,
 					'supplier_id'=>$supplier_id
@@ -1639,6 +1645,7 @@ switch (Yii::$app->request->post('action')){
 					$html .= '<option '.(isset($v3['parent_id']) && $v3['parent_id'] == $v5['id'] ? 'selected' : '').' value="'.$v5['id'].'">Giá '.$v5['title'].'</option>';
 				}
 			}
+			
 			$html .= '</select></label>
 					
 					
@@ -1729,6 +1736,7 @@ switch (Yii::$app->request->post('action')){
 			$html .= '<th rowspan="2" class="center ">Tiêu đề</th>';
 			$html .= '<th rowspan="2" class="center w50p">Xóa</th>';
 			$html .= '</tr></thead><tbody class="ajax-result-price-distance-'.$k3.'">';
+			
 			if(in_array($v3['type_id'], [3,4,5])){
 				$l4 = \app\modules\admin\models\Seasons::get_list_weekend_by_parent($id, $v3['id']);
 				//view($l4);
@@ -1769,6 +1777,7 @@ switch (Yii::$app->request->post('action')){
 		
 		$html .= '</div>';
 		//
+		 
 		echo json_encode([
 			'html'=>$html,
 			'callback'=>true,
@@ -1784,7 +1793,7 @@ switch (Yii::$app->request->post('action')){
 		//
 		//if(!empty($new)){
 			switch (post('type_id')){
-				case 3: case 4:// NT - CT
+				case SEASON_TYPE_WEEKEND: case SEASON_TYPE_WEEKDAY:// NT - CT
 					
 					if(!empty($new)){
 							foreach ($new as $n){
@@ -1797,7 +1806,7 @@ switch (Yii::$app->request->post('action')){
 											'to_date'=>$n['to_date'],
 											'from_time'=>isset($n['from_time']) ? $n['from_time'] : '00:00:00',
 											'to_time'=>isset($n['to_time']) ? $n['to_time'] : '23:59:59', 
-											'parent_id'=>post('season_id'),
+											//'parent_id'=>post('season_id'),
 											'type_id'=>post('type_id'),
 											'part_time'=>isset($n['part_time']) ? $n['part_time'] : -1
 									]);
@@ -1808,7 +1817,7 @@ switch (Yii::$app->request->post('action')){
 					 
 					
 					break;
-				case 5:// NT - CT
+				case SEASON_TYPE_TIME:// NT - CT 
 					
 					if(!empty($new)){
 							foreach ($new as $n){
@@ -1821,7 +1830,7 @@ switch (Yii::$app->request->post('action')){
 											'to_date'=>$n['to_date'],
 											'from_time'=>isset($n['from_time']) ? $n['from_time'] : '00:00:00',
 											'to_time'=>isset($n['to_time']) ? $n['to_time'] : '23:59:59', 
-											'parent_id'=>post('season_id'),
+											//'parent_id'=>post('season_id'),
 											'type_id'=>post('type_id'),
 											'part_time'=>isset($n['part_time']) ? $n['part_time'] : -1
 									]);
@@ -1837,13 +1846,15 @@ switch (Yii::$app->request->post('action')){
 					if(!empty($new)){
 					foreach ($new as $n){
 						if($n['title'] != "" && check_date_string($n['from_date'])){
+							$n['to_date'] =  ctime(['string'=>$n['to_date']]);
+							$n['to_date'] = date("Y-m-d 23:59:59",strtotime($n['to_date']));
 							$child_id[] = Yii::$app->zii->insert('seasons',[
-									'parent_id'=>post('id'),
-									'type_id'=>10,
+									//'parent_id'=>post('id'),
+									'type_id'=>post('type_id'), 
 									'title'=>$n['title'],
 									'sid'=>__SID__,
 									'from_date'=>ctime(['string'=>$n['from_date']]),
-									'to_date'=>ctime(['string'=>$n['to_date']]),
+									'to_date'=>$n['to_date'],
 							]);
 						}
 					}
@@ -1859,13 +1870,13 @@ switch (Yii::$app->request->post('action')){
 						'season_id'=>$c,
 						'parent_id'=>post('season_id'),
 						'supplier_id'=>post('id'),
-						'type_id'=>10
+						'type_id'=>post('type_id'), 
 				])->count(1) == 0){
 					Yii::$app->db->createCommand()->insert('seasons_to_suppliers',[
 							'season_id'=>$c,
 							'parent_id'=>post('season_id'),
 							'supplier_id'=>post('id'),
-							'type_id'=>10
+							'type_id'=>post('type_id'), 
 					])->execute();
 				}
 			}
@@ -1881,7 +1892,7 @@ switch (Yii::$app->request->post('action')){
 		break;
 	case 'sadd-more-season-to-supplier':
 			$r = array(); $r['html'] = '';
-			$m = new app\modules\admin\models\Seasons();
+			$m = new \app\modules\admin\models\Seasons();
 			$type_id = isset($_POST['type_id']) ? $_POST['type_id'] : 2;
 			///view($type_id);
 			//
@@ -1891,7 +1902,7 @@ switch (Yii::$app->request->post('action')){
 			$r['html'] = '<div class="form-group">';
 			$r['html'] .= '<div class="group-sm34 col-sm-12"><select name="f[child_id][]" multiple data-existed="'.$existed.'" data-role="chosen-load-season" class="form-control ajax-chosen-select-ajax" style="width:100%">';
 			switch ($type_id){
-				case 4: case 3:case 5:
+				case SEASON_TYPE_WEEKEND: case SEASON_TYPE_WEEKDAY: case SEASON_TYPE_TIME:
 					foreach (\app\modules\admin\models\Seasons::getAvailableWeekend([
 						'parent_id'=>post('season_id'),
 						'type_id'=>$type_id,
@@ -1910,7 +1921,7 @@ switch (Yii::$app->request->post('action')){
 					}
 					break;
 			}
-			
+			/* 
 			if(!empty($l4['listItem'])){
 				foreach ($l4['listItem'] as $k4=>$v4){break;
 					if(in_array($type_id,[3,4,5])){
@@ -1920,6 +1931,7 @@ switch (Yii::$app->request->post('action')){
 					}
 				}
 			}
+			*/
 			$r['html'] .= '</select></div>';
 			$r['html'] .= '</div><p class="help-block italic ">*** Bạn có thể chọn giá trị có sẵn hoặc thêm mới ở ô nhập bên dưới</p><hr>';
 			$r['html'] .= '<div class="">';
@@ -1930,7 +1942,7 @@ switch (Yii::$app->request->post('action')){
 		
 			for($i=0; $i<3;$i++){
 				switch ($type_id){
-					case 3: case 4:
+					case SEASON_TYPE_WEEKEND: case SEASON_TYPE_WEEKDAY:
 						$r['html'] .= '<tr>
     					<td><select class="form-control input-sm ajax-select2-no-search"  name="new['.$i.'][from_date]">';
 						for($j = 0;$j<7;$j++){
@@ -1947,7 +1959,7 @@ switch (Yii::$app->request->post('action')){
     					<td class=""><input type="text" class="sui-input w100 form-control input-sm" value="" name="new['.$i.'][title]" placeholder="Tiêu đề"/></td>';
 						$r['html'] .= '</tr>';
 						break;
-					case 5:
+					case SEASON_TYPE_TIME:
 						$r['html'] .= '<tr>
     					<td><select class="form-control input-sm ajax-select2-no-search"  name="new['.$i.'][from_date]">';
 						for($j = 0;$j<7;$j++){
@@ -6195,7 +6207,7 @@ $r['html'] .= '</div>';
 			if(!empty($new) && $season_category_id>0){
 				foreach ($new as $k=>$v){
 					switch ($f['type_id']){
-						case 5:
+						case SEASON_TYPE_TIME:
 							if(trim($v['title']) != ""){
 								$season_id = Yii::$app->zii->insert('weekend',[
 										'title'=>$v['title'],
@@ -6205,17 +6217,17 @@ $r['html'] .= '</div>';
 										//'from_time'=>isset($v['from_time']) ? $v['from_time'] : '00:00:00',
 										//'to_time'=>isset($v['to_time']) ? $v['to_time'] : '00:00:00',
 										'part_time'=>isset($v['part_time']) ? $v['part_time'] : 0,
-										'parent_id'=>$season_category_id,
+										//'parent_id'=>$season_category_id,
 										'type_id'=>$f['type_id']
 								]);
 								Yii::$app->db->createCommand()->insert($m->tableToSuppliers(),[
 										'season_id'=>$season_id,
 										'parent_id'=>$season_category_id,
 										'supplier_id'=>$supplier_id,
-										'type_id'=>10])->execute();
+										'type_id'=>$f['type_id']])->execute();
 							}
 							break;
-						case 3: case 4: 
+						case SEASON_TYPE_WEEKEND: case SEASON_TYPE_WEEKDAY: 
 							if(trim($v['title']) != "" && trim($v['from_time']) != "" && trim($v['to_time']) != ""){
 								$season_id = Yii::$app->zii->insert('weekend',[
 										'title'=>$v['title'],
@@ -6225,33 +6237,33 @@ $r['html'] .= '</div>';
 										'from_time'=>isset($v['from_time']) ? $v['from_time'] : '00:00:00',
 										'to_time'=>isset($v['to_time']) ? $v['to_time'] : '00:00:00',
 										//'part_time'=>isset($v['part_time']) ? $v['part_time'] : 0,
-										'parent_id'=>$season_category_id,
+										//'parent_id'=>$season_category_id,
 										'type_id'=>$f['type_id']
 								]);
 								Yii::$app->db->createCommand()->insert($m->tableToSuppliers(),[
 										'season_id'=>$season_id,
 										'parent_id'=>$season_category_id,
 										'supplier_id'=>$supplier_id,
-										'type_id'=>10])->execute();
+										'type_id'=>$f['type_id']])->execute();
 							}
 							break;
 						default :
 							if($v['from_date'] != "" && $v['to_date'] != ""){
 									
 								$season_id = Yii::$app->zii->insert($m->tableName(),[
-										'parent_id'=>$season_category_id,
+										//'parent_id'=>$season_category_id,
 										'title'=>$v['title'],
-										'type_id'=>10,
+										'type_id'=>$f['type_id'],
 										'sid'=>__SID__,
 										'from_date'=>ctime(['string'=>$v['from_date']]),
-										'to_date'=>ctime(['string'=>$v['to_date']]),
+										'to_date'=>ctime(['string'=>$v['to_date'],'format'=>'Y-m-d']) . ' 23:59:59',
 								]);
 							
 								Yii::$app->db->createCommand()->insert($m->tableToSuppliers(),[
 										'season_id'=>$season_id,
 										'parent_id'=>$season_category_id,
 										'supplier_id'=>$supplier_id,
-										'type_id'=>10])->execute();
+										'type_id'=>$f['type_id']])->execute();
 							
 							}
 							break;

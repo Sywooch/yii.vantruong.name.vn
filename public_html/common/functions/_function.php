@@ -1651,10 +1651,10 @@ function load_model($m = '',$c = false){
 		}
 		switch (Yii::$app->controller->module->id){
 			case 'app-frontend':
-				$model_name = 'app\models\\'.$model_name;
+				$model_name = '\app\models\\'.$model_name;
 				break;
 			default:
-				$model_name = 'app\modules\\'.(Yii::$app->controller->module->id)
+				$model_name = '\app\modules\\'.(Yii::$app->controller->module->id)
 				.'\models\\'.$model_name; 
 				break;
 		}
@@ -2706,7 +2706,7 @@ function getPriceHeaderButton($supplier_id = 0,$o = []){
 						$html .= '<button '.($price_type != "" ? 'data-price_type="'.$price_type.'"' : '').' data-controller_code="'.($controller_code).'" '.($type_id != "" ? 'data-type_id="'.$type_id.'"' : '').' data-toggle="tooltip" data-placement="top" title="Thêm phương tiện vào bảng giá, một phương tiện có thể có nhiều mức giá (áp dụng khi tính theo km) tùy theo độ dài quãng đường." data-required-save="true" data-load="new" data-supplier_id="'.$supplier_id.'" data-title="Thêm phương tiện" type="button" onclick="open_ajax_modal(this);" data-class="w60" data-action="add-more-vehicle-to-supplier-price" class="btn btn-sm btn-success btn-data-required-save"><i class="fa fa-cab"></i> Phương tiện</button>';
 						break;
 					case 'distance':
-						$html .= '<button '.($price_type != "" ? 'data-price_type="'.$price_type.'"' : '').' data-controller_code="'.($controller_code).'" '.($type_id != "" ? 'data-type_id="'.$type_id.'"' : '').' data-toggle="tooltip" data-placement="top" title="Thêm chặng xe vào bảng giá, mỗi chặng có thể có nhiều mức giá tùy theo thời điểm (xem thêm mục cài đặt mùa)" data-required-save="true" data-load="new" data-supplier_id="'.$supplier_id.'" data-title="Thêm chặng di chuyển" type="button" onclick="open_ajax_modal(this);" data-class="w60" data-action="add-more-distance-to-supplier-price" class="btn btn-sm btn-success btn-data-required-save"><i class="fa fa-cab"></i> Chặng xe</button>';
+						$html .= '<button '.($price_type != "" ? 'data-price_type="'.$price_type.'"' : '').' data-controller_code="'.($controller_code).'" '.($type_id != "" ? 'data-type_id="'.$type_id.'"' : '').' data-toggle="tooltip" data-placement="top" title="Thêm chặng xe vào bảng giá, mỗi chặng có thể có nhiều mức giá tùy theo thời điểm (xem thêm mục cài đặt mùa)" data-required-save="true" data-load="new" data-supplier_id="'.$supplier_id.'" data-title="Thêm chặng di chuyển" type="button" onclick="open_ajax_modal(this);" data-class="w60" data-action="add-more-distance-to-supplier-price" class="btn btn-sm btn-success btn-data-required-save"><i class="fa fa-cab"></i> Chặng vận chuyển</button>';
 						break;
 				}				
 			}else{
@@ -3398,7 +3398,7 @@ function getSupplierVehiclePrices2($supplier_id = 0, $o = []){
 			$h['menu'] = true;
 			$l = \app\modules\admin\models\Menus::getMenus(['supplier_id'=>$supplier_id]);
 			break;
-		case TYPE_ID_VECL:
+		case TYPE_ID_VECL: case TYPE_ID_SHIP:
 			//$l = \app\modules\admin\models\Cars::getPrices(['supplier_id'=>$supplier_id]);
 			$h['distance'] = true;
 			break;
@@ -3733,6 +3733,7 @@ function loadTourProgramDetail($o = []){
 							'day'=>$i,
 							'time'=>$j,
 							'service_id'=>$sv['id'],
+							
 							'type_id'=>$sv['type_id'],
 							'nationality'=>$v['nationality'],
 							'total_pax'=>$v['guest'],

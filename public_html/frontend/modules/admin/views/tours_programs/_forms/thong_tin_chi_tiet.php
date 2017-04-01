@@ -9,9 +9,23 @@ $prices = Yii::$app->zii->getServiceDetailPrices([
 		'total_pax'=>$v['guest'],
 		'from_date'=>$v['from_date']
 ]);
+ 
+
+$prices = \app\modules\admin\models\Suppliers::getSeasons([
+		'date'=>'08/03/2017',
+		'supplier_id'=>5
+		
+]
+		);
 
 view($prices);
-
+/*foreach ((new \yii\db\Query)->from('seasons')->all() as $k1=>$v1){
+	view($v1['to_date']);
+	Yii::$app->db->createCommand()->update('seasons',['to_date'=>date("Y-m-d 23:59:59:59",strtotime($v1['to_date']))],[
+			'id'=>$v1['id']
+	])->execute();
+}
+*/
 ?>
 <div class="col-sm-12 bang-thong-tin-chung" style=""><div class="row">
 <div class="" style="margin-top: 10px">

@@ -1489,6 +1489,7 @@ class Zii extends yii\base\Object
 				case TYPE_ID_HOTEL: // Khách sạn
 					$r['currency'] = 1;
 					$r['price1'] = 0;
+					//view(\app\modules\admin\models\Suppliers::getNationalityGroup($nationality, $service_id));
 					break;
 			}
 		}
@@ -1506,12 +1507,14 @@ class Zii extends yii\base\Object
 		switch ($code){
 			case TYPE_ID_HOTEL:
 			case TYPE_ID_SHIP_HOTEL:
+			
 				return '{{%rooms_to_prices}}';
 				break;
 			case TYPE_ID_REST:
 				return '{{%menus_to_prices}}';
 				break;	
 			case TYPE_ID_VECL:
+			case TYPE_ID_SHIP:
 				return $price_type == 2 ? '{{%distances_to_prices}}' : '{{%vehicles_to_prices}}';
 				break;
 				
@@ -1845,7 +1848,9 @@ class Zii extends yii\base\Object
 		}else{
 			$date = ctime(['string'=>$date,'format'=>'Y-m-d']);
 		}
-		// 
+		// get quotation
+		$quotation = \app\modules\admin\models\Suppliers::getQuotation($date,$supplier_id);
+		$quotation_id = !empty($quotation) ? $quotation['id'] : 0;
 		
 		
 	}
