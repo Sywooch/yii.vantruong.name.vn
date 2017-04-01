@@ -1839,13 +1839,14 @@ class Zii extends yii\base\Object
 	
 	
 	
-	public function getDateInfo($date = ''){
+	public function getProgramInfoFromDate($date = '0000-00-00', $supplier_id = 0){
 		if(!check_date_string($date)){
 			$date = date('Y-m-d');
 		}else{
 			$date = ctime(['string'=>$date,'format'=>'Y-m-d']);
 		}
-		//
+		// 
+		
 		
 	}
 	
