@@ -13,7 +13,7 @@ $prices = Yii::$app->zii->getServiceDetailPrices([
 
 $prices = \app\modules\admin\models\Suppliers::getSeasons([
 		'date'=>'10/03/2017',
-		'supplier_id'=>5,
+		'supplier_id'=>11,
 		'time_id'=>1
 		
 ]

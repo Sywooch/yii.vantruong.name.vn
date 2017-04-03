@@ -159,7 +159,7 @@ class Suppliers extends Customers
 		])
 		
 		;
-		view($query->createCommand()->getRawSql());
+		//view($query->createCommand()->getRawSql());
 		
 		$r['time_day'] = $query->orderBy(['b.price_type'=>SORT_ASC])->all();
 		
