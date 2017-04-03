@@ -37,7 +37,8 @@ if(!empty($lb)){
 ';
 				if(!empty($vb['listItem'])){
 					foreach ($vb['listItem'] as $k=>$v){
-						$link = cu([DS.$v['url']]);
+						//view($v['url_link']);
+						$link = isset($v['url_link']) ? $v['url_link'] : cu([DS.$v['url']]);
 						echo '<div class="center fusion-column content-box-column content-box-column-1 col-lg-4 col-md-4 col-sm-4 fusion-content-box-hover content-box-column-first-in-row">
 <div class="col content-wrapper link-area-link-icon link-type-text icon-hover-animation-fade" style="background-color:transparent;">
 <div class="heading heading-with-icon icon-left"><a class="heading-link" href="'.$link.'" >
@@ -107,7 +108,7 @@ echo '<div class="fusion-clearfix"></div><div class="fusion-clearfix"></div></di
   
 if(!empty($vb['listItem'])){
 	foreach ($vb['listItem'] as $k=>$v){
-		$link = cu([DS.$v['url']]);
+		$link = isset($v['url_link']) ? $v['url_link'] : cu([DS.$v['url']]);;
 	
   
 echo '<div class="item" ><div class="fusion-post-wrapperx col-sm-12">			
@@ -160,7 +161,8 @@ echo '</div><div class="clear"></div>
 				 
 				if(!empty($vb['listItem'])){
 					echo '<div class="box-content col-xs-12 col-sm-6">';
-					$v = $vb['listItem'][0];$url = cu([DS . $v['url']]);
+					$v = $vb['listItem'][0];
+					$url = isset($v['url_link']) ? $v['url_link'] : cu([DS.$v['url']]);
 					//
 					echo '<div class="list-news-01"><div class="fl100 pr big-item">
 							
@@ -178,7 +180,7 @@ echo '</div><div class="clear"></div>
 					echo '<div class="box-content col-xs-12 col-sm-6 "><div class="list-news-01">';
 					foreach ($vb['listItem'] as $k=>$v){
 						if($k>0){
-						$url = cu([DS . $v['url']]);
+						$url = isset($v['url_link']) ? $v['url_link'] : cu([DS.$v['url']]);
 						echo '<div class="fl100 pr item">
 								
 								<a href="'.$url.'">
@@ -213,7 +215,7 @@ echo '</div><div class="clear"></div>
   
 if(!empty($vb['listItem'])){
 	foreach ($vb['listItem'] as $k=>$v){
-		$link = cu([DS.$v['url']]);
+		$link = isset($v['url_link']) ? $v['url_link'] : cu([DS.$v['url']]);;
 	
   
 echo '<div class="item" ><div class="fusion-post-wrapperx col-sm-12">';		

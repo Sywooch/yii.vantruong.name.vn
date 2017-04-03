@@ -442,7 +442,15 @@ class SiteController extends Controller
 
             return $this->refresh();
         } else {
-            return $this->render(__TEMP_NAME__ .DS . Yii::$app->controller->action->id, [
+        	//
+        	$temp_id = isset(Yii::$site['settings']['contact']['temp_id']) ? Yii::$site['settings']['contact']['temp_id'] : '01';
+        	$fp = Yii::getAlias("@app/views/site/forms/contact/$temp_id.php");
+        	if(!file_exists($fp)){
+        		$temp_id = '01';
+        		$fp = Yii::getAlias("@app/views/site/forms/contact/01.php");
+        	}
+        	//
+            return $this->render('forms/contact/'.$temp_id, [
                 'model' => $model,
             ]);
         }

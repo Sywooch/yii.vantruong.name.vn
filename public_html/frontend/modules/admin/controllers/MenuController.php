@@ -88,6 +88,7 @@ class MenuController extends CrsController
     		$f['route'] = isset($f['route']) ? $f['route'] : $f['type'];
     		
     		$f['sid'] = __SID__; $id = 0;
+    		$biz = post('biz',[]);
     		$titles = explode(';', $f['title']);
     		foreach ($titles as $title){
     			if(trim($title) != ""){
@@ -98,9 +99,14 @@ class MenuController extends CrsController
 	    			$this->model->updatePosition($id);
 	    			$this->model->updateDestination($id);
 	    			 			 
-	    			Slugs::updateSlug($f['url'],$id,$f['type'],0,post('biz',[]));
-	    			Yii::$app->db->createCommand()->update(Menu::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],['id'=>$id])->execute();
-	    			//if(isset($old['url']) && $old['url'] != $f['url']){
+	    			
+	    			Slugs::updateSlug($f['url'],$id,$f['type'],0,$biz);
+	    			if(isset($biz['manual_link']) && $biz['manual_link'] == 'on'){
+	    				Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>$biz['url_link']],$con)->execute();
+	    			}else {
+	    				Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],$con)->execute();
+	    				//
+	    			}//if(isset($old['url']) && $old['url'] != $f['url']){
 	    			Yii::$app->zii->generateSitemap([
 	    				'updateDatabase'=>true
 	    			]);
@@ -206,10 +212,17 @@ class MenuController extends CrsController
     		
     		//$this->model->updateAllLevel($f['parent_id']);
     		//view(Yii::$site['seo']);
-    		 
+    		$biz = post('biz',[]);
+    		Slugs::updateSlug($f['url'],$id,$f['type'],0,$biz);
+    		if(isset($biz['manual_link']) && $biz['manual_link'] == 'on'){
+    			Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>$biz['url_link']],$con)->execute();
+    		}else {
+    			Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],$con)->execute();
+    			//
+    		}
     		//view(Yii::$app->zii->getUrl($f['url']),true);
-    		Slugs::updateSlug($f['url'],$id,$f['type'],0,post('biz',[]));
-    		Yii::$app->db->createCommand()->update(Menu::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],$con)->execute();
+    		//Slugs::updateSlug($f['url'],$id,$f['type'],0,post('biz',[]));
+    		//Yii::$app->db->createCommand()->update(Menu::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],$con)->execute();
     		$btn = post('btnSubmit');
     		$tab = post('currentTab');
     		

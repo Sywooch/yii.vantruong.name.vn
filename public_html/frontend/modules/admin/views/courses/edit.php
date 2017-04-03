@@ -9,8 +9,10 @@
 <ul class="nav form-edit-tab nav-tabs" role="tablist">
 <?php
 echo '<li role="presentation" class="active"><a href="#tab-general" role="tab" data-toggle="tab">'.getTextTranslate(68,ADMIN_LANG).'</a></li>';
+
 echo '<li role="presentation" class=""><a href="#tab-detail" role="tab" data-toggle="tab">'.getTextTranslate(69).'</a></li>';
-?>
+
+echo '<li role="presentation" class=""><a href="#tab-seo" role="tab" data-toggle="tab">'. getTextTranslate(71,ADMIN_LANG).'</a></li>';?>
 </ul>
 
 <div class="tab-content edit-form-content-tab">
@@ -65,6 +67,7 @@ echo Ad_edit_show_check_field([
 ?>   
 </div></div> 
 <?php include_once(dirname(__FILE__).DIRECTORY_SEPARATOR.'/_forms/_tab_detail.php');?>
+<?php include_once(dirname(__FILE__).DIRECTORY_SEPARATOR.'../content/_forms/_forms/_tab_seo.php');?>
 <div role="tabpanel" class="tab-panel" id="tab-help">
    <div class="fl100">
         <div class="p-content f12e help-panel-<?php echo Yii::$app->controller->id;?>">

@@ -112,10 +112,17 @@ class ContentController extends CrsController
 			    		$this->model->updateTask($id);
 			    		$this->model->updateFilters($id);   
 			    		$this->model->updateAttrType($id, $f['type']);			    					    		
-			    		Slugs::updateSlug($f['url'],$id,$f['type'],1,post('biz',[]));
+			    		//Slugs::updateSlug($f['url'],$id,$f['type'],1,post('biz',[]));
 			    		$con = array('id'=> $id,'sid'=>__SID__);
-			    		Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],$con)->execute();
-			    		
+			    		//Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],$con)->execute();
+			    		$biz = post('biz',[]);
+			    		Slugs::updateSlug($f['url'],$id,$f['type'],1,$biz);
+			    		if(isset($biz['manual_link']) && $biz['manual_link'] == 'on'){
+			    			Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>$biz['url_link']],$con)->execute();
+			    		}else {
+			    			Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],$con)->execute();
+			    			//
+			    		}
 			    		//
 			    		//view(CONTROLLER_CODE,true);
 			    		switch (getParam('type')){
@@ -212,10 +219,14 @@ class ContentController extends CrsController
     		$this->model->updateTask($id);
     		$this->model->updateFilters($id);
     		$this->model->updateAttrType($id, $f['type']);
-    		Slugs::updateSlug($f['url'],$id,$f['type'],1,post('biz',[]));
-    		Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],$con)->execute();
+    		$biz = post('biz',[]);
+    		Slugs::updateSlug($f['url'],$id,$f['type'],1,$biz);
+    		if(isset($biz['manual_link']) && $biz['manual_link'] == 'on'){
+    			Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>$biz['url_link']],$con)->execute();
+    		}else {
+    			Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],$con)->execute();
     		//
-    		 
+    		}
     		switch (getParam('type')){
     			case FORM_TYPE_TESTIMONIALS:
     				Yii::$app->db->createCommand()->delete('item_to_courses',['item_id'=>$id])->execute();
