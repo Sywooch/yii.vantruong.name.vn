@@ -2584,7 +2584,7 @@ function showState($state = 0, $type_id = 0){
 function read_date($number = 0, $lang = __LANG__){
 	$date = '';
 	switch ($number){
-		case 0:
+		case 0: case 7:
 			$date = 'Chủ nhật';
 			break;
 		default:
@@ -4029,3 +4029,11 @@ function copyToRemoteServer($o = []){
 	}
 }
  
+function configPartTime(){
+	return [
+			0=>['from_time'=>'00:00:00','to_time'=>'09:59:59'],
+			1=>['from_time'=>'10:00:00','to_time'=>'13:59:59'],
+			2=>['from_time'=>'14:00:00','to_time'=>'17:59:59'],
+			3=>['from_time'=>'18:00:00','to_time'=>'23:59:59'],
+	];
+}

@@ -1952,7 +1952,7 @@ switch (Yii::$app->request->post('action')){
     					<td><input type="text" class="sui-input form-control input-sm ajax-timepicker" value="" name="new['.$i.'][from_time]" placeholder="Thời gian bắt đầu"/></td>
     					<td><select class="form-control input-sm ajax-select2-no-search" name="new['.$i.'][to_date]">';
 						for($j = 0;$j<7;$j++){
-							$r['html'] .= '<option value="'.$j.'">'.read_date($j).'</option>';
+							$r['html'] .= '<option value="'.($j == 0 ? 7 : $j).'">'.read_date($j).'</option>';
 						}
 						$r['html'] .= '</select></td>
     					<td class="center "><input type="text" class="sui-input w100 form-control input-sm ajax-timepicker" value="" name="new['.$i.'][to_time]" placeholder="Thời gian kết thúc"/></td>
@@ -1969,7 +1969,7 @@ switch (Yii::$app->request->post('action')){
     					 
     					<td><select class="form-control input-sm ajax-select2-no-search" name="new['.$i.'][to_date]">';
 						for($j = 0;$j<7;$j++){
-							$r['html'] .= '<option value="'.$j.'">'.read_date($j).'</option>';
+							$r['html'] .= '<option value="'.($j == 0 ? 7 : $j).'">'.read_date($j).'</option>';
 						}
 						$r['html'] .= '</select></td>
     					<td><select class="form-control input-sm ajax-select2-no-search" name="new['.$i.'][part_time]">';
@@ -6135,7 +6135,7 @@ $r['html'] .= '</div>';
     					<td><input type="text" class="sui-input form-control input-sm ajax-timepicker" value="" name="new['.$i.'][from_time]" placeholder="Thời gian bắt đầu"/></td>
     					<td><select class="form-control input-sm ajax-select2-no-search" name="new['.$i.'][to_date]">';
 				for($j = 0;$j<7;$j++){
-					$r['html'] .= '<option value="'.$j.'">'.read_date($j).'</option>';
+					$r['html'] .= '<option value="'.($j == 0 ? 7 : $j).'">'.read_date($j).'</option>';
 				}
 				$r['html'] .= '</select></td>
     					<td class="center "><input type="text" class="sui-input w100 form-control input-sm ajax-timepicker" value="" name="new['.$i.'][to_time]" placeholder="Thời gian kết thúc"/></td>
