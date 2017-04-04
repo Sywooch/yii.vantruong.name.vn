@@ -1224,7 +1224,7 @@ class Zii extends yii\base\Object
 	public function getConfigs($code = false, $lang = __LANG__,$sid=__SID__,$cached=true){
 		return Yii::$app->getConfigs($code,$lang,$sid,$cached);
 	}
-	public function getTextRespon($o = array()){
+	public function getTextRespon($o = []){
 		$id = is_array($o) && isset($o['id']) ? $o['id'] : 0;
 		$category_id = is_array($o) && isset($o['category_id']) ? $o['category_id'] : 0;
 		$lang = is_array($o) && isset($o['lang']) ? $o['lang'] : __LANG__;

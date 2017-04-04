@@ -109,26 +109,78 @@ switch (post('action')){
 		exit;
 		break;
 	case 'send_contact_request':
+		$model = new \frontend\models\ContactForm();
+		if ($model->load(Yii::$app->request->post()) && $model->validate()) {
 		$f = post('f',[]);
-		$text1 = Yii::$app->zii->getTextRespon(array('code'=>'RP_ORDER_ADMIN', 'show'=>false));
-		//$text2 = Yii::$app->zii->getTextRespon(array('code'=>'RP_ORDER_CUS', 'show'=>false));
-		$form1 = replace_text_form($regex, uh($text1['value']));
+		if(isset($_POST['ContactForm'])){
+			$f = post('ContactForm');
+			if(isset($f['verifyCode'])){
+				unset($f['verifyCode']);
+			}
+			
+		}
+		
+		$f = splitName($f); 
 		$fx = Yii::$app->zii->getConfigs('CONTACTS');
 		$fx1 = Yii::$app->zii->getConfigs('EMAILS_RESPON');
+		$from_email = isset($f['guest']['email']) ? $f['guest']['email'] : $f['email'];
+		$from_name = isset($f['guest']['full_name']) ? $f['guest']['full_name'] : $f['lname'] . ' ' . $f['fname'];
+		$regex = array(
+				'{LOGO}' => isset(Yii::$site['logo']['logo']['image']) ? '<img src="'.Yii::$site['logo']['logo']['image'].'" style="max-height:100px"/>' : '',
+				'{DOMAIN}' => __DOMAIN__,
+				//'{ORDER_NUMBER}'=>$order_code,
+				'{ORDER_TIME}' => date("d/m/Y H:i:s"),
+				'{CUSTOMER_NAME}' =>$from_name,
+				'{CUSTOMER_ADDRESS}' => isset($f['guest']['address']) ? $f['guest']['address'] : $f['address'],
+				'{CUSTOMER_EMAIL}' => $from_email,
+				'{CUSTOMER_PHONE}' => isset($f['guest']['phone']) ? $f['guest']['phone'] : $f['phone'],
+				// f[receiver]
+				'{CUSTOMER_RECEIVER}' => (isset($f['receiver']) && $f['receiver'] == 'on' ? '' :
+						(isset($f['guest2']) && !empty($f['guest2']) ? 'Người nhận:&nbsp;<strong>'.$f['guest2']['full_name'].'</strong>&nbsp;- Địa chỉ:&nbsp;<strong>'.$f['guest2']['address'].'</strong>&nbsp;- ĐT:&nbsp;<strong>'.$f['guest2']['phone'].'</strong>' : '') ),
+				'{ORDER_TAX_INFOMATION}' => (isset($f['tax']) && $f['tax'] == 'on' ? '<b>Thôn tin xuất hóa đơn:</b></br>
+							Tên công ty: '.$f['company']['name'].'<br/>
+							Địa chỉ thuế: '.$f['company']['address'].'<br/>
+							Mã số thuế: '.$f['company']['tax'].'<br/>
+							' : ''),
+				//
+				//'{ORDER_LINK}'=>$order_link,
+				//'{PRODUCTS_LIST}' => $plist,
+				'{ORDER_OTHER_REQUEST}' => isset($f['other_request']) ? $f['other_request'] : '',
+				'{ORDER_PAYMETHOD}' => isset($f['pay']['method']) ? $f['pay']['method'] : '',
+				'{ORDER_PAY_METHOD}' => isset($f['pay']['method']) ? $f['pay']['method'] : '',
+				'{ORDER_TRANSPORT}' => isset($f['transport']) ? $f['transport']: '',
+				'{CURRENT_COMPANY_NAME}'=> $fx['name'],
+				'{CURRENT_COMPANY_INFOMATION}' => !empty($fx) ? '<p>'.$fx['name'].'</p> 
+					<p>Địa chỉ: '.$fx['address'].'</p>
+					<p>Điện thoại: '.$fx['phone'].'</p>'.($fx['hotline'] != "" ? '<p>Hotline: '.$fx['hotline'].'</p>' : '').'
+					<p>Email: '.$fx['email'].'</p>' : '',
+				'{REQUEST_CONTENT}'=>isset($f['body']) ? $f['body'] : '',
+				'{USER_AGENT_IP}' => getClientIP()
+		
+		);
+		 
+		$text1 = Yii::$app->zii->getTextRespon(['code'=>'RP_CONTACT', 'show'=>false]);
+		
+		
+		$form1 = replace_text_form($regex, uh($text1['value']));
+		
 		$fx['sender'] = $fx['email'];
 		$fx['short_name']  = $fx['short_name'] != "" ? $fx['short_name'] : $fx['name'];
 		if(isset($fx1['RP_CONTACT'])){
 			$fx['email'] = $fx1['RP_CONTACT']['email'] != "" ? $fx1['RP_CONTACT']['email'] : $fx['email'];
 		}
+		//
 		
+	 
+		//
 		Yii::$app->zii->sendEmail(array(
 				'subject'=>replace_text_form($regex , $text1['title']) ."  (".date("H:i d/m/Y").")",
 				'body'=>$form1,
-				'from'=>$f['guest']['email'],
-				//'from'=>'noreply.thaochip@gmail.com',
-				'fromName'=>$fx['short_name']  . ' - ' . $f['guest']['full_name'],
-				'replyTo'=>$f['guest']['email'],
-				'replyToName'=>$f['guest']['full_name'],
+				'from'=>$from_email,
+				
+				'fromName'=>$from_name,
+				'replyTo'=>$from_email,
+				'replyToName'=>$from_name,
 				'to'=>$fx['email'],'toName'=>$fx['short_name']
 		));
 		$notis = [
@@ -136,11 +188,14 @@ switch (post('action')){
 				 
 				//'uid'=>Yii::$app->user->id
 		];
-		app\models\Notifications::insertNotification($notis);
+		\app\models\Notifications::insertNotification($notis);
 		echo json_encode([
 			'callback'=>true,
-			'callback_function'=>'showModal(\'Thông báo\',\'Gửi liên hệ thành công. Chúng tôi sẽ phản hồi lại trong thời gian sớm nhất. Xin cảm ơn !\')'
+			'callback_function'=>'showModal(\'Thông báo\',\'Gửi liên hệ thành công. Chúng tôi sẽ phản hồi lại trong thời gian sớm nhất. Xin cảm ơn !\');window.setTimeout(function(){window.location=\'/\'},3000);',
+			'delay'=>3000,
+			'redirect'=>'/'	
 		]);exit;
+		}
 		break;
 	case 'submit-orders':
 		$l = Yii::$app->zii->getCart();

@@ -11,10 +11,10 @@ $this->registerCssFile(__LIBS_DIR__ . '/slider/slick/slick-theme.css');
 //$this->registerCssFile(__RSDIR__ . '/css/flip-countdown.css');
 //$this->registerCssFile(__RSDIR__ . '/css/event.css');
 //$this->registerCssFile(__RSDIR__ . '/css/teacher.css');
-$this->registerCssFile('http://fonts.googleapis.com/css?family=Roboto%3A&#038;ver=4.4.8');
+$this->registerCssFile('https://fonts.googleapis.com/css?family=Roboto%3A&#038;ver=4.4.8');
 //$this->registerCssFile(__RSDIR__ . '/css/ilightbox.css');
 //$this->registerCssFile(__RSDIR__ . '/css/animations.css');
-//$this->registerCssFile(__RSDIR__ . '/css/responsive.css');
+//$this->registerCssFile(__RSDIR__ . '/css/responsive.css'); 
  
 ?>
 <header id="header" class="header_out_side">

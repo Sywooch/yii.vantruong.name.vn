@@ -39,9 +39,10 @@ if(!empty($lb)){
 					foreach ($vb['listItem'] as $k=>$v){
 						//view($v['url_link']);
 						$link = isset($v['url_link']) ? $v['url_link'] : cu([DS.$v['url']]);
+						$target = isset($v['target']) ? $v['target'] : '_self';
 						echo '<div class="center fusion-column content-box-column content-box-column-1 col-lg-4 col-md-4 col-sm-4 fusion-content-box-hover content-box-column-first-in-row">
 <div class="col content-wrapper link-area-link-icon link-type-text icon-hover-animation-fade" style="background-color:transparent;">
-<div class="heading heading-with-icon icon-left"><a class="heading-link" href="'.$link.'" >
+<div class="heading heading-with-icon icon-left"><a target="'.$target.'" class="heading-link" href="'.$link.'" >
 <div class="image">'.getImage([
 		'src'=>$v['icon'],
 		'w'=>250,'h'=>250
@@ -169,7 +170,7 @@ echo '</div><div class="clear"></div>
 								<a href="'.$url.'">
 								<span class="big-item-img ">'.getImage(['src'=>$v['icon'],'w'=>600,'alt'=>uh($v['title']),'attrs'=>['class'=>'w100']]).'</span>
 								<h2 class="big-item-name big-item-title">'.uh($v['title']).'</h2>	</a>
-								<p class="big-item-post-by">'.($v['post_by_name'] != "" ? 'by '.$v['post_by_name'] : '').'  '.'<span class="item-time"> - '.date("d/m/Y",strtotime($v['time'])).'</span></p>
+								<p class="big-item-post-by hide">'.($v['post_by_name'] != "" ? 'by '.$v['post_by_name'] : '').'  '.'<span class="item-time"> - '.date("d/m/Y",strtotime($v['time'])).'</span></p>
 								<p class="big-item-description">'.uh($v['info']).'</p>
 <p class="big-item-description big-item-summary">'.uh($v['summary']).'</p>
 								<a href="" class="big-item-read-more">'.getTextTranslate(34).'</a>
@@ -186,7 +187,7 @@ echo '</div><div class="clear"></div>
 								<a href="'.$url.'">
 								<span class="item-img ">'.getImage(['src'=>$v['icon'],'w'=>200,'alt'=>uh($v['title']),'attrs'=>['class'=>'w100']]).'</span>
 								<h2 class="item-name item-title">'.uh($v['title']).'</h2>	</a>
-								<p class="item-post-by">'.($v['post_by_name'] != "" ? 'by '.$v['post_by_name'] : '').'  '.'<span class="item-time"> - '.date("d/m/Y",strtotime($v['time'])).'</span></p>
+								<p class="item-post-by hide">'.($v['post_by_name'] != "" ? 'by '.$v['post_by_name'] : '').'  '.'<span class="item-time"> - '.date("d/m/Y",strtotime($v['time'])).'</span></p>
 								<p class="item-description">'.uh($v['info']).'</p>
 								<a href="'.$url.'" class="item-read-more">'.getTextTranslate(34).'</a>
 						</div>';

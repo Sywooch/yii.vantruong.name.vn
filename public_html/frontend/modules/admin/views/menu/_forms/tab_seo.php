@@ -20,8 +20,9 @@ echo '<p class="preview-description">'.(isset($v['seo']['description']) ? $v['se
          </div>
          
          <div class="form-group">
-          <label class="col-sm-12 control-label">Rel</label>
-          <div class="col-sm-12">
+         <div class="col-sm-6 col-xs-12"><div class="row">
+         <label class="col-sm-12 control-label">Rel</label>
+         <div class="col-sm-12">
 
             <select data-placeholder="Rel" data-minimum-results-for-search="Infinity" class="form-control input-sm select2" name="biz[rel]">
             <?php 
@@ -47,6 +48,33 @@ echo '<p class="preview-description">'.(isset($v['seo']['description']) ? $v['se
             </select>
 
           </div>
+         </div></div>
+         
+         <div class="col-sm-6 col-xs-12"><div class="row">
+         <label class="col-sm-12 control-label">Target</label>
+         <div class="col-sm-12">
+
+            <select data-placeholder="Rel" data-minimum-results-for-search="Infinity" class="form-control input-sm select2" name="biz[target]">
+            <?php 
+            $rels = array(
+            		array('id'=>'_self','name'=>getTextTranslate(118,ADMIN_LANG)),
+            		array('id'=>'_blank','name'=>'_blank'),
+            		array('id'=>'_parent','name'=>'_parent'),
+            		array('id'=>'_top','name'=>'_top'),
+            		 
+            		
+            );
+            foreach ($rels as $k=>$rel){
+            	echo '<option '.(isset($v['target']) && $rel['id'] == $v['target'] ? 'selected' : '').' value="'.$rel['id'].'">'.$rel['name'].'</option>';
+            }
+            ?>
+            </select>
+
+          </div>
+         </div></div>
+         
+          
+          
          </div>  
          <div class="form-group">
           <label for="inputSeoTitle" class="col-sm-12 control-label"><?php echo getTextTranslate(100,ADMIN_LANG);?></label>

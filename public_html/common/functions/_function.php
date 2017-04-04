@@ -3834,7 +3834,7 @@ function splitName($f){
 	if(isset($f['lname']) && $f['lname'] != ""){
 		//return $f;
 	}else{
-		view($spName);
+		//view($spName);
 		$n = explode(' ', trim($spName));
 		$f['fname'] = $n[count($n)-1];
 		if(count($n) > 1){
@@ -4036,4 +4036,19 @@ function configPartTime(){
 			2=>['from_time'=>'14:00:00','to_time'=>'17:59:59'],
 			3=>['from_time'=>'18:00:00','to_time'=>'23:59:59'],
 	];
+}
+function getClientIP(){
+	if (!empty($_SERVER['HTTP_CLIENT_IP']))   //check ip from share internet
+	{
+		$ip=$_SERVER['HTTP_CLIENT_IP'];
+	}
+	elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))   //to check ip is pass from proxy
+	{
+		$ip=$_SERVER['HTTP_X_FORWARDED_FOR'];
+	}
+	else
+	{
+		$ip=$_SERVER['REMOTE_ADDR'];
+	}
+	return $ip;
 }
