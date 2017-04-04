@@ -188,4 +188,10 @@ class Suppliers extends Customers
 		return $query;
 	}
 	
+	/*
+	 * 	 
+	 */
+	
+	
+	
 }
