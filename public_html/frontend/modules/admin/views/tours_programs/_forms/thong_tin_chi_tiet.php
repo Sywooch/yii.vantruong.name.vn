@@ -11,10 +11,11 @@ $prices = Yii::$app->zii->getServiceDetailPrices([
 ]);
  
 
-$prices = \app\modules\admin\models\Suppliers::getSeasons([
+$prices = \app\modules\admin\models\Suppliers::getNationalityGroup([
 		'date'=>'10/03/2017',
 		'supplier_id'=>5,
-		'time_id'=>3
+		'total_pax'=>30,
+		'nationality_id'=>3
 		
 ]
 		);

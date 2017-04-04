@@ -11,7 +11,9 @@ class Suppliers extends Customers
 	/*
 	 * Lấy báo giá của đơn vị theo ngày đã nhập 
 	 */
-	public static function getQuotation($date = '', $supplier_id = 0){
+	public static function getQuotation($o = []){
+		$date = isset($o['date']) ? $o['date'] : date('Y-m-d');
+		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
 		if(!check_date_string($date)){
 			$date = date('Y-m-d');
 		}else{
@@ -30,7 +32,10 @@ class Suppliers extends Customers
 	 * Lấy nhóm quốc tịch từ địa danh đã chọn
 	 */
 	
-	public static function getNationalityGroup($nationality_id = 0, $supplier_id = 0){
+	public static function getNationalityGroup($o= []){
+		$nationality_id = isset($o['nationality_id']) ? $o['nationality_id'] : 0;
+		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;	
+				
 		$query = (new Query())->from(['a'=>NationalityGroups::tableName()])->where([
 				'a.id'=>(new Query())->from(['b'=>NationalityGroups::tableToLocal()])->where([
 						'b.local_id'=>$nationality_id
@@ -166,6 +171,21 @@ class Suppliers extends Customers
 		
 		
 		return $r;
+	}
+	
+	/*
+	 * Lấy dánh sách nhóm khách / Phòng	 
+	 */
+	public function getGuestGroup($o = []){
+		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
+		// Tổng số phòng (tính từ tổng số khách)
+		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
+		$query = (new Query())->from(['a'=>'rooms_groups'])->where([
+				'a.sid'=>__SID__,'a.parent_id'=>$supplier_id
+		])
+		->andWhere("$total_pax between a.pmin and a.pmax")
+		->one();
+		return $query;
 	}
 	
 }

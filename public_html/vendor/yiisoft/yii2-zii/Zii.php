@@ -1498,6 +1498,10 @@ class Zii extends yii\base\Object
 		return $r;
 	}
 	
+	public function getDefaultHotelPrices($o = []){
+		
+	}
+	
 	private function getPriceInfoFromDate($supplier_id, $date){
 		// Check quotation
 		
