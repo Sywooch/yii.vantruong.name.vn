@@ -1,22 +1,5 @@
 <?php 
-//curl --request POST --user 'yii:CHIP@123' --data 'package=unlimited' https://123.30.149.89:2020/CMD_API_PACKAGES_USER
-$prices = Yii::$app->zii->getServiceDetailPrices([
-		'item_id'=>$v['id'],
-		'day'=>0,
-		'time'=>0,
-		'service_id'=>16,
-		'type_id'=>4,
-		'nationality'=>$v['nationality'],
-		'total_pax'=>$v['guest']
-]);
-if(!empty($prices)){
-	$price = Yii::$app->zii->getServicePrice($prices['price1'],[
-			'item_id'=>$v['id'],
-			//'price'=>$prices['price1'],
-			'from'=>$prices['currency'],
-			'to'=>$v['currency']
-	]);
-}
+
 ?>
 <div class="table-responsive ">
 <div class="fl100 edit-form">

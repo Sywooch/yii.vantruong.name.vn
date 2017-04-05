@@ -306,57 +306,68 @@ class Application extends \yii\base\Application
 				}
 				$_route[0] = $r['route'];
 				//exit;
+				
 				if(!__IS_ADMIN__){
-					
-					switch ($r['item_type']){
-						case 1:
-							define('__IS_DETAIL__', true);
-							break;
-						case 3:
-							define('__IS_DETAIL__', true);
-							break;
-						default:
-							define('__IS_DETAIL__', false);
-							break;
-					}
 					define('__ITEM_ID__', $r['item_id']);
-					//
-					if(__IS_DETAIL__){
-						$r = (new Query())->from('{{%site_menu}}')->where([
-								'id'=>(new Query())->select(['category_id'])
-								->from('{{%items_to_category}}')
-								->where(['item_id'=>__ITEM_ID__])
-						])->one();
-						//
-						$item = (new Query())->from('{{%articles}}')->where([
-								'id'=>__ITEM_ID__
-						])->one();
-
-						Yii::$site['seo']['title'] = isset($item['seo']['title']) && $item['seo']['title'] != "" ? $item['seo']['title'] : $item['title'];
-						Yii::$site['seo']['description'] = isset($item['seo']['description']) && $item['seo']['description'] != "" ? $item['seo']['title'] : Yii::$site['seo']['description'];
-						Yii::$site['seo']['keyword'] = isset($item['seo']['keyword']) && $item['seo']['keyword'] != "" ? $item['seo']['title'] : Yii::$site['seo']['keyword'];
-						Yii::$site['seo']['og_image'] = $item['icon'];
-
-					}else{
-						$r = (new Query())->from('{{%site_menu}}')->where([
-								'id'=>__ITEM_ID__
-						])->one();
-						Yii::$site['seo']['title'] = isset($r['seo']['title']) && $r['seo']['title'] != "" ? $r['seo']['title'] : $r['title'];
-						Yii::$site['seo']['description'] = isset($r['seo']['description']) && $r['seo']['description'] != "" ? $r['seo']['title'] : Yii::$site['seo']['description'];
-						Yii::$site['seo']['keyword'] = isset($r['seo']['keyword']) && $r['seo']['keyword'] != "" ? $r['seo']['title'] : Yii::$site['seo']['keyword'];
-						Yii::$site['seo']['og_image'] = isset($r['icon']) ? $r['icon'] : '';
-					}
-					//__ROOT_CATEGORY_URL__
-					if($r['parent_id'] == 0){
-						$root = $r;
-					}else{
-						$root = (new Query())->from('{{%site_menu}}')
-						->where(['sid'=>__SID__])
-						->andWhere(['<','lft',$r['lft']])
-						->andWhere(['>','rgt',$r['rgt']])
-						->one();
+					switch ($r['item_type']){
+						case 1: //
+							define('__IS_DETAIL__', true);
+							$r = (new Query())->from('{{%site_menu}}')->where([
+									'id'=>(new Query())->select(['category_id'])
+									->from('{{%items_to_category}}')
+									->where(['item_id'=>__ITEM_ID__])
+							])->one();
+							//
+							$item = (new Query())->from('{{%articles}}')->where([
+									'id'=>__ITEM_ID__
+							])->one();
 							
+							Yii::$site['seo']['title'] = isset($item['seo']['title']) && $item['seo']['title'] != "" ? $item['seo']['title'] : $item['title'];
+							Yii::$site['seo']['description'] = isset($item['seo']['description']) && $item['seo']['description'] != "" ? $item['seo']['title'] : Yii::$site['seo']['description'];
+							Yii::$site['seo']['keyword'] = isset($item['seo']['keyword']) && $item['seo']['keyword'] != "" ? $item['seo']['title'] : Yii::$site['seo']['keyword'];
+							Yii::$site['seo']['og_image'] = $item['icon'];
+							
+							if(isset($r['parent_id']) && $r['parent_id'] == 0){
+								$root = $r;
+							}else{
+								$root = (new Query())->from('{{%site_menu}}')
+								->where(['sid'=>__SID__])
+								->andWhere(['<','lft',$r['lft']])
+								->andWhere(['>','rgt',$r['rgt']])
+								->one();
+									
+							}
+							break;
+						case 3: //
+					 
+							define('__IS_DETAIL__', true);
+							break;
+						case 0: 
+							define('__IS_DETAIL__', false);
+							$r = (new Query())->from('{{%site_menu}}')->where([
+									'id'=>__ITEM_ID__
+							])->one();
+							Yii::$site['seo']['title'] = isset($r['seo']['title']) && $r['seo']['title'] != "" ? $r['seo']['title'] : $r['title'];
+							Yii::$site['seo']['description'] = isset($r['seo']['description']) && $r['seo']['description'] != "" ? $r['seo']['title'] : Yii::$site['seo']['description'];
+							Yii::$site['seo']['keyword'] = isset($r['seo']['keyword']) && $r['seo']['keyword'] != "" ? $r['seo']['title'] : Yii::$site['seo']['keyword'];
+							Yii::$site['seo']['og_image'] = isset($r['icon']) ? $r['icon'] : '';
+							
+							if(isset($r['parent_id']) && $r['parent_id'] == 0){
+								$root = $r;
+							}else{
+								$root = (new Query())->from('{{%site_menu}}')
+								->where(['sid'=>__SID__])
+								->andWhere(['<','lft',$r['lft']])
+								->andWhere(['>','rgt',$r['rgt']])
+								->one();
+									
+							}
+							break;
 					}
+					
+					 
+					//__ROOT_CATEGORY_URL__
+					
 					 
 					define('__ROOT_CATEGORY_ID__', isset($root['id']) ? $root['id'] : 0);
 					define('__ROOT_CATEGORY_NAME__', isset($root['title']) ? $root['title'] : '');
@@ -375,16 +386,16 @@ class Application extends \yii\base\Application
 					define('CONTROLLER_LFT', $r['lft']);
 					define('CONTROLLER_RGT', $r['rgt']);
 				}
-				define('__CATEGORY_NAME__',!empty($r) ? uh($r['title']) : '');
+				define('__CATEGORY_NAME__',isset($r['title']) ? uh($r['title']) : '');
 
-				define('__CATEGORY_URL__', !empty($r) ? $r['url'] : '');
+				define('__CATEGORY_URL__', isset($r['url']) ? $r['url'] : '');
 			}
 		}
 		//var_dump($r);exit;
 		defined('__IS_DETAIL__') or define('__IS_DETAIL__', true);
 		defined('__ITEM_ID__') or define('__ITEM_ID__', true);
-		define('CONTROLLER_ID', !empty($r) ? $r['id'] : 0);
-		define('__CATEGORY_ID__', !empty($r) ? $r['id'] : 0);
+		define('CONTROLLER_ID', isset($r['id']) ? $r['id'] : 0);
+		define('__CATEGORY_ID__', isset($r['id']) ? $r['id'] : 0);
 		defined('__CATEGORY_URL__') or define('__CATEGORY_URL__', $url);
 
 		$request->url = DS . $this->defaultRoute .'/'. implode('/', $_route);
@@ -394,7 +405,7 @@ class Application extends \yii\base\Application
 				$request->url .= $suffix;
 			}
 		}
-		define('CHECK_PERMISSION', !empty($r) && $r['is_permission'] == 1 ? true : false);
+		define('CHECK_PERMISSION', isset($r['is_permission']) && $r['is_permission'] == 1 ? true : false);
 		Yii::$_category = $r;
 		defined('CONTROLLER_TEXT') or define('CONTROLLER_TEXT', $url);
 		defined('__RCONTROLLER__') or define('__RCONTROLLER__', $url);

@@ -244,6 +244,28 @@ switch (Yii::$app->request->post('action')){
 						'nationality_id'=>$nationality_id
 				])->execute();
 		Yii::$app->db->createCommand()->update(Yii::$app->zii->getTablePrice(post('controller_code'),post('price_type',1)),['is_default'=>1],$con)->execute();
+		
+		switch (post('controller_code')){
+			case TYPE_ID_HOTEL:
+			case TYPE_ID_SHIP_HOTEL:
+				Yii::$app->db->createCommand()->update('rooms_to_hotel',['is_default'=>0],
+				[
+						//'package_id'=>$package_id,
+						'parent_id'=>$supplier_id,
+						//'quotation_id'=>$quotation_id,
+						//'nationality_id'=>$nationality_id
+				])->execute();
+				Yii::$app->db->createCommand()->update('rooms_to_hotel',['is_default'=>0],
+						[
+								'room_id'=>$item_id,
+								'parent_id'=>$supplier_id,
+								//'quotation_id'=>$quotation_id,
+								//'nationality_id'=>$nationality_id
+						])->execute();
+				
+				break;
+		}
+		
 		exit;
 		break;	
 		
@@ -3084,8 +3106,8 @@ change:function(event,ui){
  
 				
 				$html .= '<tr><td colspan="12" class="pr vtop">
-						<p class=" aright bgef"><i>Thêm/ xóa chặng di chuyển</i>
-							<button data-place_id="'.$v['place_id'].'" data-class="w90" data-action="add-tours-distance-services" data-title="Chọn thêm dịch vụ / Hành trình - <b class=red>'.$v['name'].'</b>" data-id="'.$id.'" data-supplier_id="'.$v['id'].'" data-time="'.$j.'" onclick="open_ajax_modal(this);" title="Chọn thêm / xóa dịch vụ cho '.$v['name'].'" class="btn btn-primary input-sm" type="button"><i class="glyphicon glyphicon glyphicon-pencil"></i></button></p>
+						<p class=" aright bgef"> 
+							<button data-place_id="'.$v['place_id'].'" data-class="w90" data-action="add-tours-distance-services" data-title="Chọn thêm dịch vụ / Hành trình - <b class=red>'.$v['name'].'</b>" data-id="'.$id.'" data-supplier_id="'.$v['id'].'" data-time="'.$j.'" onclick="open_ajax_modal(this);" data-toggle="tooltip" data-placement="left" title="Chọn thêm / xóa dịch vụ cho '.$v['name'].'" class="btn btn-primary input-sm" type="button"><i class="glyphicon glyphicon glyphicon-pencil"></i> Thêm/ xóa chặng di chuyển</button></p>
 						</td></tr>';
 		 
 		}

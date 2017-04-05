@@ -63,6 +63,7 @@ class Suppliers extends Customers
 		}else{
 			$date = ctime(['string'=>$date,'format'=>'Y-m-d']);
 		}
+		 
 		// Danh sách mùa lấy theo ngày $date
 		$query = (new Query())->from(['a'=>Seasons::tableCategory()])
 		->innerJoin(['b'=>Seasons::table_category_to_supplier()],'a.id=b.season_id')
@@ -86,7 +87,8 @@ class Suppliers extends Customers
 		]);
 		
 		$r['seasons'] = $query->orderBy(['b.price_type'=>SORT_ASC])->all();
-		
+		$r['seasons_prices'] = $query->andWhere(['b.price_type'=>[0]])->one();
+		//$r['s']= $query->createCommand()->getRawSql();
 		// Danh sách cuối tuần, ngày thường
 		
 		$thu_trong_tuan = date('w',strtotime($date));
@@ -128,7 +130,7 @@ class Suppliers extends Customers
 		//view($query->createCommand()->getRawSql());
 		
 		$r['week_day'] = $query->orderBy(['b.price_type'=>SORT_ASC])->all();
-		
+		$r['week_day_prices'] = $query->andWhere(['b.price_type'=>[0]])->one();
 		
 		// Danh sách buổi trong ngày
 		
@@ -167,7 +169,7 @@ class Suppliers extends Customers
 		//view($query->createCommand()->getRawSql());
 		
 		$r['time_day'] = $query->orderBy(['b.price_type'=>SORT_ASC])->all();
-		
+		$r['time_day_prices'] = $query->andWhere(['b.price_type'=>[0]])->one(); 
 		
 		
 		return $r;

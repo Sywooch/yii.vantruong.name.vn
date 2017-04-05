@@ -1438,7 +1438,40 @@ class Zii extends yii\base\Object
 		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
 		$nationality = isset($o['nationality']) ? $o['nationality'] : 0;
 		$loadDefault = true;
+		switch ($type_id){
+			case TYPE_ID_HOTEL:
+			case TYPE_ID_SHIP_HOTEL:
+			case TYPE_ID_REST:
+				$supplier_id = $service_id;
+				break;
+		}
+		$supplier_id = $supplier_id == 0 ? $supplier_id : $service_id;
+		
 		//\\//\\ *.* //\\//\\
+		$quotation = \app\modules\admin\models\Suppliers::getQuotation([
+				'supplier_id'=>$supplier_id,
+				'date'=>$from_date
+		]);
+		//view($quotation);
+		//
+		$nationality_group = \app\modules\admin\models\Suppliers::getNationalityGroup([
+				'supplier_id'=>$supplier_id,
+				'nationality_id'=>$nationality,
+		]);
+		//
+		$seasons = \app\modules\admin\models\Suppliers::getSeasons([
+				'supplier_id'=>$supplier_id,
+				 
+				'date'=>$from_date,
+				'time_id'=>$time
+		]);
+	 	$groups = \app\modules\admin\models\Suppliers::getGuestGroup([
+				'supplier_id'=>$supplier_id,
+				 
+				'date'=>$from_date,
+				'time_id'=>$time
+		]);
+		
 		if($item_id>0){
 			// Lấy giá đã lưu riêng
 			
@@ -1486,10 +1519,33 @@ class Zii extends yii\base\Object
 					]);
 					$r['quantity'] = $total_pax;
 					break;
-				case TYPE_ID_HOTEL: // Khách sạn
-					$r['currency'] = 1;
-					$r['price1'] = 0;
-					//view(\app\modules\admin\models\Suppliers::getNationalityGroup($nationality, $service_id));
+				case TYPE_ID_HOTEL:
+				case TYPE_ID_SHIP_HOTEL: // Khách sạn
+					//$r['currency'] = 1;
+					//$r['price1'] = 0;
+					 
+					$r = $this->getDefaultHotelPrices([
+							'quotation_id'=>$quotation['id'],
+							'nationality_id'=>$nationality_group['id'],
+							'season_id'=>isset($seasons['seasons_prices']['id']) ? $seasons['seasons_prices']['id'] : 0,
+							'supplier_id'=>$supplier_id,
+							'total_pax'=>$total_pax,
+							'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
+					]);
+					//view($r);
+					 
+					break;
+				case TYPE_ID_REST:
+					$r = $this->getDefaultServicePrices([
+					'controller_code'=>TYPE_ID_REST,
+							'quotation_id'=>$quotation['id'],
+							'nationality_id'=>$nationality_group['id'],
+							'season_id'=>isset($seasons['seasons_prices']['id']) ? $seasons['seasons_prices']['id'] : 0,
+							'supplier_id'=>$supplier_id,
+							'total_pax'=>$total_pax,
+							'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
+							'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
+					]);
 					break;
 			}
 		}
@@ -1499,11 +1555,180 @@ class Zii extends yii\base\Object
 	}
 	
 	public function getDefaultHotelPrices($o = []){
+		    
+		$time_id = isset($o['time_id']) ? $o['time_id'] : -1;
+		$state = isset($o['state']) ? $o['state'] : 1;
+		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
+		
+		$a = [
+				'quotation_id',
+				'package_id',
+				'supplier_id',
+				'nationality_id',
+				'season_id',
+				'group_id',
+				'weekend_id',
+				//'item_id'
+		];
+		foreach ($a as $b){
+			$$b = isset($o[$b]) ? $o[$b] : 0;
+		}
+		// lấy phòng default 
+		$query = (new Query())->from(['a'=>\app\modules\admin\models\Hotels::tablePrice()])
+		->innerJoin(['b'=>\app\modules\admin\models\RoomsCategorys::tableName()],'a.item_id=b.id')
+		->where([
+				'a.is_default'=>1,
+				'a.quotation_id'=>$quotation_id,
+				'a.package_id'=>$package_id,
+				'a.supplier_id'=>$supplier_id,
+				'a.nationality_id'=>$nationality_id,
+				//'a.season_id'=>$season_id,
+				//'a.group_id'=>$group_id,
+				//'a.weekend_id'=>$weekend_id,
+				//'a.time_id'=>$time_id,
+				//'a.quotation_id'=>$quotation_id,
+				
+		])
+		->select(['b.*','a.price1','a.currency'])
+		;
+		//view($query->createCommand()->getRawSql());
+		$item = $query->one();
+		if(!empty($item)){
+			//
+			//view($item);
+			$total_rooms = ceil($total_pax/$item['seats']);
+			$groups = \app\modules\admin\models\Suppliers::getGuestGroup([
+					'supplier_id'=>$supplier_id,
+					'total_pax'=>$total_rooms
+			]);
+			$group_id = isset($groups['id']) ? $groups['id'] : 0;
+			//
+			$query = (new Query())->from(['a'=>\app\modules\admin\models\Hotels::tablePrice()])
+			->innerJoin(['b'=>\app\modules\admin\models\RoomsCategorys::tableName()],'a.item_id=b.id')
+			->where([
+					//'a.is_default'=>1,
+					'a.quotation_id'=>$quotation_id,
+					'a.package_id'=>$package_id,
+					'a.supplier_id'=>$supplier_id,
+					'a.nationality_id'=>$nationality_id,
+					'a.season_id'=>$season_id,
+					'a.group_id'=>$group_id,
+					'a.weekend_id'=>$weekend_id,
+					'a.time_id'=>$time_id,
+					'a.quotation_id'=>$quotation_id,
+					'a.item_id'=>$item['id'] 
+			
+			])
+			->select(['b.*','a.price1','a.currency'])
+			;
+			 
+			
+			$item = $query->one();
+			$item['quantity'] = $total_rooms;
+			return $item;
+		}
+		
 		
 	}
 	
+	
+	public function getDefaultServicePrices($o = []){
+	
+		$time_id = isset($o['time_id']) ? $o['time_id'] : -1;
+		$state = isset($o['state']) ? $o['state'] : 1;
+		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
+		$controller_code = isset($o['controller_code']) ? $o['controller_code'] : '';
+	
+		$a = [
+				'quotation_id',
+				'package_id',
+				'supplier_id',
+				'nationality_id',
+				'season_id',
+				'group_id',
+				'weekend_id',
+				//'item_id'
+		];
+		foreach ($a as $b){
+			$$b = isset($o[$b]) ? $o[$b] : 0;
+		}
+		// lấy item default
+		switch ($controller_code){
+			case TYPE_ID_REST:
+				$t1 = \app\modules\admin\models\Menus::tableToPrice();
+				$t2 = \app\modules\admin\models\Menus::tableName();
+				break;
+		}
+		$query = (new Query())->from(['a'=>$t1])
+		->innerJoin(['b'=>$t2],'a.item_id=b.id')
+		->where([
+				'a.is_default'=>1,
+				'a.quotation_id'=>$quotation_id,
+				'a.package_id'=>$package_id,
+				'a.supplier_id'=>$supplier_id,
+				'a.nationality_id'=>$nationality_id,
+				//'a.season_id'=>$season_id,
+				//'a.group_id'=>$group_id,
+				//'a.weekend_id'=>$weekend_id,
+				//'a.time_id'=>$time_id,
+				//'a.quotation_id'=>$quotation_id,
+	
+		])
+		->select(['b.*','a.price1','a.currency'])
+		;
+		view($query->createCommand()->getRawSql());
+		$item = $query->one();
+		if(!empty($item)){
+			//
+			//view($item);
+			//$total_rooms = ceil($total_pax/$item['seats']);
+			$groups = \app\modules\admin\models\Suppliers::getGuestGroup([
+					'supplier_id'=>$supplier_id,
+					'total_pax'=>$total_pax
+			]);
+			$group_id = isset($groups['id']) ? $groups['id'] : 0;
+			//
+			$query = (new Query())->from(['a'=>$t1])
+			->innerJoin(['b'=>$t2],'a.item_id=b.id')
+			->where([
+					//'a.is_default'=>1,
+					'a.quotation_id'=>$quotation_id,
+					'a.package_id'=>$package_id,
+					'a.supplier_id'=>$supplier_id,
+					'a.nationality_id'=>$nationality_id,
+					'a.season_id'=>$season_id,
+					'a.group_id'=>$group_id,
+					'a.weekend_id'=>$weekend_id,
+					'a.time_id'=>$time_id,
+					'a.quotation_id'=>$quotation_id,
+					'a.item_id'=>$item['id']
+						
+			])
+			->select(['b.*','a.price1','a.currency'])
+			;
+			view($query->createCommand()->getRawSql());
+				
+			$item = $query->one();
+			$item['quantity'] = $total_pax;
+			return $item;
+		}
+	
+	
+	}
 	private function getPriceInfoFromDate($supplier_id, $date){
 		// Check quotation
+		$from_date = isset($o['from_date']) && check_date_string($o['from_date']) ? $o['from_date'] : date('Y-m-d');
+		$day = isset($o['day']) ? $o['day'] : -1;
+		$time = isset($o['time']) ? $o['time'] : -1;
+		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
+		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
+		$service_id = isset($o['service_id']) ? $o['service_id'] : 0;
+		$type_id = isset($o['type_id']) ? $o['type_id'] : 0;
+		$state = isset($o['state']) ? $o['state'] : 1;
+		
+		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
+		$nationality = isset($o['nationality']) ? $o['nationality'] : 0;
+		//
 		
 	}
 	

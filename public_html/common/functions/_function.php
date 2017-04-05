@@ -3727,7 +3727,7 @@ function loadTourProgramDetail($o = []){
 				
 			if(!empty($services)){
 				foreach ($services as $kv=>$sv){
-	
+					$price = [];
 					$prices = Yii::$app->zii->getServiceDetailPrices([
 							'item_id'=>$id,
 							'day'=>$i,
@@ -3765,8 +3765,8 @@ function loadTourProgramDetail($o = []){
 				
 				
 			$html .= '<tr><td colspan="11" class="pr vtop">
-							<p class=" aright bgef"><i>Thêm/ xóa dịch vụ </i>
-							<button data-toggle="tooltip" data-placement="left" data-class="w90" data-action="add-tours-services" data-title="Chọn thêm dịch vụ / Hành trình" data-id="'.$id.'" data-day="'.$i.'" data-time="'.$j.'" onclick="open_ajax_modal(this);" title="Chọn thêm / xóa dịch vụ" class="btn btn-primary btn-sm" type="button"><i class="glyphicon glyphicon glyphicon-pencil"></i></button></p>
+							<p class=" aright bgef">   
+							<button data-toggle="tooltip" data-placement="left" data-class="w90" data-action="add-tours-services" data-title="Chọn thêm dịch vụ / Hành trình" data-id="'.$id.'" data-day="'.$i.'" data-time="'.$j.'" onclick="open_ajax_modal(this);" title="Chọn thêm / xóa dịch vụ" class="btn btn-primary btn-sm" type="button"><i class="glyphicon glyphicon glyphicon-pencil"></i> Thêm/ xóa dịch vụ</button></p>
 							</td>';
 				
 			$html .= '</tr>';

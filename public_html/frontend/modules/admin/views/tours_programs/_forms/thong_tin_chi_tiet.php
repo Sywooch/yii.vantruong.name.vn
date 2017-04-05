@@ -7,20 +7,20 @@ $prices = Yii::$app->zii->getServiceDetailPrices([
 		'type_id'=>4,
 		'nationality'=>$v['nationality'],
 		'total_pax'=>$v['guest'],
-		'from_date'=>$v['from_date']
+		'from_date'=>$v['from_date'] 
 ]);
- 
 
+//view($v['from_date']);
 $prices = \app\modules\admin\models\Suppliers::getNationalityGroup([
 		'date'=>'10/03/2017',
-		'supplier_id'=>5,
+		'supplier_id'=>68,
 		'total_pax'=>30,
 		'nationality_id'=>3
 		
 ]
 		);
 
-view($prices);
+//view($prices);
 /*foreach ((new \yii\db\Query)->from('seasons')->all() as $k1=>$v1){
 	view($v1['to_date']);
 	Yii::$app->db->createCommand()->update('seasons',['to_date'=>date("Y-m-d 23:59:59:59",strtotime($v1['to_date']))],[
@@ -62,6 +62,14 @@ view($prices);
  <th colspan="1" class="center col-ws-1">Thành tiền (VND)</th> 
  
  </tr>
-</thead> <tbody class="ajax-load-time-detail" data-count="0">  </tbody> </table> 
-<input data-day="<?php echo isset($v['day']) ? (max($v['day'],$v['night'])) : 0;?>" type="hidden" class="auto_play_script_function ajax-auto-load-time-detail" data-target=".ajax-load-time-detail" data-action="loadTourProgramDetail" data-id="<?php echo isset($v['id']) ? $v['id'] : 0?>" value="loadTourProgramDetail(this);"/>   
+</thead> <tbody class="ajax-load-time-detail" data-count="0">  
+<?php 
+echo loadTourProgramDetail([
+				'day'=>isset($v['day']) ? (max($v['day'],$v['night'])) : 0, 'id'=>$v['id']
+		]);
+?>
+</tbody> </table> 
+<?php 
+//echo '<input data-day="'.(isset($v['day']) ? (max($v['day'],$v['night'])) : 0).'" type="hidden" class="auto_play_script_function ajax-auto-load-time-detail" data-target=".ajax-load-time-detail" data-action="loadTourProgramDetail" data-id="'.(isset($v['id']) ? $v['id'] : 0).'" value="loadTourProgramDetail(this);"/>';
+?>
 </div></div></div>  
