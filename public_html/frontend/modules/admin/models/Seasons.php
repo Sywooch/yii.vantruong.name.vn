@@ -71,7 +71,7 @@ class Seasons extends \yii\db\ActiveRecord
     	$query->andWhere(['a.id'=>(new Query())->select('season_id')->from(self::tableToSuppliers())->where([
     			'supplier_id'=>$supplier_id,
     			//'season_id'=>'a.id',
-    			'price_type'=>0,
+    			//'price_type'=>0,
     			'type_id'=>20
     	])]);
     	

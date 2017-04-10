@@ -20,12 +20,14 @@ class Suppliers extends Customers
 			$date = ctime(['string'=>$date,'format'=>'Y-m-d']);
 		}
 		 
-		return (new Query())->from(['a'=>self::tableQuotations()])
+		$r = (new Query())->from(['a'=>self::tableQuotations()])
 		->where(['and',['a.supplier_id'=>$supplier_id],
 				['>','a.state',-2]])
 		->andWhere("'$date' BETWEEN a.from_date and a.to_date")		
 		->orderBy(['a.is_active'=>SORT_DESC])
 		->one();
+		 
+		return $r;
 	}
 	
 	/*

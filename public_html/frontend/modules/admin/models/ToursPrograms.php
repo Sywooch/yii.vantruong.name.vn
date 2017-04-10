@@ -90,14 +90,14 @@ class ToursPrograms extends \yii\db\ActiveRecord
     public static function countProgramServicesPerDay($o = []){
     	//
     	$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
-    	$day = isset($o['day']) ? $o['day'] : -1;
-    	$time = isset($o['time']) ? $o['time'] : -1;
+    	$day = isset($o['day_id']) ? $o['day_id'] : -1;
+    	$time = isset($o['time_id']) ? $o['time_id'] : -1;
     	//
     	
     	$query = (new Query())->from(['a'=>'tours_programs_services_days'])
-    	->where(['item_id'=>$item_id,'day'=>$day]);
+    	->where(['item_id'=>$item_id,'day_id'=>$day]);
     	if ($time>-1){
-    		$query->andWhere(['time'=>$day]);
+    		$query->andWhere(['time_id'=>$day]);
     	}
     	$r = $query->count(1);
     	 
@@ -106,7 +106,12 @@ class ToursPrograms extends \yii\db\ActiveRecord
     }
     public static function getProgramServices($id = 0, $day = 0, $time = 0,$o = []){
     	$query = (new Query())->from(['a'=>'tours_programs_services_days'])    	
-    	->where(['item_id'=>$id,'day'=>$day,'time'=>$time]);
+    	->where([
+    			'a.item_id'=>$id,
+    			'a.day_id'=>$day,
+    			'a.time_id'=>$time,
+    			
+    	]);
     	if(isset($o['not_in'])){
     		//$query->andWhere(['not'])
     	}
@@ -117,7 +122,7 @@ class ToursPrograms extends \yii\db\ActiveRecord
     	if(!empty($l)){
     		foreach ($l as $k=>$v){
     			switch ($v['type_id']){
-    				case TYPE_ID_HOTEL: case TYPE_ID_REST:
+    				case TYPE_ID_HOTEL: case TYPE_ID_REST: case TYPE_ID_SHIP_HOTEL:
     					$item = Customers::getItem($v['service_id']);
     					break;
     				case TYPE_CODE_DISTANCE:
@@ -131,6 +136,7 @@ class ToursPrograms extends \yii\db\ActiveRecord
     				break;
     			}
     			$item ['type_id'] = $v['type_id'];
+    			$item ['package_id'] = $v['package_id'];
     			$r[] = $item;
     		}
     	}

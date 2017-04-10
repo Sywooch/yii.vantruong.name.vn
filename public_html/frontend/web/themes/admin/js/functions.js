@@ -4677,8 +4677,10 @@ function change_selected_tour_service_group($t){
 	$pr.addClass('active');
 	var $data = getAttributes($this);
 	// 
-	$data['selected'] = jQuery("input.selected_value_"+($data['id'])+'_'+$data['day']+'_'+$data['time']).map(
+	var $x = jQuery("input.selected_value_"+($data['id'])+'_'+$data['day']+'_'+$data['time']).map(
 	        function () {return this.value;}).get().join(",");
+	//console.log("input.selected_value_"+($data['id'])+'_'+$data['day']+'_'+$data['time']);
+	$data['selected'] = $x;
 	$data['place_id'] = jQuery('.input-quick-search-local').val();
 	$data['action'] = 'change_selected_tour_service_group';
 	jQuery.ajax({

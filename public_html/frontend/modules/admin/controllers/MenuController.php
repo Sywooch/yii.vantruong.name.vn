@@ -102,9 +102,9 @@ class MenuController extends CrsController
 	    			
 	    			Slugs::updateSlug($f['url'],$id,$f['type'],0,$biz);
 	    			if(isset($biz['manual_link']) && $biz['manual_link'] == 'on'){
-	    				Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>$biz['url_link']],$con)->execute();
+	    				Yii::$app->db->createCommand()->update(Menu::tableName(),['url_link'=>$biz['url_link']],$con)->execute();
 	    			}else {
-	    				Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],$con)->execute();
+	    				Yii::$app->db->createCommand()->update(Menu::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],$con)->execute();
 	    				//
 	    			}//if(isset($old['url']) && $old['url'] != $f['url']){
 	    			Yii::$app->zii->generateSitemap([
@@ -215,9 +215,9 @@ class MenuController extends CrsController
     		$biz = post('biz',[]);
     		Slugs::updateSlug($f['url'],$id,$f['type'],0,$biz);
     		if(isset($biz['manual_link']) && $biz['manual_link'] == 'on'){
-    			Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>$biz['url_link']],$con)->execute();
+    			Yii::$app->db->createCommand()->update(Menu::tableName(),['url_link'=>$biz['url_link']],$con)->execute();
     		}else {
-    			Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],$con)->execute();
+    			Yii::$app->db->createCommand()->update(Menu::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],$con)->execute();
     			//
     		}
     		//view(Yii::$app->zii->getUrl($f['url']),true);

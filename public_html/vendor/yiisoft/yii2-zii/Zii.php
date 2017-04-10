@@ -69,9 +69,9 @@ class Zii extends yii\base\Object
 			//
 		$price_type = !empty($item) ? $item['price_type'] : 0; // Giá chặng
 		$item = !empty($item) ? $item : (new Query())->from('distances_to_prices')->where([
-				'distance_id'=>$distance_id,
+				'item_id'=>$distance_id,
 				'vehicle_id'=>$vehicle_id,
-				'parent_id'=>$supplier_id,
+				//'parent_id'=>$supplier_id,
 		])->one();
 			//
 			
@@ -917,9 +917,7 @@ class Zii extends yii\base\Object
 			if(!empty($f2)){
 				$query->andWhere(['in','a.id',(new Query())->select('item_id')->from('articles_to_filters')->where(['in','filter_id',$f2])]);
 			}
-			//$where .= !empty($f1) ? " and a.id in (select item_id from {$this->table('items_to_category')} where category_id in (".implode(',', $f1).") group by item_id)" : '';
-			//$where .= !empty($f2) ? " and a.id in (select item_id from {$this->table('articles_to_filters')} where filter_id in (".implode(',', $f2)."))" : '';
-			///view($where);
+			 
 		}
 		
 		if($filter_category != "" && !is_array($filter_category)){
@@ -927,7 +925,7 @@ class Zii extends yii\base\Object
 		}
 		if(is_array($filter_category) && !empty($filter_category)){
 			$query->andWhere(['in','a.id',(new Query())->select('item_id')->from('items_to_category')->where(['in','category_id',SiteMenu::getAllChildID($filter_category)])]);
-			//$where .= " and (a.id in(select item_id from {$this->table('items_to_category')} where category_id in(".implode(',', Zii::$CRouter->_get_all_child_id($filter_category)).")))";
+			 
 		}
 		
 		// Check price range
@@ -1429,12 +1427,13 @@ class Zii extends yii\base\Object
 		$from_date = isset($o['from_date']) && check_date_string($o['from_date']) ? $o['from_date'] : date('Y-m-d');
 		$day = isset($o['day']) ? $o['day'] : -1;
 		$time = isset($o['time']) ? $o['time'] : -1;
+		
 		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
 		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
 		$service_id = isset($o['service_id']) ? $o['service_id'] : 0;
 		$type_id = isset($o['type_id']) ? $o['type_id'] : 0;
 		$state = isset($o['state']) ? $o['state'] : 1;
-		
+		$package_id = isset($o['package_id']) ? $o['package_id'] : 0;
 		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
 		$nationality = isset($o['nationality']) ? $o['nationality'] : 0;
 		$loadDefault = true;
@@ -1444,15 +1443,25 @@ class Zii extends yii\base\Object
 			case TYPE_ID_REST:
 				$supplier_id = $service_id;
 				break;
+			case TYPE_ID_GUIDES:
+				$supplier_id = (new Query())->from('guides_to_suppliers')->where([
+					'guide_id'=>$service_id
+				])->select('supplier_id')->scalar();
+				//view($supplier_id); 
+				break;
 		}
-		$supplier_id = $supplier_id == 0 ? $supplier_id : $service_id;
-		
+		//view($supplier_id == 0);
+		$supplier_id = $supplier_id > 0 ? $supplier_id : $service_id;
+		//view($supplier_id);
 		//\\//\\ *.* //\\//\\
 		$quotation = \app\modules\admin\models\Suppliers::getQuotation([
 				'supplier_id'=>$supplier_id,
 				'date'=>$from_date
 		]);
-		//view($quotation);
+		if($type_id == TYPE_ID_GUIDES){
+		
+		//view($quotation);exit;
+		}
 		//
 		$nationality_group = \app\modules\admin\models\Suppliers::getNationalityGroup([
 				'supplier_id'=>$supplier_id,
@@ -1486,10 +1495,10 @@ class Zii extends yii\base\Object
 			]);
 			//
 			if($day > -1){
-				$query->andWhere(['a.day'=>$day]);
+				$query->andWhere(['a.day_id'=>$day]);
 			}
 			if($time > -1){
-				$query->andWhere(['a.time'=>$time]);
+				$query->andWhere(['a.time_id'=>$time]);
 			}
 			//
 			if($service_id>0){
@@ -1514,7 +1523,7 @@ class Zii extends yii\base\Object
 			switch ($type_id){
 				case TYPE_ID_SCEN : // Vé tham quan
 					$r = \app\modules\admin\models\Tickets::getPrice([
-						'ticket_id'=>$service_id,
+						'item_id'=>$service_id,
 						'nationality'=>$nationality 
 					]);
 					$r['quantity'] = $total_pax;
@@ -1531,11 +1540,12 @@ class Zii extends yii\base\Object
 							'supplier_id'=>$supplier_id,
 							'total_pax'=>$total_pax,
 							'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
+							'package_id'=>$package_id,
 					]);
-					//view($r);
+					//view($type_id);
 					 
 					break;
-				case TYPE_ID_REST:
+				case TYPE_ID_REST: // nhà hàng
 					$r = $this->getDefaultServicePrices([
 					'controller_code'=>TYPE_ID_REST,
 							'quotation_id'=>$quotation['id'],
@@ -1545,11 +1555,29 @@ class Zii extends yii\base\Object
 							'total_pax'=>$total_pax,
 							'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
 							'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
+							'package_id'=>$package_id,
 					]);
+					break;
+				case TYPE_ID_GUIDES:
+					$r = $this->getDefaultServicePrices([
+							'controller_code'=>TYPE_ID_GUIDES,
+							'quotation_id'=>$quotation['id'],
+							'nationality_id'=>$nationality_group['id'],
+							'season_id'=>isset($seasons['seasons_prices']['id']) ? $seasons['seasons_prices']['id'] : 0,
+							'supplier_id'=>$supplier_id,
+							'total_pax'=>$total_pax,
+							'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
+							'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
+							'package_id'=>$package_id, 
+							'item_id'=>$service_id
+					]);
+					 
+					$r['quantity'] = 1;	
 					break;
 			}
 		}
 			
+		
 		$r['quantity'] = isset($r['quantity']) ? $r['quantity'] : $total_pax;
 		return $r;
 	}
@@ -1593,6 +1621,7 @@ class Zii extends yii\base\Object
 		;
 		//view($query->createCommand()->getRawSql());
 		$item = $query->one();
+		//view($item);
 		if(!empty($item)){
 			//
 			//view($item);
@@ -1638,7 +1667,7 @@ class Zii extends yii\base\Object
 		$state = isset($o['state']) ? $o['state'] : 1;
 		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
 		$controller_code = isset($o['controller_code']) ? $o['controller_code'] : '';
-	
+		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
 		$a = [
 				'quotation_id',
 				'package_id',
@@ -1658,7 +1687,22 @@ class Zii extends yii\base\Object
 				$t1 = \app\modules\admin\models\Menus::tableToPrice();
 				$t2 = \app\modules\admin\models\Menus::tableName();
 				break;
+			case TYPE_ID_GUIDES:
+				$t1 = \app\modules\admin\models\Guides::tableToPrice();
+				$t2 = \app\modules\admin\models\Guides::tableGuide();
+				break;
 		}
+		if($item_id>0){
+			$query = (new Query())->from(['a'=>$t2])
+			//->innerJoin(['b'=>$t2],'a.item_id=b.id')
+			->where([
+					'a.id'=>$item_id,
+					 
+			
+			])
+			 ;
+			$item = $query->one();
+		}else {
 		$query = (new Query())->from(['a'=>$t1])
 		->innerJoin(['b'=>$t2],'a.item_id=b.id')
 		->where([
@@ -1674,14 +1718,13 @@ class Zii extends yii\base\Object
 				//'a.quotation_id'=>$quotation_id,
 	
 		])
-		->select(['b.*','a.price1','a.currency'])
-		;
-		view($query->createCommand()->getRawSql());
-		$item = $query->one();
-		if(!empty($item)){
+		->select(['b.*','a.price1','a.currency']);
+		$item = $query->one(); 
+		}
+		
+		if(!empty($item)){ 
 			//
-			//view($item);
-			//$total_rooms = ceil($total_pax/$item['seats']);
+			 
 			$groups = \app\modules\admin\models\Suppliers::getGuestGroup([
 					'supplier_id'=>$supplier_id,
 					'total_pax'=>$total_pax
@@ -1706,7 +1749,7 @@ class Zii extends yii\base\Object
 			])
 			->select(['b.*','a.price1','a.currency'])
 			;
-			view($query->createCommand()->getRawSql());
+			//view($query->createCommand()->getRawSql());
 				
 			$item = $query->one();
 			$item['quantity'] = $total_pax;
@@ -1718,6 +1761,8 @@ class Zii extends yii\base\Object
 	private function getPriceInfoFromDate($supplier_id, $date){
 		// Check quotation
 		$from_date = isset($o['from_date']) && check_date_string($o['from_date']) ? $o['from_date'] : date('Y-m-d');
+		$day = isset($o['day']) ? $o['day'] : -1;
+		$time = isset($o['time']) ? $o['time'] : -1;
 		$day = isset($o['day']) ? $o['day'] : -1;
 		$time = isset($o['time']) ? $o['time'] : -1;
 		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
@@ -1742,6 +1787,10 @@ class Zii extends yii\base\Object
 			case TYPE_ID_REST:
 				return '{{%menus_to_prices}}';
 				break;	
+			case TYPE_ID_GUIDES:
+				return '{{%guides_to_prices}}'; 
+				break;	
+				
 			case TYPE_ID_VECL:
 			case TYPE_ID_SHIP:
 				return $price_type == 2 ? '{{%distances_to_prices}}' : '{{%vehicles_to_prices}}';
@@ -1845,7 +1894,7 @@ class Zii extends yii\base\Object
 				case 1: // Full
 					$c = [];
 					foreach (\app\models\Slugs::getAllParent($item_id) as $k=>$v){
-						view($v['url']);
+						//view($v['url']);
 						$c[] = $v['url'];
 					}
 					if($item['item_type'] == 1) {

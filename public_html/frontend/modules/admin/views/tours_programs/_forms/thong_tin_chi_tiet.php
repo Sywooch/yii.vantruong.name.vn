@@ -1,33 +1,5 @@
 <?php 
-$prices = Yii::$app->zii->getServiceDetailPrices([
-		'item_id'=>$v['id'],
-		'day'=>0,
-		'time'=>0,
-		'service_id'=>68,
-		'type_id'=>4,
-		'nationality'=>$v['nationality'],
-		'total_pax'=>$v['guest'],
-		'from_date'=>$v['from_date'] 
-]);
-
-//view($v['from_date']);
-$prices = \app\modules\admin\models\Suppliers::getNationalityGroup([
-		'date'=>'10/03/2017',
-		'supplier_id'=>68,
-		'total_pax'=>30,
-		'nationality_id'=>3
-		
-]
-		);
-
-//view($prices);
-/*foreach ((new \yii\db\Query)->from('seasons')->all() as $k1=>$v1){
-	view($v1['to_date']);
-	Yii::$app->db->createCommand()->update('seasons',['to_date'=>date("Y-m-d 23:59:59:59",strtotime($v1['to_date']))],[
-			'id'=>$v1['id']
-	])->execute();
-}
-*/
+ 
 ?>
 <div class="col-sm-12 bang-thong-tin-chung" style=""><div class="row">
 <div class="" style="margin-top: 10px">

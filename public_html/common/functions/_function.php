@@ -2637,6 +2637,7 @@ function showPartDay($part = 0){
 function showListChooseService(){
 	return [
 			['id'=>TYPE_ID_HOTEL,'title'=>'Khách sạn'],
+			['id'=>TYPE_ID_SHIP_HOTEL,'title'=>'Tàu ngủ'],
 			['id'=>TYPE_ID_REST,'title'=>'Nhà hàng'],
 			['id'=>TYPE_CODE_DISTANCE,'title'=>'Vận chuyển'],
 			['id'=>TYPE_ID_SCEN,'title'=>'Vé tham quan'],
@@ -2650,6 +2651,7 @@ function showListChooseService(){
 function getServiceType($type_id = 0){
 	switch ($type_id){ 
 		case TYPE_ID_HOTEL: return 'Khách sạn'; break;
+		case TYPE_ID_SHIP_HOTEL: return 'Tàu ngủ'; break;
 		case TYPE_ID_REST: return 'Nhà hàng'; break;
 		case TYPE_CODE_DISTANCE: return 'Vận chuyển'; break;
 		case TYPE_ID_SCEN: return 'Vé tham quan'; break;
@@ -2664,6 +2666,7 @@ function getServiceUnitPrice($type_id = 0){
 	switch ($type_id){
 		case TYPE_ID_HOTEL: return 'Phòng'; break;
 		case TYPE_ID_REST: return 'Khách'; break;
+		case TYPE_ID_SHIP_HOTEL: return 'Cabin'; break;
 		case TYPE_CODE_DISTANCE: return '-'; break;
 		case TYPE_ID_SCEN: return 'Khách'; break;
 		case TYPE_ID_GUIDES: return '-'; break;
@@ -2707,6 +2710,9 @@ function getPriceHeaderButton($supplier_id = 0,$o = []){
 						break;
 					case 'distance':
 						$html .= '<button '.($price_type != "" ? 'data-price_type="'.$price_type.'"' : '').' data-controller_code="'.($controller_code).'" '.($type_id != "" ? 'data-type_id="'.$type_id.'"' : '').' data-toggle="tooltip" data-placement="top" title="Thêm chặng xe vào bảng giá, mỗi chặng có thể có nhiều mức giá tùy theo thời điểm (xem thêm mục cài đặt mùa)" data-required-save="true" data-load="new" data-supplier_id="'.$supplier_id.'" data-title="Thêm chặng di chuyển" type="button" onclick="open_ajax_modal(this);" data-class="w60" data-action="add-more-distance-to-supplier-price" class="btn btn-sm btn-success btn-data-required-save"><i class="fa fa-cab"></i> Chặng vận chuyển</button>';
+						break;
+					case 'guide':
+						$html .= '<button '.($price_type != "" ? 'data-price_type="'.$price_type.'"' : '').' data-controller_code="'.($controller_code).'" '.($type_id != "" ? 'data-type_id="'.$type_id.'"' : '').' data-toggle="tooltip" data-placement="top" title="Thêm hướng dẫn" data-required-save="true" data-load="new" data-supplier_id="'.$supplier_id.'" data-title="Thêm hướng dẫn viên" type="button" onclick="open_ajax_modal(this);" data-class="w60" data-action="add-more-guides" class="btn btn-sm btn-success btn-data-required-save"><i class="fa fa-cab"></i> Hướng dẫn viên</button>';
 						break;
 				}				
 			}else{
@@ -2782,6 +2788,11 @@ function getSupplierPricesList($supplier_id = 0, $o = []){
 		case TYPE_ID_REST:
 			$h['menu'] = true;
 			$l = \app\modules\admin\models\Menus::getMenus(['supplier_id'=>$supplier_id]);
+			break;
+		case TYPE_ID_GUIDES:
+			$h['guide'] = true;
+			$l = \app\modules\admin\models\Guides::getGuides(['supplier_id'=>$supplier_id]);
+			//view($l);
 			break;
 	}
 	$html .= getPriceHeaderButton($supplier_id,$h);
@@ -2899,7 +2910,7 @@ function getSupplierPricesList($supplier_id = 0, $o = []){
 											$cates = \app\modules\admin\models\Menus::getItemCategorys($v1['id'],0);
 											$html .= '<tr class="tr-price-'.implode('-', $tr).'">
 <td class="center">'.($k1+1).'</td>
-<td><a class="pointer" data-supplier_id="'.$supplier_id.'" data-menu_id="'.$v1['id'].'" data-title="Chỉnh sửa thực đơn" onclick="open_ajax_modal(this);" data-class="w90" data-action="add-more-menu-supplier">'.uh($v1['title']). ( !empty($cates) ? ' <i class="font-normal red">('.implode(' | ', $cates).')</i>' : '') .'</a></td>';
+<td><a class="pointer" data-supplier_id="'.$supplier_id.'" data-menu_id="'.$v1['id'].'" data-item_id="'.$v1['id'].'" data-title="Chỉnh sửa" onclick="open_ajax_modal(this);" data-class="w90" data-action="add-more-menu-supplier">'.uh($v1['title']). ( !empty($cates) ? ' <i class="font-normal red">('.implode(' | ', $cates).')</i>' : '') .'</a></td>';
 											if(!empty($incurred_prices_list)){
 												foreach ($incurred_prices_list as $in){
 													if(!empty($room_groups)){
@@ -3707,7 +3718,7 @@ function loadTourProgramDetail($o = []){
 	for($i = 0; $i<$day;$i++){
 		$colspan2 = \app\modules\admin\models\ToursPrograms::countProgramServicesPerDay([
 				'item_id'=>$id,
-				'day'=>$i
+				'day_id'=>$i
 		]);
 			//$date = date('Y-m-d',strtotime($v['from_date']) + ($i * 86400) );
 			$date =  date('Y-m-d', mktime(0, 0, 0, date("m",strtotime($v['from_date']))  , date("d",strtotime($v['from_date']))+$i, date("Y",strtotime($v['from_date']))));
@@ -3733,13 +3744,13 @@ function loadTourProgramDetail($o = []){
 							'day'=>$i,
 							'time'=>$j,
 							'service_id'=>$sv['id'],
-							
+							'package_id'=>$sv['package_id'],
 							'type_id'=>$sv['type_id'],
 							'nationality'=>$v['nationality'],
 							'total_pax'=>$v['guest'],
 							'from_date'=>$date
 					]);
-					
+					//view($prices);
 					if(!empty($prices) && isset($prices['price1'])){
 						$price = Yii::$app->zii->getServicePrice($prices['price1'],[
 								'item_id'=>$id,
@@ -3748,11 +3759,17 @@ function loadTourProgramDetail($o = []){
 								'to'=>$v['currency']
 						]);
 					}
-					
-					$html .= '<tr><td colspan="4"><p><a data-service_id="'.$sv['id'].'" data-type_id="'.$sv['type_id'].'">' .(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
-								<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$i.'_'.$j.'" name="selected_value[]"/>
-								<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>
-										</a></p></td>
+					$package = \app\modules\admin\models\PackagePrices::getItem($sv['package_id']);
+					$html .= '<tr><td colspan="4"><p><a href="#" onclick="open_ajax_modal(this);return false;" data-action="qedit-service-detail-day" data-title="Chỉnh sửa dịch vụ" data-class="w80"
+									data-service_id="'.$sv['id'].'" 
+									data-id="'.$v['id'].'"
+									data-type_id="'.$sv['type_id'].'"	
+									data-package_id="'.$sv['package_id'].'"		
+									data-day_id="'.$i.'"	 
+									data-time_id="'.$j.'"	
+											
+											>'.(!empty($package) ? '<i class="underline green">['.uh($package['title']).']</i>&nbsp;' : '') .(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
+								 		</a></p></td>
 										<td class="center " colspan="2">'.getServiceType($sv['type_id']).'</td>
 										<td class="center">'.getServiceUnitPrice($sv['type_id']).'</td>
 										<td class="center">'.number_format($prices['quantity']).'</td>
@@ -4001,8 +4018,8 @@ function copyToRemoteServer($o = []){
 	$config = isset($o['config']) ? $o['config'] : [];
 	//
 	$ftp = new \yii\web\FtpUpload($config);
-	view($config);
-	view($ftp->testConnected()); 
+	//view($config);
+	//view($ftp->testConnected()); 
 	if($ftp->testConnected()){		 	 
 		if(!is_dir($dir)){
 			$ftp->nfileupload($dir, $dest);
@@ -4021,7 +4038,7 @@ function copyToRemoteServer($o = []){
 					{
 						$result[] = $value;
 						$fp = $value;
-						view($fp);
+					//	view($fp);
 					}
 				}
 			}
