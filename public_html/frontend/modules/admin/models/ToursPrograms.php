@@ -105,7 +105,7 @@ class ToursPrograms extends \yii\db\ActiveRecord
     	return $r;
     }
     public static function getProgramServices($id = 0, $day = 0, $time = 0,$o = []){
-    	$query = (new Query())->from(['a'=>'tours_programs_services_days'])    	
+    	$query = (new Query())->from(['a'=>'tours_programs_services_prices'])    	
     	->where([
     			'a.item_id'=>$id,
     			'a.day_id'=>$day,
@@ -135,8 +135,10 @@ class ToursPrograms extends \yii\db\ActiveRecord
     					$item = Guides::getGuide($v['service_id']); 
     				break;
     			}
-    			$item ['type_id'] = $v['type_id'];
-    			$item ['package_id'] = $v['package_id'];
+    			$item['supplier_id'] = $v['supplier_id'];
+    			$item['sub_item_id'] = $v['sub_item_id'];
+    			$item['type_id'] = $v['type_id'];
+    			$item['package_id'] = $v['package_id'];
     			$r[] = $item;
     		}
     	}

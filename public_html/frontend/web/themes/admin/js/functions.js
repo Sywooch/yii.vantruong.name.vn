@@ -4798,6 +4798,31 @@ function reloadDistanceServicePriceAuto($t){
 	});
 	//return false;
 }
+function reloadServiceDayPriceAuto($t){
+	var $this = jQuery($t);
+	var $data = getAttributes($this);
+	$data['action'] = 'reloadServiceDayPriceAuto';
+	jQuery.ajax({
+	      type: 'post',
+	      datatype: 'json',
+		  url: $cfg.adminUrl  + '/ajax',						 		 
+	      data: $data,
+	      beforeSend:function(){
+	    	  $this.addClass('fa-spin fa-refresh').removeClass('green fa-check-square-o')
+	      },
+	      success: function (data) {
+	    	  $d = JSON.parse(data);
+	    	  console.log($d);
+	    	  jQuery('.input-distance-service-price').val($d.price1).addClass('green');
+	    	  ///jQuery('.input-distance-service-distance').val($d.distance['distance']).addClass('green');
+	      },
+	      complete:function(){
+	    	  $this.removeClass('fa-spin fa-refresh ').addClass('green fa-check-square-o')
+	      },
+	      error : function(err, req) {}
+	});
+	//return false;
+}
 function getExchangeRateToday($t){
 	var $this = jQuery($t);
 	var $data = getAttributes($this);

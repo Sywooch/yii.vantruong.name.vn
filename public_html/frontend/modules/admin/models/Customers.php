@@ -68,7 +68,7 @@ class Customers extends \yii\db\ActiveRecord
      
     public static function getItem($id=0,$o=[]){
     	$item = static::find()->from(['a'=>self::tableName()])
-    	->select(['a.*'])
+    	->select(['a.*','title'=>'a.name'])
     	->where(['a.id'=>$id, 'a.sid'=>__SID__])
     	->asArray()->one();
     

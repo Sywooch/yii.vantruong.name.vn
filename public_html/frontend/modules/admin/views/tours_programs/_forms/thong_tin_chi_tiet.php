@@ -1,5 +1,32 @@
 <?php 
- 
+$a = [
+		'service_id',
+		'id',
+		'type_id',
+		'package_id',
+		'day_id',
+		'item_id',
+		'supplier_id','service_id'
+
+];
+foreach ($a as $b){
+	$$b = post($b,12); 
+}
+$time_id = post('time_id',-1);
+
+	
+
+	
+	
+$prices = Yii::$app->zii->getServiceDetailDayPrices([
+		'supplier_id'=>$supplier_id,
+		'package_id'=>$package_id,
+		'type_id'=>4,
+		'item_id'=>$id,
+		'sub_item_id'=>$item_id,
+		'day_id'=>$day_id,
+		'time_id'=>$time_id,'service_id'=>$service_id
+]);
 ?>
 <div class="col-sm-12 bang-thong-tin-chung" style=""><div class="row">
 <div class="" style="margin-top: 10px">
@@ -37,7 +64,8 @@
 </thead> <tbody class="ajax-load-time-detail" data-count="0">  
 <?php 
 echo loadTourProgramDetail([
-				'day'=>isset($v['day']) ? (max($v['day'],$v['night'])) : 0, 'id'=>$v['id']
+				'day'=>isset($v['day']) ? (max($v['day'],$v['night'])) : 0, 'id'=>$v['id'],
+		'loadDefault'=>true
 		]);
 ?>
 </tbody> </table> 

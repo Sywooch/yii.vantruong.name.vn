@@ -3748,9 +3748,10 @@ function loadTourProgramDetail($o = []){
 							'type_id'=>$sv['type_id'],
 							'nationality'=>$v['nationality'],
 							'total_pax'=>$v['guest'],
-							'from_date'=>$date
+							'from_date'=>$date,
+							'sub_item_id'=>(isset($sv['item_id']) ? $sv['item_id'] : 0)
 					]);
-					//view($prices);
+					//view($sv);
 					if(!empty($prices) && isset($prices['price1'])){
 						$price = Yii::$app->zii->getServicePrice($prices['price1'],[
 								'item_id'=>$id,
@@ -3766,8 +3767,9 @@ function loadTourProgramDetail($o = []){
 									data-type_id="'.$sv['type_id'].'"	
 									data-package_id="'.$sv['package_id'].'"		
 									data-day_id="'.$i.'"	 
-									data-time_id="'.$j.'"	
-											
+									data-time_id="'.$j.'"
+									data-item_id="'.(isset($sv['sub_item_id']) ? $sv['sub_item_id'] : 0).'" 		 
+									data-supplier_id="'.(isset($sv['supplier_id']) ? $sv['supplier_id'] : 0).'" 			
 											>'.(!empty($package) ? '<i class="underline green">['.uh($package['title']).']</i>&nbsp;' : '') .(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
 								 		</a></p></td>
 										<td class="center " colspan="2">'.getServiceType($sv['type_id']).'</td>
