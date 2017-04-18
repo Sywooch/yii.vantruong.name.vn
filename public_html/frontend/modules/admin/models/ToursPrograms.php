@@ -94,7 +94,7 @@ class ToursPrograms extends \yii\db\ActiveRecord
     	$time = isset($o['time_id']) ? $o['time_id'] : -1;
     	//
     	
-    	$query = (new Query())->from(['a'=>'tours_programs_services_days'])
+    	$query = (new Query())->from(['a'=>'tours_programs_services_prices'])
     	->where(['item_id'=>$item_id,'day_id'=>$day]);
     	if ($time>-1){
     		$query->andWhere(['time_id'=>$day]);
@@ -134,11 +134,18 @@ class ToursPrograms extends \yii\db\ActiveRecord
     				case TYPE_ID_GUIDES:
     					$item = Guides::getGuide($v['service_id']); 
     				break;
+    				case TYPE_ID_SHIP:
+    					$item = Distances::getItem($v['service_id']); 
+    				break;
+    				case TYPE_ID_TEXT:
+    					$item = TextInstructions::getItem($v['service_id']);
+    					break;
     			}
     			$item['supplier_id'] = $v['supplier_id'];
     			$item['sub_item_id'] = $v['sub_item_id'];
     			$item['type_id'] = $v['type_id'];
     			$item['package_id'] = $v['package_id'];
+    			//view($v);
     			$r[] = $item;
     		}
     	}
@@ -198,10 +205,12 @@ class ToursPrograms extends \yii\db\ActiveRecord
     					$item = Guides::getGuide($v['service_id']);
     					break;
     			}
+    			$item ['package_id'] = $v['package_id'];
     			$item ['type_id'] = $v['type_id'];
     			$r[] = $item;
     		}
     	}
+    	///view($r); 
     	return $r;
     }
     /*

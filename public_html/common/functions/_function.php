@@ -2638,11 +2638,15 @@ function showListChooseService(){
 	return [
 			['id'=>TYPE_ID_HOTEL,'title'=>'Khách sạn'],
 			['id'=>TYPE_ID_SHIP_HOTEL,'title'=>'Tàu ngủ'],
+			['id'=>TYPE_ID_SHIP,'title'=>'Tàu thuyền'],
+			['id'=>TYPE_ID_TRANSFORM_TICKET,'title'=>'PT vận chuyển bán vé'],
 			['id'=>TYPE_ID_REST,'title'=>'Nhà hàng'],
 			['id'=>TYPE_CODE_DISTANCE,'title'=>'Vận chuyển'],
 			['id'=>TYPE_ID_SCEN,'title'=>'Vé tham quan'],
 			['id'=>TYPE_ID_GUIDES,'title'=>'Hướng dẫn viên'],
-			//['id'=>TYPE_ID_HOTEL,'title'=>'Khách sạn'],
+			['id'=>TYPE_ID_TRAIN,'title'=>'Tàu hỏa'],
+			['id'=>TYPE_ID_AIR,'title'=>'Máy bay'],
+			['id'=>TYPE_ID_TEXT,'title'=>'Text chỉ dẫn'],
 			//['id'=>TYPE_ID_HOTEL,'title'=>'Khách sạn'],
 	];
 }
@@ -2656,7 +2660,9 @@ function getServiceType($type_id = 0){
 		case TYPE_CODE_DISTANCE: return 'Vận chuyển'; break;
 		case TYPE_ID_SCEN: return 'Vé tham quan'; break;
 		case TYPE_ID_GUIDES: return 'Hướng dẫn viên'; break;
-		
+		case TYPE_ID_SHIP: return 'Tàu vận chuyển'; break;
+		case TYPE_ID_TRAIN : return 'Tàu hỏa'; break;
+		case TYPE_ID_AIR: return 'Máy bay' ; break;
 		default : return ''; break;
 	}
 	 
@@ -2666,9 +2672,12 @@ function getServiceUnitPrice($type_id = 0){
 	switch ($type_id){
 		case TYPE_ID_HOTEL: return 'Phòng'; break;
 		case TYPE_ID_REST: return 'Khách'; break;
+		case TYPE_ID_TRAIN : return 'Vé'; break;
+		case TYPE_ID_AIR: return 'Khách' ; break;
 		case TYPE_ID_SHIP_HOTEL: return 'Cabin'; break;
 		case TYPE_CODE_DISTANCE: return '-'; break;
 		case TYPE_ID_SCEN: return 'Khách'; break;
+		case TYPE_ID_SHIP: return 'Tàu'; break;
 		case TYPE_ID_GUIDES: return '-'; break;
 
 		default : return ''; break;
@@ -3393,7 +3402,7 @@ function getSupplierVehiclePrices2($supplier_id = 0, $o = []){
 	// Danh sách chặng
 	$distances = \app\modules\admin\models\Cars::get_list_distance_from_price($supplier_id);
 	
-	
+	//view($distances);
 	$html = ''; $h = [
 			'price_type'=>2,
 			'controller_code'=>$supplier_type,'type_id'=>$supplier_type,
@@ -3707,11 +3716,12 @@ function showFirstTitle($title = '', $length = 1){
 
 function loadTourProgramDetail($o = []){
 	$html = '';
-	 
+	$loadDefault= isset($o['loadDefault']) ? $o['loadDefault'] : false; 
 	$id = isset($o['id']) ? $o['id'] : 0;
 	$day =isset($o['day']) ? $o['day'] : 0;
 	
 	$v = \app\modules\admin\models\ToursPrograms::getItem($id);
+	$day = max($v['day'],$v['night']);
 	
 	$v['from_date'] = check_date_string($v['from_date']) ? $v['from_date'] : date('Y-m-d');
 	
@@ -3739,19 +3749,22 @@ function loadTourProgramDetail($o = []){
 			if(!empty($services)){
 				foreach ($services as $kv=>$sv){
 					$price = [];
+					//view($sv);
 					$prices = Yii::$app->zii->getServiceDetailPrices([
 							'item_id'=>$id,
-							'day'=>$i,
-							'time'=>$j,
+							'day_id'=>$i,
+							'time_id'=>$j,
 							'service_id'=>$sv['id'],
 							'package_id'=>$sv['package_id'],
 							'type_id'=>$sv['type_id'],
 							'nationality'=>$v['nationality'],
 							'total_pax'=>$v['guest'],
 							'from_date'=>$date,
-							'sub_item_id'=>(isset($sv['item_id']) ? $sv['item_id'] : 0)
+							'sub_item_id'=>(isset($sv['sub_item_id']) ? $sv['sub_item_id'] : 0),
+							'loadDefault'=>$loadDefault,
 					]);
-					//view($sv);
+					
+					 
 					if(!empty($prices) && isset($prices['price1'])){
 						$price = Yii::$app->zii->getServicePrice($prices['price1'],[
 								'item_id'=>$id,
@@ -3760,19 +3773,39 @@ function loadTourProgramDetail($o = []){
 								'to'=>$v['currency']
 						]);
 					}
+					$sub_item = Yii::$app->zii->getSupplierServiceDetail(isset($prices['sub_item_id']) ? $prices['sub_item_id'] : 0,$sv['type_id']);
+					
+					if($sv['type_id'] == TYPE_ID_REST){
+						//view($prices['sub_item_id']);
+					}
+					
 					$package = \app\modules\admin\models\PackagePrices::getItem($sv['package_id']);
-					$html .= '<tr><td colspan="4"><p><a href="#" onclick="open_ajax_modal(this);return false;" data-action="qedit-service-detail-day" data-title="Chỉnh sửa dịch vụ" data-class="w80"
+					$html .= '<tr><td colspan="4"><p><a href="#" '.(!in_array($sv['type_id'], [TYPE_ID_TEXT])).' onclick="open_ajax_modal(this);return false;" data-action="qedit-service-detail-day" data-title="Chỉnh sửa dịch vụ" data-class="w80"
 									data-service_id="'.$sv['id'].'" 
 									data-id="'.$v['id'].'"
 									data-type_id="'.$sv['type_id'].'"	
 									data-package_id="'.$sv['package_id'].'"		
 									data-day_id="'.$i.'"	 
 									data-time_id="'.$j.'"
-									data-item_id="'.(isset($sv['sub_item_id']) ? $sv['sub_item_id'] : 0).'" 		 
+									data-item_id="'.(isset($prices['sub_item_id']) ? $prices['sub_item_id'] : (isset($sv['sub_item_id']) ? $sv['sub_item_id'] : 0)).'" 		 
 									data-supplier_id="'.(isset($sv['supplier_id']) ? $sv['supplier_id'] : 0).'" 			
-											>'.(!empty($package) ? '<i class="underline green">['.uh($package['title']).']</i>&nbsp;' : '') .(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
-								 		</a></p></td>
-										<td class="center " colspan="2">'.getServiceType($sv['type_id']).'</td>
+											>
+								 		
+													'. (isset($prices['supplier']['title']) ? $prices['supplier']['title'] : (!empty($package) ? '<i class="underline green">['.uh($package['title']).']</i>&nbsp;' : '') .(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '')).'
+													</a></p></td>
+										<td class="center " colspan="2">';
+					switch ($sv['type_id']){
+						case TYPE_ID_SCEN:
+							if(!isset($prices['supplier']['title'])){
+								$html .= (isset($sub_item['title']) ? $sub_item['title'] :  (!empty($package) ? '<i class="underline green">'.uh($package['title']).'</i>&nbsp;' : ''));
+							}
+							break;
+						default:
+							$html .= (isset($sub_item['title']) ? $sub_item['title'] : '' ) .  (!empty($package) ? '<i class="underline green">&nbsp;['.uh($package['title']).']</i>&nbsp;' : '');
+							break;
+					}
+					$html .= '</td>			
+										<td class="center " colspan="1">'.getServiceType($sv['type_id']).'</td>
 										<td class="center">'.getServiceUnitPrice($sv['type_id']).'</td>
 										<td class="center">'.number_format($prices['quantity']).'</td>
 										<td class="center" ><span data-decimal="'.(isset($price['decimal']) ? $price['decimal'] : 0).'" class="number-format '.(isset($price['changed']) && $price['changed'] ? 'red underline' : '').'" title="'.(isset($price['changed']) && $price['changed'] ? $price['old_price'] : '').'">'.(isset($price['price']) ? $price['price'] : '-').'</span></td>
@@ -3783,7 +3816,7 @@ function loadTourProgramDetail($o = []){
 			}
 				
 				
-			$html .= '<tr><td colspan="11" class="pr vtop">
+			$html .= '<tr><td colspan="12" class="pr vtop">
 							<p class=" aright bgef">   
 							<button data-toggle="tooltip" data-placement="left" data-class="w90" data-action="add-tours-services" data-title="Chọn thêm dịch vụ / Hành trình" data-id="'.$id.'" data-day="'.$i.'" data-time="'.$j.'" onclick="open_ajax_modal(this);" title="Chọn thêm / xóa dịch vụ" class="btn btn-primary btn-sm" type="button"><i class="glyphicon glyphicon glyphicon-pencil"></i> Thêm/ xóa dịch vụ</button></p>
 							</td>';
@@ -4071,3 +4104,145 @@ function getClientIP(){
 	}
 	return $ip;
 }
+
+
+function loadTourProgramDistances($id = 0){
+	$item = \app\modules\admin\models\ToursPrograms::getItem($id);
+	 //view($item,true);
+	$html = '<table class="table table-bordered table-striped table-sm vmiddle"> 
+ 
+<colgroup>
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+</colgroup>
+<thead>
+
+<tr class="col-middle">
+ <th class="bold center">Nhà xe</th>
+ <th class="bold center" colspan="2">Loại xe</th>
+ <th class="bold center">Số lượng</th>
+ <th colspan="5" > 
+ <p class="bold center">Chặng di chuyển</p>
+</th>
+<th class="bold center">Km</th>
+<th class="bold center">Đơn giá ('.Yii::$app->zii->showCurrency(isset($item['currency']) ? $item['currency'] : 1).')</th>
+<th class="bold center">Thành tiền </th> 
+ 
+</tr>
+</thead> <tbody class="ajax-load-distance-detail" data-count="0">';	 
+	//view(Yii::$app->zii->getTourProgramSuppliers($id));
+	$j=$i=-1;
+	foreach (Yii::$app->zii->getTourProgramSuppliers($id) as $k=>$v){
+	
+		$selected_car = Yii::$app->zii->chooseVehicleAuto([
+				'totalPax'=>post('total_pax',0),
+				'nationality'=>post('nationality',0),
+				'supplier_id'=>$v['id'],
+				'item_id'=>$id,
+				'default'=>true,
+				
+				////'auto'=>true,
+				//'update'=>true,
+		]);
+		$services = \app\modules\admin\models\ToursPrograms::getProgramDistanceServices($id,$v['id']);
+		$colspan1 = count($services)+1;
+		$colspan2 = (($colspan1) * count($selected_car)) + 1;
+			
+			
+			
+		$html .= '<tr><td rowspan="'.$colspan2.'" class="center"><button class="btn btn-sm btn-label btn-primary" type="button" data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>">'.($v['name']).'</button>';
+			
+		$html .= '<input type="hidden" value="'.$v['id'].'" class="selected_value_'.TYPE_ID_VECL.' selected_value_'.TYPE_ID_VECL.'_0_0" name="selected_value[]"/>';
+			
+		$html .= '</td></tr>';
+		//for($j=0;$j<4;$j++){
+		foreach ($selected_car as $k3=>$car){
+			$html .= '<tr><td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="2"><a data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="label label-danger f12p">'.$car['title'].'</span></a></td>';
+			$html .= '<td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="1"><a data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="badge">'.(isset($car['quantity']) ? $car['quantity'] : 0).'</span></a></td>';
+	
+			$html .= '</tr>';
+			if(!empty($services)){
+				foreach ($services as $kv=>$sv){
+					//
+					$distance = isset($sv['distance']) && $sv['distance'] > 0 ? $sv['distance'] : -1;
+					$prices = Yii::$app->zii->calcDistancePrice([
+							'supplier_id'=>$v['id'],
+							'vehicle_id'=>$car['id'],
+							'distance_id'=>$sv['id'],
+							'item_id'=>$id,
+					]);
+					//
+					$html .= '<tr><td colspan="5"><p><a data-item_id="'.$id.'" data-vehicle_id="'.$car['id'].'" data-supplier_id="'.$v['id'].'" data-service_id="'.$sv['id'].'" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">  ' .(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
+									<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$i.'_'.$j.'" name="selected_value[]"/>
+									<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>
+											</a></p></td>';
+					$html .= '<td class="center" colspan="1">'.($prices['price_type'] == 1 ? '<a data-item_id="'.$id.'" data-vehicle_id="'.$car['id'].'" data-supplier_id="'.$v['id'].'" data-service_id="'.$sv['id'].'" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">'. number_format($prices['distance']['distance']) .'</a>' : '-').'</td>';
+					$html .= '<td class="center" colspan="1"><a data-item_id="'.$id.'" data-vehicle_id="'.$car['id'].'" data-supplier_id="'.$v['id'].'" data-service_id="'.$sv['id'].'" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">'.number_format($prices['price']).'</a></td>';
+					$html .= '<td class="center" colspan="1"><b class="underline">'.number_format($prices['total_price']).'</b></td>';
+					$html .= '</tr>';
+				}
+			}
+		}
+	
+			
+		//}
+			
+		//	$html .= '<td class="center" colspan="1">'.$selected_car['quantity'].'</td>';
+		//	$html .= '<td class="center" colspan="1">'.$selected_car['quantity'].'</td>';
+		//	$html .= '<td class="center" colspan="1">'.$selected_car['quantity'].'</td>';
+	
+	
+	
+		$html .= '<tr><td colspan="12" class="pr vtop">
+						<p class=" aright bgef">
+							<button data-place_id="'.$v['place_id'].'" data-class="w90" data-action="add-tours-distance-services" data-title="Chọn thêm dịch vụ / Hành trình - <b class=red>'.$v['name'].'</b>" data-id="'.$id.'" data-supplier_id="'.$v['id'].'" data-time="'.$j.'" onclick="open_ajax_modal(this);" data-toggle="tooltip" data-placement="left" title="Chọn thêm / xóa dịch vụ cho '.$v['name'].'" class="btn btn-primary input-sm" type="button"><i class="glyphicon glyphicon glyphicon-pencil"></i> Thêm/ xóa chặng di chuyển</button></p>
+						</td></tr>';
+			
+	}
+	$html .= '<tr><td colspan="12" class="pr vtop">
+						<p class=" aright ">
+							<button data-nationality="'.$item['nationality'].'" data-guest="'.$item['guest'].'" data-class="w90" data-action="add-more-distance-supplier" data-title="Chọn thêm nhà xe" data-id="'.$id.'" onclick="open_ajax_modal(this);" title="Chọn thêm nhà xe" class="btn btn-success input-sm" type="button"><i class="glyphicon glyphicon glyphicon-plus"></i> Chọn thêm nhà xe</button></p>
+						</td></tr>';
+	$html .= '</tbody> </table>';
+	return $html;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

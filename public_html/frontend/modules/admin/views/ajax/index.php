@@ -91,6 +91,92 @@ switch (Yii::$app->request->get('action')){
 }
 //////////////////////////////////////////////////////////////////////
 switch (Yii::$app->request->post('action')){
+	case 'genTourCode':
+		echo ''; exit;
+		$code = '';
+		$cus_id = post('cus_id');
+		$in = post('pIN');
+		$out = post('pOUT');
+		$start = post('start');
+		$end = post('end');
+		$id = post('id');
+		//
+		//view($this->admin());
+		$customer = $this->loadModel('customers');
+		$contract = $this->loadModel('contracts');
+		$c = $customer->getItem($cus_id);
+		$cCode = $this->admin()->getCountryCode($c['local_id']);
+		$regIN = $this->admin()->getRegion($in);
+		$regOUT = $this->admin()->getRegion($out);
+		$dateIN = strtotime(convertTime($start));
+		$dateOUT = strtotime(convertTime($end));
+	
+		$code .= $cCode . $c['code'].$regIN.($regOUT != $regIN ? $regOUT : '').date('d',$dateIN).date('d',$dateOUT);
+		$code .= date("my",$dateOUT);
+		$code = $contract->checkTourCode($code,$id);
+		//
+		echo $code; exit;
+		break;
+	case 'Tourprogram_ReloadAllPrice':
+		//
+		$id = post('id',0);
+		$guest = post('guest',0);
+		$c = [];
+		$v = \app\modules\admin\models\ToursPrograms::getItem($id);
+		 
+		if(!empty($v)){
+			//
+			if($guest>-1){
+				$c = ['guest'=>$guest];
+			}
+			
+			switch (post('field')){
+				case 'guest1':
+					$c['guest1'] = post('value');
+					break;
+				case 'guest2':
+					$c['guest2'] = post('value');
+					break;	
+				case 'guest3':
+					$c['guest3'] = post('value');
+					break;		
+				case 'nationality':
+					$c['nationality'] = post('value');
+					break;
+				case 'from_date':
+					$c['from_date'] = ctime(['string'=> post('value')]);
+					$time = ctime(['string'=>$c['from_date'] ,'return_type'=>1]);
+					$to_date = date('Y-m-d H:i:s',mktime(0,0,0,date('m',$time),date('d',$time)+max($v['day'],$v['night']),date('Y',$time)));
+					$c['to_date'] = ctime(['string'=> $to_date]);
+					break;
+			}
+			//
+			Yii::$app->db->createCommand()->update( \app\modules\admin\models\ToursPrograms::tableName(),$c,['id'=>$id,'sid'=>__SID__])->execute();
+			//
+			$a = loadTourProgramDetail([
+				'id'=>$id,
+				'loadDefault'=>true,
+				'updateDatabase'=>true,
+			]);
+		}
+		
+		
+		//
+		echo json_encode(['post'=>$_POST,'html'=>'']);
+		exit;
+		break;
+	case 'change_date_range_from_day':
+		$day = post('day',0);
+		$night = post('night',0);
+		$from_date = post('from_date');
+		$time = ctime(['string'=>$from_date,'return_type'=>1]);
+		$to_date = date('d/m/Y',mktime(0,0,0,date('m',$time),date('d',$time)+max($day,$night),date('Y',$time)));
+		
+		echo json_encode([
+			'html'=>$to_date,
+		]);
+		exit;
+		break;
 	case 'quick-add-more-distance-to-supplier-price':
 		$f = post('f',[]);
 		$supplier_id = post('supplier_id');
@@ -564,6 +650,7 @@ switch (Yii::$app->request->post('action')){
 			$controller_code = post('controller_code',post('type_id'));
 			switch ($controller_code){
 				case TYPE_ID_VECL: case TYPE_ID_GUIDES:
+				case TYPE_ID_SHIP:
 					$incurred_prices = \app\modules\admin\models\Customers::getSupplierQuotations($supplier_id);
 					if(!empty($incurred_prices)){
 						foreach ($incurred_prices as $k=>$v){
@@ -1370,6 +1457,7 @@ switch (Yii::$app->request->post('action')){
 								'parent_id'=>$supplier_id,
 								'room_id'=>post('item_id'),
 						])->execute();
+						 
 						break;
 					case TYPE_ID_REST:
 						Yii::$app->db->createCommand()->delete('menus_to_suppliers',[
@@ -1377,7 +1465,7 @@ switch (Yii::$app->request->post('action')){
 							'menu_id'=>post('item_id'),
 						])->execute();
 						break;
-					case TYPE_ID_VECL:
+					case TYPE_ID_VECL: case TYPE_ID_SHIP:
 						if(post('price_type',1) == 2){
 							Yii::$app->db->createCommand()->delete('distances_to_suppliers',[
 									'supplier_id'=>$supplier_id,
@@ -1399,7 +1487,7 @@ switch (Yii::$app->request->post('action')){
 						post('item_id'),
 				];
 				
-				$callback_function = 'reloadAutoPlayFunction();'; 
+				$callback_function = 'reloadAutoPlayFunction();';  
 				break;
 				
 		} 
@@ -2082,7 +2170,7 @@ switch (Yii::$app->request->post('action')){
 			case TYPE_CODE_DISTANCE:
 				$model = load_model('distances');
 				
-				$l = $model->getAll(6, [ 
+				$l = $model->getAll(TYPE_ID_VECL, [ 
 						'limit'=>100,
 						'place_id'=>$place_id,
 						'not_in'=>post('selected'),
@@ -2091,10 +2179,41 @@ switch (Yii::$app->request->post('action')){
 				//$html .= json_encode($l);
 				if(!empty($l)){
 					foreach($l as $k=>$v){
-						$html .= '<li data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).'</li>';
+						// Lay package
+						$packages = \app\modules\admin\models\PackagePrices::getPackages($v['id']);
+						if(empty($packages)){
+							$packages = [['id'=>0,'title'=>'']];
+						}
+						foreach ($packages as $package){
+						$html .= '<li data-package_id="'.$package['id'].'" data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).'</li>';
+						}
 					}
 				}
 				break;
+			case TYPE_ID_SHIP:
+				$model = load_model('distances');
+				
+				$l = $model->getAll(TYPE_ID_SHIP, [ 
+						'limit'=>100,
+						'place_id'=>$place_id,
+						'not_in'=>post('selected'),
+						'p'=>1
+				]);
+				//$html .= json_encode($l);
+				if(!empty($l)){
+					foreach($l as $k=>$v){
+						// Lay package
+						$packages = \app\modules\admin\models\PackagePrices::getPackages($v['id']);
+						if(empty($packages)){
+							$packages = [['id'=>0,'title'=>'']];
+						}
+						foreach ($packages as $package){
+						$html .= '<li data-package_id="'.$package['id'].'" data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).'</li>';
+						}
+					}
+				}
+				break;	
+				
 			case TYPE_ID_SCEN:
 				$model = load_model('tickets');					
 				$l = $model->getList([
@@ -2107,7 +2226,9 @@ switch (Yii::$app->request->post('action')){
 				//$html .= json_encode($l);
 				if(!empty($l['listItem'])){
 					foreach($l['listItem'] as $k=>$v){
-						$html .= '<li data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).'</li>';
+						 
+						$html .= '<li data-package_id="0" data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).'</li>';
+						 
 					}
 				}
 				break;
@@ -2123,11 +2244,41 @@ switch (Yii::$app->request->post('action')){
 				//$html .= json_encode($l);
 				if(!empty($l)){
 					foreach($l as $k=>$v){
-						$html .= '<li data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).' &nbsp;<i class="underline font-normal green">['.uh($v['supplier_name']).']</i></li>';
+						// Lay package						
+						$packages = \app\modules\admin\models\PackagePrices::getPackages(Yii::$app->zii->getSupplierIDFromService($v['id'],TYPE_ID_GUIDES));
+						if(empty($packages)){
+							$packages = [['id'=>0,'title'=>'']];
+						}
+						foreach ($packages as $package){
+						$html .= '<li data-package_id="'.$package['id'].'" data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).' &nbsp;<i class="underline font-normal green">['.uh($v['supplier_name']).']</i></li>';
+						}
 					}
 				}
 				
 				break;
+				
+			case TYPE_ID_TEXT:
+				//$model = load_model('guides');
+				$l = \app\modules\admin\models\TextInstructions::getAll([
+						'limit'=>100,
+						'p'=>1,
+						'place_id'=>$place_id,
+						'filter_text'=>post('value'),
+						'not_in'=>post('selected')
+				]);
+				//$html .= json_encode($l);
+				if(!empty($l)){
+					foreach($l as $k=>$v){
+						$html .= '<li data-package_id="0" data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).'</li>';
+					}
+				}
+				$html .= '<li data-package_id="0" data-type_id="'.$id.'" data-id="0" class="ui-state-highlight">
+						
+						<input type="text" name="new['.$id.'][]" class="form-control" placeholder="Thêm nhanh" title="Kéo thả sang ô bên trái rồi điền giá trị"/>
+						</li>';
+				
+				break;	
+				
 		}
 		$html .= '';		
 		echo json_encode([
@@ -2177,6 +2328,24 @@ switch (Yii::$app->request->post('action')){
 					}
 				}
 				break;
+			case TYPE_ID_SHIP:
+				$model = load_model('distances');
+			
+				$l = $model->getAll(TYPE_ID_SHIP, [
+						'limit'=>100,
+						'p'=>1,
+						'place_id'=>$place_id,
+						'filter_text'=>post('value'),
+						'not_in'=>post('selected')
+				]);
+				//$html .= json_encode($l);
+				if(!empty($l)){
+					foreach($l as $k=>$v){
+						$html .= '<li data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).'</li>';
+					}
+				}
+				break;	
+				
 			case TYPE_ID_SCEN:
 				$model = load_model('tickets');
 			
@@ -2248,25 +2417,50 @@ switch (Yii::$app->request->post('action')){
 		$time = post('time');
 		$nationality = post('nationality');
 		$guest = post('guest');
-		
+		$type_id = post('type_id',0);
 		
 		$selected_value = post('selected_value',[]);
-		 
+		//
+		Yii::$app->db->createCommand()->delete('tours_programs_to_suppliers',
+				['and',
+						['not in','supplier_id',$selected_value],
+						['item_id'=>$item_id,'type_id'=>$type_id]
+						
+				])->execute();
+		//
+		$selected_id = post('selected_id',[]);
 		$i = 0;
 		if(!empty($selected_value)){
 			$selected_type_id = post('selected_type_id');
 			foreach ($selected_value as $k => $id){
 				$type_id = $selected_type_id[$k];
-				
-				Yii::$app->zii->chooseVehicleAuto([
-						'totalPax'=>$guest,
-						'nationality'=>$nationality,
-						'supplier_id'=>$id,
-						'auto'=>true,
-						'update'=>true,
-						'item_id'=>$item_id
-				]);
-				 
+				if(!in_array($id, $selected_id)){
+					
+					Yii::$app->db->createCommand()->insert('tours_programs_to_suppliers',[
+							'position'=>$k,
+							'type_id'=>$type_id,
+							'supplier_id'=>$id,
+							'item_id'=>$item_id,
+					])->execute();
+					/*
+					Yii::$app->zii->chooseVehicleAuto([
+							'totalPax'=>$guest,
+							'nationality'=>$nationality,
+							'supplier_id'=>$id,
+							'auto'=>true,
+							'update'=>true,
+							'item_id'=>$item_id,
+							'position'=>$k
+					]);
+					*/
+				}else{
+					Yii::$app->db->createCommand()->update('tours_programs_to_suppliers',[
+							'position'=>$k
+					],[
+							'supplier_id'=>$id,							 
+							'item_id'=>$item_id,
+					])->execute();
+				}
 			}
 		}
 		echo json_encode([
@@ -2285,12 +2479,7 @@ switch (Yii::$app->request->post('action')){
 		
 		$selected_value = post('selected_value',[]);
 		$removed_item_id = post('removed_item_id',[]);
-		//view($selected_value);
-		Yii::$app->db->createCommand()->delete('tours_programs_services_days',[
-				'item_id'=>$item_id,
-				'day_id'=>$day,
-				'time_id'=>$time,
-		])->execute();
+		
 		
 		if(!empty($removed_item_id)){
 			$removed_type_id = post('removed_type_id',[]);
@@ -2308,35 +2497,62 @@ switch (Yii::$app->request->post('action')){
 		}
 		
 		
-		
 		$i = 0;
 		if(!empty($selected_value)){
 			$selected_type_id = post('selected_type_id');
 			$selected_package_id = post('selected_package_id');
+			$new = post('new',[]);
+			$new_added = [];
+			if(!empty($new)){
+				foreach ($new as $type_id=>$titles){
+					if(!empty($titles)){
+						foreach ($titles as $title){
+						switch ($type_id){
+							case TYPE_ID_TEXT:
+								if(trim($title) != "" && (new Query())->from(\app\modules\admin\models\TextInstructions::tableName())->where(['title'=>trim($title),'sid'=>__SID__])->count(1) == 0){
+									$f['title'] = trim($title);
+									$f['sid'] = __SID__;
+									$new_added[] = Yii::$app->zii->insert(\app\modules\admin\models\TextInstructions::tableName(),$f);
+								}else{
+									$new_added[] = (new Query())->from(\app\modules\admin\models\TextInstructions::tableName())->where(['title'=>trim($title),'sid'=>__SID__])->select('id')->scalar();
+								}
+								break;
+						}}
+					}
+				}
+			}
+			$m = '';
 			foreach ($selected_value as $k => $id){
 				$type_id = $selected_type_id[$k];
-				//if(!empty($v)){
+				if($id == 0){
+					if(isset($new_added[0])){
+						$id = $new_added[0]; unset($new_added[0]); $new_added = array_values($new_added);
+					}
+				}
+				switch ($type_id){
+					case TYPE_ID_SHIP: case TYPE_ID_SCEN: case TYPE_ID_GUIDES:
+						$sub_item_id = $id;
+						break;
+					default: 
+						$sub_item_id = 0;
+						break;
+				}
+				if($id>0){
 				//	foreach ($v as $id){
-				Yii::$app->db->createCommand()->insert('tours_programs_services_days',[
-						'item_id'=>$item_id,
-						'type_id'=>$type_id,
-						'service_id'=>$id,
-						'day_id'=>$day,
-						'time_id'=>$time,
-						'position'=>$k,
-						'package_id'=>(isset($selected_package_id[$k]) ? $selected_package_id[$k] : 0 ),
-				])->execute();
-				//}
-				//}
+				$supplier_id = Yii::$app->zii->getSupplierIDFromService($id,$type_id);
+				 
 				if((new Query())->from('tours_programs_services_prices')->where([
 						'item_id'=>$item_id,
 						'type_id'=>$type_id,
 						'service_id'=>$id,
 						'day_id'=>$day,
 						'time_id'=>$time,
+						'supplier_id'=>$supplier_id,
+						//'sub_item_id'=>[$sub_item_id,0],
 						'package_id'=>(isset($selected_package_id[$k]) ? $selected_package_id[$k] : 0 ),
 						
 				])->count(1) == 0){
+					
 					Yii::$app->db->createCommand()->insert('tours_programs_services_prices',[
 							'item_id'=>$item_id,
 							'type_id'=>$type_id,
@@ -2344,9 +2560,15 @@ switch (Yii::$app->request->post('action')){
 							'day_id'=>$day,
 							'time_id'=>$time,
 							'position'=>$k,
+							'state'=>2,
+							'supplier_id'=>$supplier_id,
+							'sub_item_id'=>$sub_item_id,
 							'package_id'=>(isset($selected_package_id[$k]) ? $selected_package_id[$k] : 0 ),
 					])->execute();
+					
 				}else{
+					
+					
 					Yii::$app->db->createCommand()->update('tours_programs_services_prices',
 							[
 								'position'=>$k,	
@@ -2357,9 +2579,12 @@ switch (Yii::$app->request->post('action')){
 							'service_id'=>$id,
 							'day_id'=>$day,
 							'time_id'=>$time,
-							
+							'supplier_id'=>$supplier_id,
+							//'sub_item_id'=>[$sub_item_id,0],
 							'package_id'=>(isset($selected_package_id[$k]) ? $selected_package_id[$k] : 0 ),
 					])->execute();
+					
+				}
 				}
 			}
 		}
@@ -2370,7 +2595,8 @@ switch (Yii::$app->request->post('action')){
 		echo json_encode([
 				'event'=>'hide-modal',
 				'callback'=>true,
-				'callback_function'=>'reloadAutoPlayFunction();'
+				//'m'=>$new,
+				'callback_function'=>'console.log(data);reloadAutoPlayFunction();'
 		]);
 		exit;
 		break;
@@ -2434,6 +2660,7 @@ switch (Yii::$app->request->post('action')){
 			$html .= $v['id'] == TYPE_CODE_DISTANCE ? '<li class="'.($v['id'] == TYPE_CODE_DISTANCE ? 'li-service-first-child' : '').'"><a data-day="'.$day.'" data-time="'.$time.'" data-id="'.$v['id'].'" onclick="return change_selected_tour_service_group(this);" href="#">'.$v['title'].'</a></li>' : '';
 		}
 		$services = \app\modules\admin\models\ToursPrograms::getProgramDistanceServices($id,$supplier_id);
+		
 		$html .= '</ul>
 				
 				</td>
@@ -2443,15 +2670,16 @@ switch (Yii::$app->request->post('action')){
 		if(!empty($services)){
 			foreach ($services as $kv=>$sv){
 				$html .= '<li data-package_id="'.$sv['package_id'].'" data-type_id="'.$sv['type_id'].'" data-id="'.$sv['id'].'" class="ui-state-default">'.(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
-									<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$day.'_'.$time.'" name="selected_value[]"/>
-									<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>
-											<input value="'.$sv['package_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_package_id[]"/></li>';
+						<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$day.'_'.$time.'" name="selected_value[]"/>
+						<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>
+						<input value="'.$sv['package_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_package_id[]"/></li>';
 			}
 		}
 		$place = [];
 		if(post('place_id') > 0){
 			$place = \app\modules\admin\models\DeparturePlaces::getItem(post('place_id'));
 		}
+		 
 				$html .= '</ul>
 				</td>
 				<td class="">
@@ -2659,11 +2887,14 @@ change:function(event,ui){
 				<td class="">
 				
 				<ul id="sortable1" class="connectedSortable style-none">';
+		$services = Yii::$app->zii->getTourProgramSuppliers($id);
 		if(!empty($services)){
 			foreach ($services as $kv=>$sv){
 				$html .= '<li data-type_id="'.$sv['type_id'].'" data-id="'.$sv['id'].'" class="ui-state-default">'.(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
 									<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$day.'_'.$time.'" name="selected_value[]"/>
-									<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>											</li>';
+									<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>
+									<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_id[]"/>
+											</li>';
 			}
 		}
 		$place = [];
@@ -2745,7 +2976,11 @@ change:function(event,ui){
 		$supplier_id = post('supplier_id');
 		$item_id = post('item_id');
 		//
-		Yii::$app->db->createCommand()->delete('tours_programs_to_suppliers',['supplier_id'=>$supplier_id,'item_id'=>$item_id])->execute();
+		Yii::$app->db->createCommand()->delete('tours_programs_to_suppliers',[
+				'supplier_id'=>$supplier_id,
+				'item_id'=>$item_id
+				
+		])->execute();
 		//
 		if(!empty($selected_value)){
 			foreach ($selected_value as $k=>$v){
@@ -2764,8 +2999,8 @@ change:function(event,ui){
 		echo json_encode([
 			'event'=>'hide-modal',
 			'callback'=>true,
-			//'post'=>$_POST,
-			'callback_function'=>'reloadAutoPlayFunction();'
+			'post'=>$_POST,
+			'callback_function'=>'console.log(data);reloadAutoPlayFunction();'
 		]); exit;
 		break;
 	case 'quick-edit-supplier-services':
@@ -2850,6 +3085,7 @@ change:function(event,ui){
 				'callback'=>true,
 				'callback_function'=>'loadScrollDiv();quick_search_tour_service(\'.input-quick-search-service\');loadSelectTagsinput1();jQuery(\'.li-service-first-child a\').click();jQuery("#sortable2").sortable({connectWith: ".connectedSortable",
 receive:function(event,ui){
+				var $type_id = ui.item.attr(\'data-type_id\');
 				(ui.item).addClass(\'ui-state-highlight\').removeClass(\'ui-state-default\')
 				.find(\'input.selected_value_\'+$type_id+\'\').remove();
 				$iq = ui.item.find(\'input.selected_quantity\');
@@ -2859,8 +3095,8 @@ receive:function(event,ui){
 }).disableSelection();
 jQuery("#sortable1").sortable({connectWith: ".connectedSortable",
 receive:function(event,ui){
-				$type_id = ui.item.attr(\'data-type_id\');
-				$id = ui.item.attr(\'data-id\');
+				var $type_id = ui.item.attr(\'data-type_id\');
+				var $id = ui.item.attr(\'data-id\');
 				(ui.item).removeClass(\'ui-state-highlight\').addClass(\'ui-state-default\')
 				.append(\'<input value="\'+$id+\'" type="hidden" class="selected_value_\'+$type_id+\' selected_value_\'+$type_id+\'_'.$day.'_'.$time.' " name="selected_value[]"/><input value="\'+$type_id+\'" type="hidden" class="selected_value_\'+$type_id+\'" name="selected_type_id[]"/>\')
 				.append(\'\');
@@ -2989,31 +3225,54 @@ change:function(event,ui){
 		break;	
 	case 'quick-qedit-service-detail-day':
 		$f = post('f');
-		if((new Query())->from('tours_programs_suppliers_prices')->where([
-				'supplier_id'=>post('supplier_id'),
-				'vehicle_id'=>post('vehicle_id'),
-				'item_id'=>post('item_id'),
-				'service_id'=>post('service_id'),
+		$a = [
+				'service_id',
+				'id',
+				'type_id',
+				'package_id',
+				'day_id',
+				'item_id',
+				'supplier_id',
+				'service_id',
+				'sub_item_id'
+		
+		];
+		foreach ($a as $b){
+			$$b = post($b,12);
+		}
+		$time_id = post('time_id',-1);
+		
+		
+		if((new Query())->from('tours_programs_services_prices')->where([
+				'supplier_id'=>$supplier_id,
+				'package_id'=>$package_id,
+				'item_id'=>$id,
+				'service_id'=>$service_id,
+				'day_id'=>$day_id,
+				'time_id'=>$time_id,
+				'type_id'=>$type_id,
+				'sub_item_id'=>$item_id,
 		])->count(1) == 0){
-			Yii::$app->db->createCommand()->insert('tours_programs_suppliers_prices',[
-				'supplier_id'=>post('supplier_id'),
-				'vehicle_id'=>post('vehicle_id'),
-				'item_id'=>post('item_id'),
-				'service_id'=>post('service_id'),
-				'price1'=>$price	,
-				'distance'=>post('distance',1),	
-			])->execute();
+			Yii::$app->db->createCommand()->insert('tours_programs_services_prices',[
+				'supplier_id'=>$supplier_id,
+				'package_id'=>$package_id,
+				'item_id'=>$id,
+				'service_id'=>$service_id,
+				'day_id'=>$day_id,
+				'time_id'=>$time_id,
+				'type_id'=>$type_id,
+				'sub_item_id'=>$item_id,
+			]+$f)->execute();
 		}else{
-			Yii::$app->db->createCommand()->update('tours_programs_suppliers_prices',[
-					 
-					'price1'=>$price,
-					'distance'=>post('distance',1),
-			],[
-					'supplier_id'=>post('supplier_id'),
-					'vehicle_id'=>post('vehicle_id'),
-					'item_id'=>post('item_id'),
-					'service_id'=>post('service_id'),
-					
+			Yii::$app->db->createCommand()->update('tours_programs_services_prices',$f,[
+				'supplier_id'=>$supplier_id,
+				'package_id'=>$package_id,
+				'item_id'=>$id,
+				'service_id'=>$service_id,
+				'day_id'=>$day_id,
+				'time_id'=>$time_id,
+				'type_id'=>$type_id,
+				'sub_item_id'=>$item_id,
 				 
 			])->execute();
 		}
@@ -3085,7 +3344,7 @@ change:function(event,ui){
 				'type_id',
 				'package_id',
 				'day_id',
-				'item_id',
+				'item_id','sub_item_id',
 				'supplier_id','service_id','nationality_id','total_pax'
 		
 		];
@@ -3095,20 +3354,36 @@ change:function(event,ui){
 		$item = \app\modules\admin\models\ToursPrograms::getItem($id);
 		$time_id = post('time_id',-1);
 		
-		$prices = Yii::$app->zii->getServiceDetailDayPrices([
+		$prices = Yii::$app->zii->getServiceDetailPrices([
 			'supplier_id'=>$supplier_id,
 			'package_id'=>$package_id,
-			'type_id'=>4,
+			'type_id'=>$type_id,
 			'item_id'=>$id,
-			'sub_item_id'=>$item_id,
+			'sub_item_id'=>$sub_item_id,
 			'day_id'=>$day_id,
 			'time_id'=>$time_id,
 			'service_id'=>$service_id,
 			'from_date'=>$item['from_date'],
 			'nationality_id'=>$item['nationality']	,
 			'total_pax'=>$item['guest'],	
+			'loadDefault'=>true	,
+			'updateDatabase'=>false,	
 		]);
-		echo json_encode($prices);exit;
+		echo json_encode($prices + [
+			'supplier_id'=>$supplier_id,
+			'package_id'=>$package_id,
+			'type_id'=>$type_id,
+			'item_id'=>$id,
+			'sub_item_id'=>$sub_item_id,
+			'day_id'=>$day_id,
+			'time_id'=>$time_id,
+			'service_id'=>$service_id,
+			'from_date'=>$item['from_date'],
+			'nationality_id'=>$item['nationality']	,
+			'total_pax'=>$item['guest'],	
+			'loadDefault'=>true	,
+			'updateDatabase'=>false,	
+		]);exit;
 		break;	
 	case 'qedit-service-detail':
 		 
@@ -3206,7 +3481,7 @@ change:function(event,ui){
 		 
 		
 		 
-		 
+		$package = \app\modules\admin\models\PackagePrices::getItem($package_id);
 		$prices = Yii::$app->zii->getServiceDetailDayPrices([
 				'supplier_id'=>$supplier_id,
 				'package_id'=>$package_id,
@@ -3216,43 +3491,54 @@ change:function(event,ui){
 				'day_id'=>$day_id,
 				'time_id'=>$time_id,'service_id'=>$service_id
 		]);
+		
+		$sub_item = Yii::$app->zii->getSupplierServiceDetail(isset($prices['sub_item_id']) ? $prices['sub_item_id'] : 0,$type_id);
+		
+	
 		$html = '';
 		
 		$html .= '
 				<table class="table table-bordered vmiddle"><thead><tr>
-				<th class="center bold col-ws-6">Dịch vụ / Nhà cung cấp DV</th>
+				<th class="center bold col-ws-3">Dịch vụ / Nhà cung cấp DV</th>
+				<th class="center bold col-ws-3">Chi tiết dịch vụ</th>
 				<th class="center bold col-ws-1">Loại DV</th>
-				<th class="center bold col-ws-1">ĐVT</th>
+				<th class="center bold col-ws-1">ĐVT</th> 
 				<th class="center bold col-ws-1">Số lượng</th>
-				<th class="center bold col-ws-2">Đơn giá (<i class="red underline">'.Yii::$app->zii->showCurrency($prices['currency']).'</i>)</th>
-				<th class="center bold col-ws-1"></th>
+				<th class="center bold col-ws-2">Đơn giá (<i class="red underline">'.Yii::$app->zii->showCurrency(isset($prices['currency']) ? $prices['currency'] : 1).'</i>)</th>
+				<th class="center bold col-ws-1">Tính lại</th>
 				</tr></thead><tbody>';
 		//if(!empty($services)){
 		//	foreach ($services as $kv=>$sv){
 				$html .= '<tr class="">
 			
 				<td class="">
-	 '. (isset($prices['supplier']['title']) ? $prices['supplier']['title'] : '').'
+	 '.  ( isset($prices['supplier']['title']) ? $prices['supplier']['title'] : '').'
 				</td>
-				
 				<td class="center">
-		 		   '.getServiceType($prices['type_id']).'
-				</td><td class="center">'.getServiceUnitPrice($prices['type_id']).'</td>
+	 		<input name="f[sub_item_id]" value="'.(isset($prices['sub_item_id']) ? $prices['sub_item_id'] : 0).'" type="hidden" class="input-service-day-price-sub-item-id form-control bold center number-format"/>
+		 		   '. (isset($sub_item['title']) ? $sub_item['title'] : '') .  (!empty($package) ? '<i class="underline green">&nbsp;['.uh($package['title']).']</i>&nbsp;' : '').'
+				</td>
+				<td class="center">
+		 		   '.getServiceType(isset($prices['type_id']) ? $prices['type_id'] : 0).'
+				</td><td class="center">'.getServiceUnitPrice(isset($prices['type_id']) ? $prices['type_id'] : 0).'</td>
 				<td class="center">
 		   
-				<input name="f[quantity]" value="'.(isset($prices['quantity']) ? $prices['quantity'] : 0).'" type="text" class=" form-control bold center number-format"/>
+				<input name="f[quantity]" value="'.(isset($prices['quantity']) ? $prices['quantity'] : 0).'" type="text" class="input-service-day-price-quantity form-control bold center number-format"/>
 		  		</td>
 				<td class=""> 
 						<input name="f[price1]" value="'.(isset($prices['price1']) ? $prices['price1'] : 0).'" type="text" class="input-distance-service-price form-control bold aright number-format"/>
 				</td>
 				<td class="center"> 
 						<i data-id="'.$id.'" 
+								data-type_id="'.$type_id.'"
 								data-service_id="'.$service_id.'" 
 								data-supplier_id="'.$supplier_id.'" 
 								data-time_id="'.$time_id.'" 
 								data-day_id="'.$day_id.'"		
-								data-package_id="'.$package_id.'"		
-										onclick="reloadServiceDayPriceAuto(this)" class="fa fa-refresh f12e pointer" title="Tính giá tự động theo số liệu hệ thống"></i>
+								data-package_id="'.$package_id.'"	
+								data-sub_item_id="'.$item_id.'"		
+								data-toggle="tooltip"
+								onclick="reloadServiceDayPriceAuto(this)" class="fa fa-refresh f12e pointer" title="Tính giá tự động theo số liệu hệ thống"></i>
 				</td>
 				</tr>';
 		//	}
@@ -3417,7 +3703,8 @@ change:function(event,ui){
 									'to'=>$v['currency']
 							]);
 						}
-						$html .= '<tr><td colspan="4"><p><a data-type_id="'.$sv['type_id'].'">' .(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
+						$package = \app\modules\admin\models\PackagePrices::getItem($sv['package_id']);
+						$html .= '<tr><td colspan="4"><p><a data-type_id="'.$sv['type_id'].'">'.(!empty($package) ? '<i class="underline green">['.uh($package['title']).']</i>&nbsp;' : '') .(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
 								<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$i.'_'.$j.'" name="selected_value[]"/>
 								<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>											
 										</a></p></td>

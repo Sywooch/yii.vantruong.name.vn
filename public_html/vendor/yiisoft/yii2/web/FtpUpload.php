@@ -646,13 +646,18 @@ function upload_file_ckeditor($path,$filename,$file){
 	if (substr($path,-1) != '/'){
 		$path = $path . '/';
 	}
+	
 	if(!$this->ftp_directory_exists($this->link_id,$path)){
 		$this->MkDir_($path);
 	}
 	$folder = get_folder_upload_file($filename);
-	if(!$this->ftp_directory_exists($this->link_id,$folder)){
-		$this->MkDir_($folder);
+	//var_dump($path); exit;
+	if(!$this->ftp_directory_exists($this->link_id,$path . $folder)){
+		$this->MkDir_($path . $folder);
 	}
+	//
+	//var_dump($path. $folder . '/' . $filename); exit;
+	//
 	$this->put($path. $folder . '/' . $filename, $file);
 	//var_dump($path . '/' .$filename); exit;
 	$this->close();

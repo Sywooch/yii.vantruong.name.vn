@@ -51,6 +51,8 @@ $d = array(
 		'TYPE_ID_COACHES'=>14, // Huấn luyện viên
 		'TYPE_ID_MEMBERS'=>15, // Thành viên
 		'TYPE_ID_STUDENTS'=>15, // Học viên
+		'TYPE_ID_TRANSFORM_TICKET'=>16, // Phương tiện bán vé
+		'TYPE_ID_TEXT'=>17, // Text
 		'TYPE_ID_ORDER'=>80, //Order Status
 		'TYPE_ID_PAYMETHOD'=>81, //Pay method
 		

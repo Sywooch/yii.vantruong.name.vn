@@ -187,7 +187,14 @@ class Menus extends \yii\db\ActiveRecord
     	->asArray()->all();
     	return $query;
     }
+    public static function getItem($id=0,$o=[]){
+    	$item = static::find()
+    	->where(['id'=>$id, 'sid'=>__SID__]);
     
+    	$item = $item->asArray()->one();
+    
+    	return $item;
+    }
     public static function getMenus($o=[]){
     	$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : (is_numeric($o) ? $o : 0);
     	$menu_id = isset($o['menu_id']) ? $o['menu_id'] : 0;

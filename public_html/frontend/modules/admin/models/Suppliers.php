@@ -11,7 +11,7 @@ class Suppliers extends Customers
 	/*
 	 * Lấy báo giá của đơn vị theo ngày đã nhập 
 	 */
-	public static function getQuotation($o = []){
+	public static function getQuotation($o = [], $c = 0){
 		$date = isset($o['date']) ? $o['date'] : date('Y-m-d');
 		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
 		if(!check_date_string($date)){
@@ -26,7 +26,16 @@ class Suppliers extends Customers
 		->andWhere("'$date' BETWEEN a.from_date and a.to_date")		
 		->orderBy(['a.is_active'=>SORT_DESC])
 		->one();
-		 
+		if(empty($r) && $c<3){
+			$date = date("Y-m-d",mktime(
+					0,0,0,
+					date('m',strtotime($date)),
+					date('d',strtotime($date)),
+					date('Y',strtotime($date))-1
+			));
+			$o['date'] = $date;
+			return self::getQuotation($o,++$c);
+		}
 		return $r;
 	}
 	

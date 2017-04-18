@@ -168,17 +168,19 @@ class Zii extends yii\base\Object
 		return $html;
 	}
 	
-	public function getTourProgramSuppliers($id){
+	public function getTourProgramSuppliers($id, $type_id = TYPE_ID_VECL){
 		$query = new Query();
 		$query->select(['a.*',
 		'place_id'=>(new Query())->select('place_id')->from('customers_to_places')->where('customer_id=a.id')->limit(1)		
 		])->from(['a'=>'customers'])
-		//->leftJoin(['b'=>'tours_programs_to_suppliers'],'a.id=b.supplier_id')
-		->where(['in','a.id',(new Query())->select('supplier_id')->from('tours_programs_to_suppliers')->where(['item_id'=>$id])])
+		->innerJoin(['b'=>'tours_programs_to_suppliers'],'a.id=b.supplier_id')
+		->where(['b.item_id'=>$id,'b.type_id'=>$type_id])->groupBy(['a.id'])
 		//->andWhere(['b.item_id'=>$id])
 		;
-		return $query->orderBy(['a.name'=>SORT_ASC])->all();
+		return $query->orderBy(['b.position'=>SORT_ASC, 'a.name'=>SORT_ASC])->all();
 	}
+	
+	
 	
 	public function chooseVehicleAuto($o = []){
 		/* 
@@ -189,23 +191,45 @@ class Zii extends yii\base\Object
 		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
 		$totalPax = isset($o['totalPax']) ? $o['totalPax'] : $total_pax;
 		$nationality = isset($o['nationality']) ? $o['nationality'] : 0;
+		$nationality_id = isset($o['nationality_id']) ? $o['nationality_id'] : $nationality;
 		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
 		$place_id = isset($o['place_id']) ? $o['place_id'] : 0;
 		$auto = isset($o['auto']) ? $o['auto'] : 0;
 		$update = isset($o['update']) ? $o['update'] : 0;
 		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
+		$position = isset($o['position']) ? $o['position'] : 0;
+		$vehicle_id = isset($o['vehicle_id']) ? $o['vehicle_id'] : 0;
+		$default = isset($o['default']) ? $o['default'] : false;
 		// Check quốc tịch - 
-		$pax_type = \app\modules\admin\models\Local::getTypeByNationality($nationality);
+		$pax_type = \app\modules\admin\models\Local::getTypeByNationality($nationality_id);
 		$selected_car = [];
 		if(isConfirm($auto)){		
 		
 		// Lấy danh sách xe
 		$query = new Query();
-		$query->from(['a'=>'vehicles_categorys'])->where(['>','a.state',-2])->andWhere(['a.type'=>$pax_type])
-		->andWhere(['<=','a.pmin',$totalPax])
-		->andWhere(['in','a.id',(new Query())->from(['vehicles_to_cars'])->where(['parent_id'=>$supplier_id,'is_active'=>1,'is_default'=>1])->select('vehicle_id')])		
+		$query->select(['a.*'])->from(['a'=>'vehicles_categorys'])
+		->innerJoin(['b'=>'vehicles_to_cars'],'a.id=b.vehicle_id')
+		->where(['>','a.state',-2])
+		->andWhere(['a.type'=>$pax_type,
+				'b.parent_id'=>$supplier_id,
+				'b.is_active'=>1,
+		])
+		
+		//->andWhere(['in','a.id',(new Query())->from(['vehicles_to_cars'])->where([
+		//		'parent_id'=>$supplier_id,
+		//		'is_active'=>1,
+		//		'is_default'=>1
+				
+		//])->select('vehicle_id')])		
 		->orderBy(['a.pmax'=>SORT_DESC]);
+		if($vehicle_id>0){
+			$query->andWhere(['id'=>$vehicle_id]);
+		}else{
+			$query->andWhere(['<=','a.pmin',$totalPax]);
+			$query->andWhere(['b.is_default'=>1]);
+		}
 		$listCar = $query->all();
+		 
 		$totalCar = 0; 
 		if(!empty($listCar)){
 			foreach ($listCar as $k=>$v){
@@ -218,7 +242,7 @@ class Zii extends yii\base\Object
 				$selected_car[0] = $v;
 				$selected_car[0]['quantity'] = $t;
 			}
-		}
+	 
 		//
 		$du_khach = $totalPax - ($selected_car[0]['quantity'] * $selected_car[0]['pmax']);
 		if($du_khach < $selected_car[0]['pmax']){
@@ -237,23 +261,126 @@ class Zii extends yii\base\Object
 							'item_id'=>$item_id,
 							'vehicle_id'=>$selected_car[0]['id'],
 							'quantity'=>$selected_car[0]['quantity'],
-							'type_id'=>TYPE_ID_VECL
+							'type_id'=>TYPE_ID_VECL,
+							'position'=>$position
 					]
 					)->execute();
 		}
 		
-		 
+		}
 		}else{
 			$query = new Query();
 			$query->from(['a'=>'vehicles_categorys'])
-			->innerJoin(['b'=>'tours_programs_to_suppliers'],'a.id=b.vehicle_id')
+			//->innerJoin(['b'=>'tours_programs_to_suppliers'],'a.id=b.vehicle_id')
 			->where(['>','a.state',-2])			
+			->andWhere(['a.type'=>$pax_type])
+			->select(['a.*','maker_title'=>(new Query())->select('title')->from('vehicles_makers')->where('id=a.maker_id')])
+			;
+			//view($query->createCommand()->getRawSql());
+			$selected_car = $query->all();
+			
+		}
+		
+		
+		if(empty($selected_car) && $default){
+			return [
+				['id'=>0,'title'=>'Chọn phương tiện','quantity'=>0,]	
+			];
+		}
+		return $selected_car;
+	}
+	
+	
+	public function getVehicleAuto($o = []){
+		/*
+		 * Số lượng khách
+		 * Quốc tịch khách
+		 *
+		 */
+		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
+		$totalPax = isset($o['totalPax']) ? $o['totalPax'] : $total_pax;
+		$nationality = isset($o['nationality']) ? $o['nationality'] : 0;
+		$nationality_id = isset($o['nationality_id']) ? $o['nationality_id'] : $nationality;
+		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
+		$place_id = isset($o['place_id']) ? $o['place_id'] : 0;
+		$auto = isset($o['auto']) ? $o['auto'] : 0;
+		$update = isset($o['update']) ? $o['update'] : 0;
+		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
+		$position = isset($o['position']) ? $o['position'] : 0;
+		$type_id = isset($o['type_id']) ? $o['type_id'] : 0;
+		
+		// Check quốc tịch -
+		$pax_type = \app\modules\admin\models\Local::getTypeByNationality($nationality_id);
+		$selected_car = [];
+		if(isConfirm($auto)){
+	
+			// Lấy danh sách xe
+			$query = new Query();
+			$query->from(['a'=>'vehicles_categorys'])->where(['>','a.state',-2])->andWhere(['a.type'=>$pax_type])
+			->andWhere(['<=','a.pmin',$totalPax])
+			->andWhere(['in','a.id',(new Query())->from(['vehicles_to_cars'])->where([
+					'parent_id'=>$supplier_id,
+					'is_active'=>1,
+					'is_default'=>1
+					
+			])->select('vehicle_id')])
+			->orderBy(['a.pmax'=>SORT_DESC]);
+			$listCar = $query->all();
+			$totalCar = 0;
+			if(!empty($listCar)){
+				foreach ($listCar as $k=>$v){
+	
+					$t = (int)($totalPax/$v['pmax']);
+					if($t > $totalCar && $totalCar>0){
+						break;
+					}
+					$totalCar = $t;
+					$selected_car[0] = $v;
+					$selected_car[0]['quantity'] = $t;
+				}
+			}else{
+				return [];
+			}
+			//
+			$du_khach = $totalPax - ($selected_car[0]['quantity'] * $selected_car[0]['pmax']);
+			if($du_khach < $selected_car[0]['pmax']){
+				if($du_khach > ($selected_car[0]['quantity'] * $selected_car[0]['factor'])){
+					$selected_car[0]['quantity'] ++;
+				}
+			}else{
+				$selected_car[0]['quantity'] ++;
+			}
+			// Cập nhật cơ sở dữ liệu
+			if(isConfirm($update)){
+				/*
+				Yii::$app->db->createCommand()->delete('tours_programs_to_suppliers',['supplier_id'=>$supplier_id,'item_id'=>$item_id])->execute();
+				Yii::$app->db->createCommand()->insert('tours_programs_to_suppliers',
+						[
+								'supplier_id'=>$supplier_id,
+								'item_id'=>$item_id,
+								'vehicle_id'=>$selected_car[0]['id'],
+								'quantity'=>$selected_car[0]['quantity'],
+								'type_id'=>$type_id,
+								'position'=>$position
+						]
+						)->execute();
+						*/
+			}
+	
+				
+		}else{
+			/*
+			$query = new Query();
+			$query->from(['a'=>'vehicles_categorys'])
+			->innerJoin(['b'=>'tours_programs_to_suppliers'],'a.id=b.vehicle_id')
+			->where(['>','a.state',-2])
 			->andWhere(['a.type'=>$pax_type,'b.item_id'=>$item_id,'supplier_id'=>$supplier_id])
 			->select(['a.*','b.quantity','maker_title'=>(new Query())->select('title')->from('vehicles_makers')->where('id=a.maker_id')])
 			;
 			$selected_car = $query->all();
+			*/
 		}
-		
+	
 		return $selected_car;
 	}
 	
@@ -1424,6 +1551,7 @@ class Zii extends yii\base\Object
 	}
 	
 	public function getServiceDetailDayPrices($o = []){
+		 
 		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
 		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
 		$sub_item_id = isset($o['sub_item_id']) ? $o['sub_item_id'] : 0;
@@ -1448,8 +1576,13 @@ class Zii extends yii\base\Object
 				$item = \app\modules\admin\models\Tickets::getItem($service_id);
 				break;
 			case TYPE_ID_GUIDES:
-				$item = \app\modules\admin\models\Guides::getGuide($service_id);
+				$item = \app\modules\admin\models\Guides::getItem($this->getSupplierIDFromService($service_id,TYPE_ID_GUIDES));
 				break;
+			case TYPE_ID_SHIP:
+				$item = \app\modules\admin\models\Customers::getItem($this->getSupplierIDFromService($service_id,TYPE_ID_SHIP)); 
+				///$item['aaaaaa'] = json_encode($this->getSupplierIDFromService($service_id));
+				break;
+			default: $item = \app\modules\admin\models\Customers::getItem($supplier_id); break;
 		}
 		
 		$query = (new Query())->from(['a'=>'tours_programs_services_prices'])
@@ -1458,7 +1591,7 @@ class Zii extends yii\base\Object
 				//'supplier_id'=>$supplier_id,
 				'a.state'=>$state,
 				//'day'=>$day,
-				//'time'=>$time,
+				'package_id'=>$package_id,
 				'a.type_id'=>$type_id
 		]);
 		//
@@ -1481,10 +1614,14 @@ class Zii extends yii\base\Object
 			$query->andWhere(['a.sub_item_id'=>$sub_item_id]);
 		}	
 		//
+		$s = $query->createCommand()->getRawSql();
 		$r = $query->one();
-		 
+		//return $item;
 		if(!empty($r)){
 			$r['supplier'] = $item; 
+			//$r['s'] = $s;
+		}else {
+		//return $s;	 
 		}
 		return $r;
 		
@@ -1495,79 +1632,68 @@ class Zii extends yii\base\Object
 		$from_date = isset($o['from_date']) && check_date_string($o['from_date']) ? $o['from_date'] : date('Y-m-d');
 		$day = isset($o['day']) ? $o['day'] : -1;
 		$time = isset($o['time']) ? $o['time'] : -1;
-		
+		$day_id = isset($o['day_id']) ? $o['day_id'] : $day;
+		$time_id = isset($o['time_id']) ? $o['time_id'] : $time;
 		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
 		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
 		$service_id = isset($o['service_id']) ? $o['service_id'] : 0;
 		$type_id = isset($o['type_id']) ? $o['type_id'] : 0;
 		$state = isset($o['state']) ? $o['state'] : 1;
 		$package_id = isset($o['package_id']) ? $o['package_id'] : 0;
+		$sub_item_id = isset($o['sub_item_id']) ? $o['sub_item_id'] : 0;
 		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
 		$nationality = isset($o['nationality']) ? $o['nationality'] : 0;
+		$nationality_id = isset($o['nationality_id']) ? $o['nationality_id'] : $nationality;
 		$loadDefault = isset($o['loadDefault']) ? $o['loadDefault'] : false;
 		$updateDatabase = isset($o['updateDatabase']) ? $o['updateDatabase'] : true;
-		switch ($type_id){
-			case TYPE_ID_HOTEL:
-			case TYPE_ID_SHIP_HOTEL:
-			case TYPE_ID_REST:
-				$supplier_id = $service_id;
-				break;
-			case TYPE_ID_GUIDES:
-				$supplier_id = (new Query())->from('guides_to_suppliers')->where([
-					'guide_id'=>$service_id
-				])->select('supplier_id')->scalar();
-				//view($supplier_id); 
-				break;
-		}
-		//view($supplier_id == 0);
-		$supplier_id = $supplier_id > 0 ? $supplier_id : $service_id;
-		//view($supplier_id);
+		 //view($o);
+		//$updateDatabase = false;
+		$supplier_id = $this->getSupplierIDFromService($service_id,$type_id);
+		//$supplier_id = $supplier_id > 0 ? $supplier_id : $service_id;		
 		//\\//\\ *.* //\\//\\
 		$quotation = \app\modules\admin\models\Suppliers::getQuotation([
 				'supplier_id'=>$supplier_id,
 				'date'=>$from_date
 		]);
-		if($type_id == TYPE_ID_GUIDES){
-		
-		//view($quotation);exit;
-		}
+		//view($quotation); 
 		//
 		$nationality_group = \app\modules\admin\models\Suppliers::getNationalityGroup([
 				'supplier_id'=>$supplier_id,
-				'nationality_id'=>$nationality,
+				'nationality_id'=>$nationality_id,
 		]);
 		//
 		$seasons = \app\modules\admin\models\Suppliers::getSeasons([
 				'supplier_id'=>$supplier_id,
 				 
 				'date'=>$from_date,
-				'time_id'=>$time
+				'time_id'=>$time_id
 		]);
 	 	$groups = \app\modules\admin\models\Suppliers::getGuestGroup([
 				'supplier_id'=>$supplier_id,
 				 
 				'date'=>$from_date,
-				'time_id'=>$time
+				'time_id'=>$time_id
 		]);
 		
-		if($item_id>0){
+		if(!$loadDefault && $item_id>0){
 			// Lấy giá đã lưu riêng
 			
 			$query = (new Query())->from(['a'=>'tours_programs_services_prices'])
 			->where([
 					'a.item_id'=>$item_id,
 					//'supplier_id'=>$supplier_id,
-					'a.state'=>$state,
+					//'a.state'=>$state,
 					//'day'=>$day,
 					//'time'=>$time,
+					'a.package_id'=>$package_id,
 					'a.type_id'=>$type_id
 			]);
 			//
-			if($day > -1){
-				$query->andWhere(['a.day_id'=>$day]);
+			if($day_id > -1){
+				$query->andWhere(['a.day_id'=>$day_id]);
 			}
-			if($time > -1){
-				$query->andWhere(['a.time_id'=>$time]);
+			if($time_id > -1){
+				$query->andWhere(['a.time_id'=>$time_id]);
 			}
 			//
 			if($service_id>0){
@@ -1583,13 +1709,14 @@ class Zii extends yii\base\Object
 			 
 			if(!empty($r)){
 				$loadDefault = false;
-				if($service_id > 0 && $r['price1'] == 0){
+				if($service_id > 0 && $r['state'] == 2){
 					$loadDefault = true;
 				}
 			}else{
 				$loadDefault = true;
 			}
 		}
+		//view($loadDefault);
 		if($loadDefault){
 			// Lấy giá từ hệ thống		
 						
@@ -1599,16 +1726,15 @@ class Zii extends yii\base\Object
 				case TYPE_ID_SCEN : // Vé tham quan
 					$r = \app\modules\admin\models\Tickets::getPrice([
 						'item_id'=>$service_id,
-						'nationality'=>$nationality 
+						'nationality'=>$nationality_id 
 					]);
 					$r['quantity'] = $total_pax;
 					$r['item_id'] = $service_id; 
+					$r['sub_item_id'] = $service_id;
 					break;
 				case TYPE_ID_HOTEL:
 				case TYPE_ID_SHIP_HOTEL: // Khách sạn
-					//$r['currency'] = 1;
-					//$r['price1'] = 0;
-					 
+					 					 
 					$r = $this->getDefaultHotelPrices([
 							'quotation_id'=>$quotation['id'],
 							'nationality_id'=>$nationality_group['id'],
@@ -1648,18 +1774,42 @@ class Zii extends yii\base\Object
 							'item_id'=>$service_id
 					]);
 					 
-					$r['quantity'] = 1;	
+					$r['quantity'] = 0;	
 					break;
+				case TYPE_ID_TEXT:
+					$r = [];
+					$r['type_id'] = TYPE_ID_TEXT; 
+					$r['quantity'] = 0;	
+					break;	
+				default:
+					$r = $this->getDefaultServicePrices([
+							'controller_code'=>$type_id,
+							'quotation_id'=>$quotation['id'],
+							'nationality_id'=>$nationality_group['id'],
+							'season_id'=>isset($seasons['seasons_prices']['id']) ? $seasons['seasons_prices']['id'] : 0,
+							'supplier_id'=>$supplier_id,
+							'total_pax'=>$total_pax,
+							'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
+							'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
+							'package_id'=>$package_id,
+							'sub_item_id'=>$sub_item_id,
+							'item_id'=>$sub_item_id
+					]);
+					//view($type_id);
+					//view($r,true); exit;
+					break;
+					
 			}
 			// Cập nhật vào DB
-			if($updateDatabase){
+			 
+			if($updateDatabase && !empty($r)){
 			if((new Query())->from('tours_programs_services_prices')->where([
 					'item_id'=>$item_id,
-					'supplier_id'=>$supplier_id,
-					//'sub_item_id'=>isset($r['item_id']),
+					'package_id'=>$package_id,
+					'sub_item_id'=>[isset($r['sub_item_id']) ? $r['sub_item_id'] : 0,0],
 					'service_id'=>$service_id,
-					'day_id'=>$day,
-					'time_id'=>$time,
+					'day_id'=>$day_id,
+					'time_id'=>$time_id,
 					'type_id'=>$type_id,
 					//'item_id',
 						
@@ -1667,37 +1817,40 @@ class Zii extends yii\base\Object
 				Yii::$app->db->createCommand()->insert('tours_programs_services_prices',[
 					'item_id'=>$item_id,
 					'supplier_id'=>$supplier_id,
-					'sub_item_id'=>isset($r['item_id']) ? $r['item_id'] : 0,
+					'sub_item_id'=>isset($r['sub_item_id']) ? $r['sub_item_id'] : 0,
 					'service_id'=>$service_id,
-					'day_id'=>$day,
-					'time_id'=>$time,
+					'day_id'=>$day_id,
+					'time_id'=>$time_id,
 					'type_id'=>$type_id,
 					'quantity'=>$r['quantity'],
 					'price1'=>isset($r['price1']) ? $r['price1'] : 0,
-					'currency'=>isset($r['currency']) ? $r['currency'] : 1
-						
+					'currency'=>isset($r['currency']) ? $r['currency'] : 1,
+					'package_id'=>$package_id,
+						 
 			])->execute();
 			}else{
+				 
 				Yii::$app->db->createCommand()->update('tours_programs_services_prices',[
 						//'item_id'=>$item_id,
 						//'supplier_id'=>$supplier_id,
-						'sub_item_id'=>isset($r['item_id']) ? $r['item_id'] : 0,
+						'sub_item_id'=>isset($r['sub_item_id']) ? $r['sub_item_id'] : 0,
 						//'service_id'=>$service_id,
-						//'day_id'=>$day,
+						//'day_id'=>$day, 
 						//'time_id'=>$time,
-						//'type_id'=>$type_id,
+						'state'=>1,
 						'supplier_id'=>$supplier_id,
 						'quantity'=>$r['quantity'],
-						'price1'=>$r['price1'],
-						'currency'=>$r['currency']
+						'price1'=>isset($r['price1']) ? $r['price1'] : 0,
+						'currency'=>isset($r['currency']) ? $r['currency'] : 1
 				
 				],[
 						'item_id'=>$item_id,
-						
-						//'sub_item_id'=>isset($r['item_id']) ? $r['item_id'] : 0,
+						//'supplier_id'=>$supplier_id,
+						//'sub_item_id'=>0,
+						'package_id'=>$package_id,
 						'service_id'=>$service_id,
-						'day_id'=>$day,
-						'time_id'=>$time,
+						'day_id'=>$day_id,
+						'time_id'=>$time_id,
 						'type_id'=>$type_id,
 						//'quantity'=>$r['quantity'],
 						//'price1'=>$r['price1'],
@@ -1706,27 +1859,35 @@ class Zii extends yii\base\Object
 				])->execute();
 			}
 			//
-			Yii::$app->db->createCommand()->update('tours_programs_services_days',[					 
-					'sub_item_id'=>isset($r['item_id']) ? $r['item_id'] : 0,					 			
-			],[
-					'item_id'=>$item_id,
-					'package_id'=>$package_id,
-					//'sub_item_id'=>isset($r['item_id']) ? $r['item_id'] : 0,
-					'service_id'=>$service_id,
-					'day_id'=>$day,
-					'time_id'=>$time,
-					'type_id'=>$type_id,
-					//'quantity'=>$r['quantity'],
-					//'price1'=>$r['price1'],
-					//'currency'=>$r['currency']
-			
-			])->execute();
+		 
 			
 			}
 		}
 			
 		
+		
 		$r['quantity'] = isset($r['quantity']) ? $r['quantity'] : $total_pax;
+		switch ($type_id){
+			case TYPE_ID_HOTEL: case TYPE_ID_REST: case TYPE_ID_SHIP_HOTEL:
+				$item = \app\modules\admin\models\Customers::getItem($service_id);
+				break;
+			case TYPE_CODE_DISTANCE:
+				$item = \app\modules\admin\models\Distances::getItem($service_id);
+				break;
+			case TYPE_ID_SCEN:
+				$item = \app\modules\admin\models\Tickets::getItem($service_id);
+				break;
+			case TYPE_ID_GUIDES:
+				$item = \app\modules\admin\models\Guides::getItem($this->getSupplierIDFromService($service_id,TYPE_ID_GUIDES));
+				break;
+			case TYPE_ID_SHIP:
+				$item = \app\modules\admin\models\Customers::getItem($this->getSupplierIDFromService($service_id,TYPE_ID_SHIP));
+				///$item['aaaaaa'] = json_encode($this->getSupplierIDFromService($service_id));
+				break;
+			default: $item = \app\modules\admin\models\Customers::getItem($supplier_id); break;
+		}
+		$r['supplier'] = $item;
+		 
 		return $r;
 	}
 	
@@ -1775,6 +1936,7 @@ class Zii extends yii\base\Object
 			 
             $item_id = $item['id'] ;
 			$total_rooms = ceil($total_pax/$item['seats']);
+			
 			$groups = \app\modules\admin\models\Suppliers::getGuestGroup([
 					'supplier_id'=>$supplier_id,
 					'total_pax'=>$total_rooms
@@ -1802,8 +1964,8 @@ class Zii extends yii\base\Object
 			 
 			 
 			$item = $query->one();
-			 
-			$item['item_id'] = $item_id;
+			// view($item,true);
+			$item['sub_item_id'] = $item_id;
 			$item['quantity'] = $total_rooms;
 			return $item;
 		}
@@ -1842,6 +2004,21 @@ class Zii extends yii\base\Object
 				$t1 = \app\modules\admin\models\Guides::tableToPrice();
 				$t2 = \app\modules\admin\models\Guides::tableGuide();
 				break;
+			case TYPE_ID_SHIP:
+				$t1 = \app\modules\admin\models\Distances::table_to_prices();
+				$t2 = \app\modules\admin\models\Distances::tableName();
+				
+				$c = Yii::$app->zii->getVehicleAuto([
+						'total_pax'=>$total_pax,
+						'nationality_id'=>$nationality_id,
+						'supplier_id'=>$supplier_id,
+						'auto'=>true,
+							
+				]);
+				if(!empty($c)){
+					$total_pax = $c[0]['quantity'];
+				}
+				break;
 		}
 		if($item_id>0){
 			$query = (new Query())->from(['a'=>$t2])
@@ -1872,6 +2049,7 @@ class Zii extends yii\base\Object
 		->select(['b.*','a.price1','a.currency']);
 		$item = $query->one(); 
 		}
+		//view($query->createCommand()->getRawSql());
 		
 		if(!empty($item)){ 
 			//
@@ -1904,7 +2082,7 @@ class Zii extends yii\base\Object
 				
 			$item = $query->one();
 			$item['quantity'] = $total_pax;
-            $item['item_id'] = $item_id;
+            $item['sub_item_id'] = $item_id;
 			return $item;
 		}
 	
@@ -2289,14 +2467,56 @@ class Zii extends yii\base\Object
 		$supplier_id = 0;
 		switch ($type){
 			case TYPE_ID_SCEN: // Thang canh
-				
+				$supplier_id = (new Query())->from('tickets_to_suppliers')->where([
+						'ticket_id'=>$id
+				])->select('supplier_id')->scalar();
 				break;
 			case TYPE_ID_GUIDES: //HDV
-				
+			 
+				$supplier_id = (new Query())->from('guides_to_suppliers')->where([
+				'guide_id'=>$id
+				])->select('supplier_id')->scalar();
 				break;
+			case TYPE_ID_SHIP:
+				$supplier_id = (new Query())->from('distances_to_suppliers')->where([
+						'item_id'=>$id
+				])->select('supplier_id')->scalar();
+				break;
+			case TYPE_ID_TEXT: break;
 			default: $supplier_id = $id; break; 
 		}
 		return $supplier_id;
+	}
+	
+	public function getSupplierServiceDetail($id = 0,$type = 0){
+		$item = [];
+		//view($type);
+		switch ($type){
+			case TYPE_ID_SCEN: // Thang canh
+				$item = \app\modules\admin\models\Tickets::getItem($id);
+				break;
+			case TYPE_ID_GUIDES: //HDV
+				$item = \app\modules\admin\models\Guides::getGuide($id);
+				break;
+			case TYPE_ID_HOTEL: case TYPE_ID_SHIP_HOTEL:
+				$item = \app\modules\admin\models\RoomsCategorys::getItem($id);
+				break;
+			case TYPE_ID_SHIP:
+				$item = \app\modules\admin\models\Distances::getItem($id);
+				break;
+			case TYPE_ID_REST:
+				$item = \app\modules\admin\models\Menus::getItem($id);
+				break;
+		}
+		return $item;
+	}
+	
+	/*
+	 * Lấy dịch vụ mặc định của nhà cung cấp
+	 * Áp dụng cho Khách sạn - Nhà hàng - Tàu ngủ - Thuyền bè
+	 */
+	public function getSupplierDefaultServiceItem($supplier_id = 0){
+		
 	}
 	
 }

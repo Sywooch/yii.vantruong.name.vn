@@ -1,5 +1,23 @@
 <?php 
- 
+if(Yii::$app->user->can(ROOT_USER)){
+	/*
+	view(Yii::$app->zii->getServiceDetailPrices([
+			'item_id'=>3,
+			'day_id'=>0,
+			'time_id'=>1,
+			'service_id'=>5,
+			'package_id'=>0,
+			'type_id'=>5,
+			'nationality'=>212,
+			'total_pax'=>$v['guest'],
+			'from_date'=>'2017-05-25',
+			//'sub_item_id'=>(isset($sv['sub_item_id']) ? $sv['sub_item_id'] : 0),
+			'loadDefault'=>true,
+			'updateDatabase'=>false
+	])
+	
+);*/
+}
 ?>
 <div class="col-sm-12 bang-thong-tin-chung" style=""><div class="row">
 <?php 
@@ -48,9 +66,9 @@ if(isset($v['id'])){
            <div class="col-sm-3"><div class="input-group input-sm row" style="margin-right: 0">
           <?php 
            
-          $_so_luong_khach = isset($v['guest1']) ? $v['guest1'] : 1;
+          $_so_luong_khach = isset($v['guest1']) ? $v['guest1'] : 0;
           ?>
-          <span class="input-group-addon input-sm ">Người lớn</span>  <input id="input-tour-sokhach-nl" onblur="countTotalGuest(this);" type="text" data-num="true" name="f[guest1]" class="form-control input-sm required  numberFormat bold red" id="inputPositionx1" placeholder="Người lớn" value="<?php echo $_so_luong_khach;?>" />
+          <span class="input-group-addon input-sm ">Người lớn</span>  <input data-field="guest1" data-toggle="tooltip" title="Lưu ý: Khi thay đổi số lượng người toàn bộ giá sẽ được tính lại tự động." id="input-tour-sokhach-nl" onblur="countTotalGuest(this);Tourprogram_ReloadAllPrice(this);" type="number" name="f[guest1]" class="form-control input-sm required  numberFormat bold red" id="inputPositionx1" placeholder="Người lớn" data-id="<?php echo isset($v['id']) ? $v['id'] : 0;?>" data-old="<?php echo $_so_luong_khach;?>" value="<?php echo $_so_luong_khach;?>" />
           
           </div>
           
@@ -60,7 +78,7 @@ if(isset($v['id'])){
            
           $_so_luong_khach = isset($v['guest2']) ? $v['guest2'] : 0;
           ?>
-          <span class="input-group-addon input-sm">Trẻ em 50%</span>  <input id="input-tour-sokhach-te" onblur="countTotalGuest(this);" type="text" data-num="true" name="f[guest2]" class="form-control input-sm numberFormat bold red" id="inputPositionx2" placeholder="Trẻ em 50%" value="<?php echo $_so_luong_khach;?>" />
+          <span class="input-group-addon input-sm">Trẻ em 50%</span>  <input data-field="guest2" data-toggle="tooltip" title="Lưu ý: Khi thay đổi số lượng người toàn bộ giá sẽ được tính lại tự động." id="input-tour-sokhach-te" onblur="countTotalGuest(this);Tourprogram_ReloadAllPrice(this);" type="number" data-num="true" name="f[guest2]" class="form-control input-sm numberFormat bold red" id="inputPositionx2" placeholder="Trẻ em 50%" data-id="<?php echo isset($v['id']) ? $v['id'] : 0;?>" data-old="<?php echo $_so_luong_khach;?>" value="<?php echo $_so_luong_khach;?>" />
           
           </div>
           
@@ -70,7 +88,7 @@ if(isset($v['id'])){
            
           $_so_luong_khach = isset($v['guest3']) ? $v['guest3'] : 0;
           ?>
-          <span class="input-group-addon input-sm">Trẻ em MP</span>  <input id="input-tour-sokhach-tefree" type="text" data-num="true" name="f[guest3]" class="form-control numberFormat input-sm bold red input-sm" id="inputPositionx3" placeholder="Trẻ em MP" value="<?php echo $_so_luong_khach;?>" />
+          <span class="input-group-addon input-sm">Trẻ em MP</span>  <input title="Lưu ý: Khi thay đổi số lượng người toàn bộ giá sẽ được tính lại tự động." id="input-tour-sokhach-tefree" type="number" data-num="true" name="f[guest3]" class="form-control numberFormat input-sm bold red input-sm" id="inputPositionx3" placeholder="Trẻ em MP" value="<?php echo $_so_luong_khach;?>" />
           
           </div>
           
@@ -80,9 +98,9 @@ if(isset($v['id'])){
           <div class="col-sm-3"><div class="input-group row input-sm" title="Tổng số khách tính phí">
           <?php 
            
-          $_so_luong_khach = isset($v['guest']) ? $v['guest'] : 1;
+          $_so_luong_khach = isset($v['guest']) ? $v['guest'] : 0;
           ?>
-          <span class="input-group-addon input-sm">Tổng</span>  <input readonly="readonly" id="input-tour-sokhach" onblur="changeTotalGuest(this);" type="text" data-num="true" name="f[guest]" class="form-control required  numberFormat bold input-sm red" id="inputPositionx" placeholder="Số khách" value="<?php echo $_so_luong_khach;?>" />
+          <span class="input-group-addon input-sm">Tổng</span>  <input readonly="readonly" id="input-tour-sokhach" onblur="changeTotalGuest(this);" onchange="Tourprogram_ReloadAllPrice(this);" data-id="<?php echo isset($v['id']) ? $v['id'] : 0;?>" type="text" name="f[guest]" class="form-control required  numberFormat bold input-sm red" on id="inputPositionx" placeholder="Số khách" data-old="<?php echo $_so_luong_khach;?>" value="<?php echo $_so_luong_khach;?>" />
           
           </div>
           
@@ -95,7 +113,7 @@ if(isset($v['id'])){
   
   <tr class="col-middle">
  <td >Thời gian</td>
- <td colspan="2" >
+ <td colspan="3" >
  <div class="form-group" style="margin-bottom: 0">
            
           <div class="col-sm-12"><div class="row">
@@ -104,7 +122,7 @@ if(isset($v['id'])){
            
           $night = isset($v['day']) ? $v['day'] : 0;
           ?>
-          <input id="input-day-amount" onblur="changeNightPreview(this);" type="text" data-num="true" name="f[day]" class="form-control input-sm required center numberFormat bold red"  placeholder="Số ngày" value="<?php echo $night;?>" data-old="<?php echo $night;?>" /><span class="input-group-addon input-sm">Ngày</span>  
+          <input id="input-day-amount" onblur="changeNightPreview(this);change_date_range_from_day(this);" type="number" data-num="true" name="f[day]" class="form-control input-sm required center numberFormat bold red"  placeholder="Số ngày" value="<?php echo $night;?>" data-old="<?php echo $night;?>" /><span class="input-group-addon input-sm">Ngày</span>  
           
           </div>
           
@@ -114,7 +132,7 @@ if(isset($v['id'])){
            
           $night = isset($v['night']) ? $v['night'] : 0;
           ?>
-          <input id="input-night-amount" onblur="changeNightPreview(this);" type="text" data-num="true" name="f[night]" class="form-control input-sm center numberFormat bold red"  placeholder="Số đêm" value="<?php echo $night;?>"  data-old="<?php echo $night;?>"/><span class="input-group-addon input-sm">đêm</span>  
+          <input id="input-night-amount" onblur="changeNightPreview(this);change_date_range_from_day(this);" type="number" data-num="true" name="f[night]" class="form-control input-sm center numberFormat bold red"  placeholder="Số đêm" value="<?php echo $night;?>"  data-old="<?php echo $night;?>"/><span class="input-group-addon input-sm">đêm</span>  
           
           </div>
           
@@ -126,15 +144,15 @@ if(isset($v['id'])){
            
         </div>
  </td>
-  <td class="center" ></td>
+ 
  <td colspan="1" class="center"> Quốc tịch
  <input id="inputTourID" type="hidden"  value="<?php echo isset($v['id']) ? $v['id'] : 0;?>"/>
  <input type="hidden" id="inputStarttime" onchange="genTourCode(this);changeEatPreview(this);changeHotelPreview(this);changeNightPreview(this);" name="f[from_date]" class="datepickeronly form-control" value="<?php echo isset($v['from_date']) ? date("d/m/Y",strtotime($v['from_date'])) : '';?>">
             </td>
       
 <td colspan="7" > <div class="col-sm-12">
-<div class="form-group" style="margin-bottom: 0"><div class="group-sm borderc1">
-		      <select id="inputNationality" onchange="genTourCode(this);" name="f[nationality]" data-type="0" data-num="true" data-select="select2" class="select2 form-control" role="load_costs" data-placeholder="Chọn điểm đón khách" style="width: 100%">
+<div class="form-group" style="margin-bottom: 0"><div data-toggle="tooltip" title="Lưu ý: Khi thay đổi quốc tịch khách, toàn bộ giá sẽ được tính lại tự động." class="group-sm borderc1">
+		      <select data-id="<?php echo isset($v['id']) ? $v['id'] : 0;?>" data-field="nationality" id="inputNationality" onchange="genTourCode(this);Tourprogram_ReloadAllPrice(this);" name="f[nationality]" data-type="0" data-num="true" data-select="select2" class="select2 form-control" role="load_costs" data-placeholder="Chọn điểm đón khách" style="width: 100%">
 		      <?php 
 		       
 		     $locals = load_model('local');
@@ -233,12 +251,12 @@ if(isset($v['id'])){
    <tr class="col-middle">
  <td >Ngày bắt đầu</td>
  <td colspan="3" class="pr">
- <?php echo '<input type="text" data-id="'.(isset($v['id']) ? $v['id'] : 0).'" name="f[from_date]" class="form-control datepicker" data-format="DD/MM/YYYY" placeholder="" value="'.(isset($v['from_date']) ? date("d/m/Y",strtotime($v['from_date']))  : '').'" />';?>
+ <?php echo '<input data-toggle="tooltip" title="Lưu ý: Khi thay đổi ngày khởi hành, toàn bộ giá sẽ được tính lại tự động." data-field="from_date" type="text" id="inpput_from_date" onblur="change_date_range_from_day(this);Tourprogram_ReloadAllPrice(this);" data-id="'.(isset($v['id']) ? $v['id'] : 0).'" name="f[from_date]" class="form-control datepicker" data-format="DD/MM/YYYY" placeholder="" data-old="'.(isset($v['from_date']) ? date("d/m/Y",strtotime($v['from_date']))  : '').'" value="'.(isset($v['from_date']) ? date("d/m/Y",strtotime($v['from_date']))  : '').'" />';?>
   
  </td>
  <td class="center">Kết thúc</td>
  <td colspan="7" class="pr">
- <?php echo '<input type="text" name="f[to_date]" class="form-control datepicker" data-format="DD/MM/YYYY" placeholder=" " value="'.(isset($v['to_date']) ? date("d/m/Y",strtotime($v['to_date']))  : '').'" />';?>
+ <?php echo '<input readonly id="input_todate" type="text" name="f[to_date]" class="form-control datepicker" data-format="DD/MM/YYYY" placeholder=" " value="'.(isset($v['to_date']) ? date("d/m/Y",strtotime($v['to_date']))  : '').'" />';?>
   
  </td> 
  </tr>

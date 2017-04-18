@@ -4547,7 +4547,9 @@ function countTotalGuest(t){
 	$g2 = parseInt(jQuery('#input-tour-sokhach-te').val());
 	$g1 = $g1 > 0 ? $g1 : 0;$g2 = $g2 > 0 ? $g2 : 0;
 	$g3 = Math.ceil($g2 / 2);
-	//alert($g3)
+	console.log($g1)
+	console.log($g2)
+	console.log($g3)
 	jQuery('#input-tour-sokhach').val($g1 + $g3);
 	changeTotalGuest(t); 
 }
@@ -4587,7 +4589,7 @@ function changeNightPreview(t){
 	$n.attr('data-old',$night);
 	$this.attr('data-old',$this.val());
 	jQuery('.ajax-auto-load-time-detail').attr('data-day',Math.max($day,$night));
-	loadTourProgramDetail('.ajax-auto-load-time-detail');
+	//loadTourProgramDetail('.ajax-auto-load-time-detail');
 	
 	}
 }
@@ -4812,9 +4814,10 @@ function reloadServiceDayPriceAuto($t){
 	      },
 	      success: function (data) {
 	    	  $d = JSON.parse(data);
-	    	  console.log($d);
+	    	  console.log($d) 
 	    	  jQuery('.input-distance-service-price').val($d.price1).addClass('green');
-	    	  ///jQuery('.input-distance-service-distance').val($d.distance['distance']).addClass('green');
+	    	  jQuery('.input-service-day-price-quantity').val($d.quantity).addClass('green');
+	    	  jQuery('.input-service-day-price-sub-item-id').val($d.sub_item_id).addClass('green');
 	      },
 	      complete:function(){
 	    	  $this.removeClass('fa-spin fa-refresh ').addClass('green fa-check-square-o')
@@ -5368,12 +5371,101 @@ function addSelectedMenusCategory($t){
 	var $this = jQuery($t);
 	jQuery($this.attr('data-target')).attr('data-existed',$this.val())
 }
+function change_date_range_from_day($t){
+	var $this = jQuery($t);
+	var $data = {};
+	$data['action'] =  'change_date_range_from_day';
+	$data['from_date'] = jQuery('#inpput_from_date').val();
+	$data['day'] = jQuery('#input-day-amount').val();
+	$data['night'] = jQuery('#input-night-amount').val();
+	if($data['from_date'] != ""){
+	jQuery.ajax({
+	    type: 'post',
+	    datatype: 'json',
+		url: $cfg.adminUrl  + '/ajax',						 		 
+	    data: $data,
+	    beforeSend:function(){
+	    //show_left_small_loading('show'); 
+	    },
+	    success: function (data) {	    	  
+	     	$d = parseJsonData(data);	     	
+	    	 jQuery('#input_todate').val($d.html)
+	    },
+	    complete:function(){
+	    	//show_left_small_loading('hide');   
+	    },
+	    error : function(err, req) {
+	           
+		}
+	});
+	}
+}
 
 
+function Tourprogram_ReloadAllPrice($t){
+	var $this = jQuery($t);
+	var $data = getAttributes($this);
+	$data['action'] =  'Tourprogram_ReloadAllPrice';
+	$data['guest'] = jQuery('#input-tour-sokhach').val();
+	$data['value'] = $this.val();
+	if($this.attr('data-old') != $this.val()){
+	jQuery.ajax({
+	    type: 'post',
+	    datatype: 'json',
+		url: $cfg.adminUrl  + '/ajax',						 		 
+	    data: $data,
+	    beforeSend:function(){
+	    show_left_small_loading('show'); 
+	    },
+	    success: function (data) {	    	  
+	    	$d = parseJsonData(data);	
+	     	$this.attr('data-old',$this.val());    	
+	     	reloadAutoPlayFunction();
+	     	//console.log(data);
+	     	//jQuery('.ajax-load-time-detail').html($d.html);
+	    },
+	    complete:function(){
+	    	show_left_small_loading('hide');   
+	    },
+	    error : function(err, req) {
+	           
+		}
+	}); 
+	}
+}
 
-
-
-
+function genTourCode(t){
+	$this = jQuery(t);
+	//$target = $this.attr('data-target');
+	$cusID = jQuery('#inputCustomerID').val();
+	$start = jQuery('#inputStarttime').val();
+	$end = jQuery('#inputEndtime').val();
+	$in = jQuery('#inputDateIN').val();
+	$out = jQuery('#inputDateOUT').val();
+	$id = jQuery('#inputTourID').val();
+	$code = jQuery('#inputTourCode');
+	//alert($start);
+	jQuery.ajax({
+	      type: 'post',
+	      datatype: 'json',
+		  url: $cfg.adminUrl  + '/ajax',						 		 
+	      data: {action:'genTourCode',cusID:$cusID,pIN:$in,pOUT:$out,start:$start,end:$end,id:$id},
+	      beforeSend:function(){
+ 
+	      },
+	      success: function (data) {
+	    	  $code.val(data)
+	         // if(data != ""){
+	          //    $d = JSON.parse(data);
+	          //    jQuery($target).html($d.select).trigger("chosen:updated");
+	          //}
+	          
+	      },
+	      error : function(err, req) {
+	           
+				}
+	    });
+} 
 
 
 

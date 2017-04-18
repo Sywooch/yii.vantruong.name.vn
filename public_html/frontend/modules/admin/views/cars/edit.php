@@ -1,6 +1,8 @@
 <?php
 //getSupplierVehiclePrices2(14);
 $lx = $model->getListCars(isset($v['id']) ? $v['id'] : 0);
+
+//getSupplierVehiclePrices2(15); exit;
 ?>
 
 <div class="table-responsive " style="padding-top: 0px">
