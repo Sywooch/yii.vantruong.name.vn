@@ -38,6 +38,7 @@ if(!empty($lb)){
 				if(!empty($vb['listItem'])){
 					foreach ($vb['listItem'] as $k=>$v){
 						//view($v['url_link']);
+						//view($vb);
 						$link = isset($v['url_link']) ? $v['url_link'] : cu([DS.$v['url']]);
 						$target = isset($v['target']) ? $v['target'] : '_self';
 						echo '<div class="center fusion-column content-box-column content-box-column-1 col-lg-4 col-md-4 col-sm-4 fusion-content-box-hover content-box-column-first-in-row">

@@ -4143,10 +4143,10 @@ function loadTourProgramDistances($id = 0){
 	//view(Yii::$app->zii->getTourProgramSuppliers($id));
 	$j=$i=-1;
 	foreach (Yii::$app->zii->getTourProgramSuppliers($id) as $k=>$v){
-	
-		$selected_car = Yii::$app->zii->chooseVehicleAuto([
-				'totalPax'=>post('total_pax',0),
-				'nationality'=>post('nationality',0),
+	 
+		$selected_car = Yii::$app->zii->getSelectedVehicles([
+				//'totalPax'=>post('total_pax',0),
+				//'nationality'=>post('nationality',0),
 				'supplier_id'=>$v['id'],
 				'item_id'=>$id,
 				'default'=>true,
@@ -4167,6 +4167,7 @@ function loadTourProgramDistances($id = 0){
 		$html .= '</td></tr>';
 		//for($j=0;$j<4;$j++){
 		foreach ($selected_car as $k3=>$car){
+			 
 			$html .= '<tr><td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="2"><a data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="label label-danger f12p">'.$car['title'].'</span></a></td>';
 			$html .= '<td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="1"><a data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="badge">'.(isset($car['quantity']) ? $car['quantity'] : 0).'</span></a></td>';
 	

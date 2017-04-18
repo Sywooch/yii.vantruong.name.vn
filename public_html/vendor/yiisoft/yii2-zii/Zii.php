@@ -180,7 +180,37 @@ class Zii extends yii\base\Object
 		return $query->orderBy(['b.position'=>SORT_ASC, 'a.name'=>SORT_ASC])->all();
 	}
 	
-	
+	public function getSelectedVehicles($o = []){
+		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;		
+		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
+		$default = isset($o['default']) ? $o['default'] : false;
+		// Lấy danh sách xe
+		$query = new Query();
+		$query->from(['a'=>'vehicles_categorys'])
+		->innerJoin(['b'=>'vehicles_to_cars'],'a.id=b.vehicle_id')
+		->innerJoin(['c'=>'tours_programs_suppliers_vehicles'],'a.id=c.vehicle_id')
+		->where(['>','a.state',-2])
+		->andWhere(['a.type'=>1,
+				'b.parent_id'=>$supplier_id,
+				'b.is_active'=>1,
+				'c.supplier_id'=>$supplier_id,
+				'c.item_id'=>$item_id,
+		])
+		
+		//->andWhere(['in','a.id',(new Query())->from(['vehicles_to_cars'])->where([
+		//		'parent_id'=>$supplier_id,
+		//		'is_active'=>1,
+		//		'is_default'=>1
+		
+		//])->select('vehicle_id')])
+		->select(['a.*','c.quantity','maker_title'=>(new Query())->select('title')->from('vehicles_makers')->where('id=a.maker_id')])
+		->orderBy(['a.pmax'=>SORT_DESC]);
+		$r = $query->all();
+		if(empty($r) && $default){
+			$r = [['id'=>0,'title'=>'Chọn phương tiện','quantity'=>0,'maker_title'=>'']];
+		}
+		return $r;
+	}
 	
 	public function chooseVehicleAuto($o = []){
 		/* 
@@ -207,7 +237,7 @@ class Zii extends yii\base\Object
 		
 		// Lấy danh sách xe
 		$query = new Query();
-		$query->select(['a.*'])->from(['a'=>'vehicles_categorys'])
+		$query->from(['a'=>'vehicles_categorys'])
 		->innerJoin(['b'=>'vehicles_to_cars'],'a.id=b.vehicle_id')
 		->where(['>','a.state',-2])
 		->andWhere(['a.type'=>$pax_type,
@@ -221,6 +251,7 @@ class Zii extends yii\base\Object
 		//		'is_default'=>1
 				
 		//])->select('vehicle_id')])		
+		->select(['a.*' ,'maker_title'=>(new Query())->select('title')->from('vehicles_makers')->where('id=a.maker_id')])
 		->orderBy(['a.pmax'=>SORT_DESC]);
 		if($vehicle_id>0){
 			$query->andWhere(['id'=>$vehicle_id]);
@@ -284,7 +315,7 @@ class Zii extends yii\base\Object
 		
 		if(empty($selected_car) && $default){
 			return [
-				['id'=>0,'title'=>'Chọn phương tiện','quantity'=>0,]	
+				['id'=>0,'title'=>'Chọn phương tiện','quantity'=>0,'maker_title'=>'']	
 			];
 		}
 		return $selected_car;
@@ -642,7 +673,7 @@ class Zii extends yii\base\Object
 				]);
 				
 				$li1Class = !empty($l1) ? (isset($o['li1WithChildClass']) ? $o['li1WithChildClass'] : '') : (isset($o['li1NotChildClass']) ? $o['li1NotChildClass'] : '');  
-				
+				//$liHasChild = 
 				$liActive = isset($o['activeClass']) && isset($o['activeClass']['li']) && in_array($v['url'],Yii::$app->request->get()) ? $o['activeClass']['li'] : '';
 				$aActive = isset($o['activeClass']) && isset($o['activeClass']['a']) && in_array($v['url'],Yii::$app->request->get()) ? $o['activeClass']['a'] : '';
 				$m .= '<li data-id="'.$v['id'].'" data-child="'.count($l1).'" class="li-child li-child-'.$k.' li-level-'.$cLevel.' '. $liActive.' '.(isset($o['li1Class']) ? $o['li1Class'] : '').' '.$li1Class.'">';

@@ -2971,27 +2971,36 @@ change:function(event,ui){
 		break;	
 	case 'quick-quick-edit-supplier-services':
 		//
-		$selected_value = post('selected_value');
+		$selected_value = post('selected_value',[]);
 		$selected_quantity = post('selected_quantity');
 		$supplier_id = post('supplier_id');
 		$item_id = post('item_id');
 		//
-		Yii::$app->db->createCommand()->delete('tours_programs_to_suppliers',[
+		Yii::$app->db->createCommand()->delete('tours_programs_suppliers_vehicles',['and',[
 				'supplier_id'=>$supplier_id,
 				'item_id'=>$item_id
 				
-		])->execute();
+		],['not in','vehicle_id',$selected_value]])->execute();
 		//
 		if(!empty($selected_value)){
 			foreach ($selected_value as $k=>$v){
-				if($selected_quantity[$k]>0){
-					Yii::$app->db->createCommand()->insert('tours_programs_to_suppliers',[
+				if(!$selected_quantity[$k]>0){
+					$selected_quantity[$k] = 0;
+				}
+				if((new Query())->from('tours_programs_suppliers_vehicles')->where(['supplier_id'=>$supplier_id,'item_id'=>$item_id,'vehicle_id'=>$v])->count(1) == 0){
+					Yii::$app->db->createCommand()->insert('tours_programs_suppliers_vehicles',[
 							'supplier_id'=>$supplier_id,
 							'item_id'=>$item_id,
 							'vehicle_id'=>$v,
 							'quantity'=>$selected_quantity[$k],
-							'type_id'=>TYPE_ID_VECL
 					])->execute();
+				}else{
+					Yii::$app->db->createCommand()->update('tours_programs_suppliers_vehicles',[							
+							'quantity'=>$selected_quantity[$k],
+							//'type_id'=>TYPE_ID_VECL
+					],['supplier_id'=>$supplier_id,
+							'item_id'=>$item_id,
+							'vehicle_id'=>$v])->execute();
 				}
 			}
 		}
@@ -3005,19 +3014,31 @@ change:function(event,ui){
 		break;
 	case 'quick-edit-supplier-services':
 		 
-		$id = post('id',0);
+		$item_id = post('item_id',0);
 		$day = post('day',0);
 		$time = post('time',0);
+		$supplier_id = post('supplier_id',0);
 		
-		$services = Yii::$app->zii->chooseVehicleAuto([
+		$services = Yii::$app->zii->getSelectedVehicles([
 				//'totalPax'=>post('total_pax',0),
-				'nationality'=>post('nationality',0),
-				'supplier_id'=>post('supplier_id'),
-				'item_id'=>post('item_id'),
+				//'nationality'=>post('nationality',0),
+				'supplier_id'=>$supplier_id,
+				'item_id'=>$item_id,
+				
+				'default'=>false,
+				
 				////'auto'=>true,
 				//'update'=>true,
-		]);
-		 
+		]); 
+		
+		/*
+		echo json_encode([
+				'callback'=>true,
+				'callback_function'=>'console.log(data)',
+				's'=>$_POST,
+				'ds'=>$services
+		]); exit;
+		*/ 
 		$html = '';
 		
 		$html .= '
@@ -3046,6 +3067,7 @@ change:function(event,ui){
 				</li>';
 			}
 		}
+	
 		$place = [];
 		if(post('place_id') > 0){
 			$place = \app\modules\admin\models\DeparturePlaces::getItem(post('place_id'));
@@ -3070,8 +3092,8 @@ change:function(event,ui){
 		$html .= '</tbody></table>';
 		
 		$html .= '<div class="modal-footer">';
-		$html .= '<button type="submit" class="btn btn-primary"><i class="glyphicon glyphicon-floppy-save"></i> Chọn</button>';
-		$html .= '<button type="button" class="btn btn-danger" data-dismiss="modal"><i class="glyphicon glyphicon-remove"></i> Đóng lại</button>';
+		$html .= '<button type="submit" class="btn btn-primary"><i class="glyphicon glyphicon-floppy-save"></i> Lưu lại</button>';
+		$html .= '<button type="button" class="btn btn-danger" data-dismiss="modal"><i class="glyphicon glyphicon-remove"></i> Đóng</button>';
 		$html .= '</div>';
 		$_POST['action'] = 'quick-' . $_POST['action'];
 		foreach ($_POST as $k=>$v){

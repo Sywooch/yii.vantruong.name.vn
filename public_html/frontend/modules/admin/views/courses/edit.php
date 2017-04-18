@@ -35,7 +35,7 @@ echo Ad_edit_show_image_field($v,[
 echo Ad_edit_show_select_field($v,[
 		//'field'=>'title',
 		'label'=>getTextTranslate(65,ADMIN_LANG),
-		'class'=>'required select2',
+		'class'=>'select2',
 		'field_name'=>'category_id[]',
 		'multiple'=>true,
 		'data'=>$all_menu,

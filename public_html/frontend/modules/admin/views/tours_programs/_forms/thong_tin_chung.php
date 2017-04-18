@@ -17,6 +17,14 @@ if(Yii::$app->user->can(ROOT_USER)){
 	])
 	
 );*/
+	$services = Yii::$app->zii->chooseVehicleAuto([
+			//'totalPax'=>post('total_pax',0),
+			'nationality'=>34,
+			'supplier_id'=>11,
+			'item_id'=>1,
+			////'auto'=>true,
+			//'update'=>true,
+	]);
 }
 ?>
 <div class="col-sm-12 bang-thong-tin-chung" style=""><div class="row">
