@@ -30,6 +30,19 @@ class Zii extends yii\base\Object
 		}
 	}
 	
+	public function removeTransportSupplierTourProgram($o = []){
+		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
+		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
+		//1. Xóa bảng danh sách xe - ct
+		Yii::$app->db->createCommand()->delete('tours_programs_to_suppliers',['supplier_id'=>$supplier_id,'item_id'=>$item_id])->execute();
+		//2. Xóa bảng phương tiện - ct
+		Yii::$app->db->createCommand()->delete('tours_programs_suppliers_vehicles',['supplier_id'=>$supplier_id,'item_id'=>$item_id])->execute();
+		//3. Xóa bảng chặng - ct
+		Yii::$app->db->createCommand()->delete('tours_programs_services_distances',['supplier_id'=>$supplier_id,'item_id'=>$item_id])->execute();
+		//4. Xóa bảng giá - ct
+		Yii::$app->db->createCommand()->delete('tours_programs_suppliers_prices',['supplier_id'=>$supplier_id,'item_id'=>$item_id])->execute();
+	}
+	
 	public function getUserLanguages(){
 		return \app\modules\admin\models\AdLanguage::getList(['is_active'=>1]);
 	}
@@ -38,71 +51,103 @@ class Zii extends yii\base\Object
 		$price = $t = 0;
 		//
 		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0; 
+		$package_id = isset($o['package_id']) ? $o['package_id'] : 0;
 		$vehicle_id = isset($o['vehicle_id']) ? $o['vehicle_id'] : 0;
 		$distance_id = isset($o['distance_id']) ? $o['distance_id'] : 0;
+		$service_id = isset($o['service_id']) ? $o['service_id'] : 0;
 		$exchange_rate = isset($o['exchange_rate']) ? $o['exchange_rate'] : 0;
 		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
+		$from_date = isset($o['from_date']) ? $o['from_date'] : date('Y-m-d');
+		$nationality_id = isset($o['nationality_id']) ? $o['nationality_id'] : 0;
+		$time_id = isset($o['time_id']) ? $o['time_id'] : -1;
+		$loadDefault = isset($o['loadDefault']) && cbool($o['loadDefault']) == 1 ? true : false;
+		$updateDatabase = isset($o['updateDatabase']) ? $o['updateDatabase'] : true;
 		//
 		$distance_item = \app\modules\admin\models\Distances::getItem($distance_id);
+		 
+		$quotation_id = isset($o['quotation_id']) ? $o['quotation_id'] : 0;
+		$nationality_id = isset($o['nationality_id']) ? $o['nationality_id'] : 0;
+		$season_id = isset($o['season_id']) ? $o['season_id'] : 0;
+		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
+		$weekend_id = isset($o['weekend_id']) ? $o['weekend_id'] : 0;
+		$group_id = isset($o['group_id']) ? $o['group_id'] : 0;
+		$pax_type = isset($o['pax_type']) ? $o['pax_type'] : 1;
 		//
-		$item = [];
-		if($item_id>0){
-			//
-			if((new Query())->from('tours_programs_suppliers_prices')->where([
-					'supplier_id'=>$supplier_id,
-					'vehicle_id'=>$vehicle_id,
-					'item_id'=>$item_id,
-					'service_id'=>$distance_id,
-			])->count(1) == 0){
-				$t = 1; $item = [];
+		//'season_id'=>isset($seasons['seasons_prices']['id']) ? $seasons['seasons_prices']['id'] : 0,
+		//'supplier_id'=>$supplier_id,
+		///'total_pax'=>$item['guest'],
+		//'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
+		//'package_id'=>0,
+		
+		// Lấy giá từ CSDL
+		if(!$loadDefault){ 
+			$query = (new Query())->from(['a'=>'tours_programs_suppliers_prices'])
+			->innerJoin(['b'=>'vehicles_categorys'],'b.id=a.vehicle_id')
+			->where([
+				'a.supplier_id'=>$supplier_id,
+				'a.vehicle_id'=>$vehicle_id,
+				'a.item_id'=>$item_id,
+				'a.service_id'=>$distance_id,
+				'b.type'=>$pax_type	
+			]);
+			$item = $query->one();
+			//$item['o']= $query->createCommand()->getRawSql();
+			if(empty($item)){
+				$loadDefault = true;$updateDatabase = true;
 			}else{
-				$item = (new Query())->from(['a'=>'tours_programs_suppliers_prices'])
-				->innerJoin(['b'=>'vehicles_categorys'],'b.id=a.vehicle_id')
-				->where([
-					'supplier_id'=>$supplier_id,
-					'vehicle_id'=>$vehicle_id,
-					'item_id'=>$item_id,
-					'service_id'=>$distance_id,
-				])->one();
+				return $item;
 			}
 		}
 			//
 		$price_type = !empty($item) ? $item['price_type'] : 0; // Giá chặng
-		$item = !empty($item) ? $item : (new Query())->from('distances_to_prices')->where([
+		
+		$query = (new Query())->from('distances_to_prices')->where([
 				'item_id'=>$distance_id,
 				'vehicle_id'=>$vehicle_id,
-				//'parent_id'=>$supplier_id,
-		])->one();
-			//
+				'quotation_id'=>$quotation_id,
+				'nationality_id'=>$nationality_id,
+				'package_id'=>$package_id,
+				'season_id'=>$season_id,
+				'group_id'=>$group_id,
+				'weekend_id'=>$weekend_id,
+				'package_id'=>$package_id,
+				
+				
+		]);
+		//if()
+		$currency = 1;
+		$item = $query->one();
 			
-			//
-		if(!empty($item)){
-			if ($item['currency'] > 1){
-				$item['price1'] = $item['price1'] * ($exchange_rate > 0 ? $exchange_rate : $this->getExchangeRate($item['currency']));
-			}
+		if(!empty($item)){			 
 			$price = $item['price1'];
-			
+			$currency = $item['currency'];
 		}		
-		
 		//
+		 
 		if($price == 0){
 			$price_type = 1; // Giá km
-			$item = (new Query())->from(['a'=>'vehicles_to_prices'])->where([
-					//	'distance_id'=>$distance_id,
+			$query = (new Query())->from(['a'=>'vehicles_to_prices'])->where([
+					 
+					'a.quotation_id'=>$quotation_id,
+					'a.nationality_id'=>$nationality_id,
+					'a.package_id'=>$package_id,
+					'a.season_id'=>$season_id,
+					'a.group_id'=>$group_id,
+					'a.weekend_id'=>$weekend_id,
+					'a.package_id'=>$package_id,
 					'a.item_id'=>$vehicle_id,
-					'a.parent_id'=>$supplier_id,
+					'a.supplier_id'=>$supplier_id,
 			])
 			->innerJoin(['b'=>'vehicles_categorys'],'b.id=a.item_id')
 			->andWhere(['>','a.pmax',$distance_item['distance']-1])
 			->andWhere(['<','a.pmin',$distance_item['distance']+1])
-			->select(['a.*','b.*','id'=>'b.id'])
-			->one();
-			//view($item); 
+			->select(['a.*','b.*','id'=>'b.id']);
+			$item = $query->one();
+			 
 			if(!empty($item)){
-				if ($item['currency'] > 1){
-					$item['price1'] = $item['price1'] * ($exchange_rate > 0 ? $exchange_rate : $this->getExchangeRate($item['currency']));
-				}
+				 
 				$price = $item['price1'];
+				$currency =  $item['currency'];
 			}
 		}
 		//
@@ -113,25 +158,61 @@ class Zii extends yii\base\Object
 		}
 		
 		//
-		if($t == 1){
-			Yii::$app->db->createCommand()->insert('tours_programs_suppliers_prices',[
+		if(!empty($item) && $updateDatabase){
+			if((new Query())->from('tours_programs_suppliers_prices')->where([
 					'supplier_id'=>$supplier_id,
-					'vehicle_id'=>$vehicle_id,
 					'item_id'=>$item_id,
+					'vehicle_id'=>$vehicle_id,
 					'service_id'=>$distance_id,
-					'price1'=>$price,
-					'price_type'=>$price_type,
-					'distance'=>$distance_item['distance']
-			])->execute();
+			])->count(1) == 0){
+				if((new Query())->from('tours_programs_suppliers_prices')->where([
+						'supplier_id'=>$supplier_id,
+						'item_id'=>$item_id,
+						'vehicle_id'=>0,
+						'service_id'=>$distance_id,
+				])->count(1) == 0){
+					Yii::$app->db->createCommand()->insert('tours_programs_suppliers_prices',[
+							'supplier_id'=>$supplier_id,
+							'vehicle_id'=>$vehicle_id,
+							'item_id'=>$item_id,
+							'service_id'=>$distance_id,
+							'price1'=>$price,
+							'price_type'=>$price_type,
+							'quantity'=>$distance_item['distance']
+					])->execute();
+				}else {
+					Yii::$app->db->createCommand()->update('tours_programs_suppliers_prices',[
+							'vehicle_id'=>$vehicle_id,
+							'price1'=>$price,
+							'price_type'=>$price_type,
+							'quantity'=>$distance_item['distance']
+					],['supplier_id'=>$supplier_id,
+							'vehicle_id'=>0,
+							'item_id'=>$item_id,
+							'service_id'=>$distance_id,])->execute();
+				}
+				
+			}else{
+				Yii::$app->db->createCommand()->update('tours_programs_suppliers_prices',[
+						
+						'price1'=>$price,
+						'price_type'=>$price_type,
+						'quantity'=>$distance_item['distance']
+				],['supplier_id'=>$supplier_id,
+						'vehicle_id'=>$vehicle_id,
+						'item_id'=>$item_id,
+						'service_id'=>$distance_id,])->execute();
+			}
 		}
 		//
 		return [
-				'vehicle'=>$item,
-				'distance'=>$distance_item,
-				'supplier'=>\app\modules\admin\models\Customers::getItem($supplier_id),
-				'price'=>$price,
-				'total_price'=>($price * $distance_item['distance']),
-				'price_type'=>$price_type
+				//'vehicle'=>$item,
+				'quantity'=>$distance_item['distance'],
+				//'supplier'=>\app\modules\admin\models\Customers::getItem($supplier_id),
+				'price1'=>$price,
+				//'total_price'=>($price * $distance_item['distance']),
+				'price_type'=>$price_type,
+				'currency'=>$currency
 		];
 	}
 	
@@ -197,12 +278,7 @@ class Zii extends yii\base\Object
 				'c.item_id'=>$item_id,
 		])
 		
-		//->andWhere(['in','a.id',(new Query())->from(['vehicles_to_cars'])->where([
-		//		'parent_id'=>$supplier_id,
-		//		'is_active'=>1,
-		//		'is_default'=>1
-		
-		//])->select('vehicle_id')])
+		 
 		->select(['a.*','c.quantity','maker_title'=>(new Query())->select('title')->from('vehicles_makers')->where('id=a.maker_id')])
 		->orderBy(['a.pmax'=>SORT_DESC]);
 		$r = $query->all();
@@ -356,13 +432,27 @@ class Zii extends yii\base\Object
 					
 			])->select('vehicle_id')])
 			->orderBy(['a.pmax'=>SORT_DESC]);
+			
 			$listCar = $query->all();
+			//view($listCar);
 			$totalCar = 0;
 			if(!empty($listCar)){
 				foreach ($listCar as $k=>$v){
 	
 					$t = (int)($totalPax/$v['pmax']);
+					view($totalPax . DS .$v['pmax']);
+					if($t == 0){
+						$t = 1;
+						$totalCar = $t;
+						$selected_car[0] = $v;
+						$selected_car[0]['quantity'] = $t;
+						
+						
+					}
+					view($totalCar);
 					if($t > $totalCar && $totalCar>0){
+						view($t);
+						view($v);
 						break;
 					}
 					$totalCar = $t;
@@ -381,37 +471,10 @@ class Zii extends yii\base\Object
 			}else{
 				$selected_car[0]['quantity'] ++;
 			}
-			// Cập nhật cơ sở dữ liệu
-			if(isConfirm($update)){
-				/*
-				Yii::$app->db->createCommand()->delete('tours_programs_to_suppliers',['supplier_id'=>$supplier_id,'item_id'=>$item_id])->execute();
-				Yii::$app->db->createCommand()->insert('tours_programs_to_suppliers',
-						[
-								'supplier_id'=>$supplier_id,
-								'item_id'=>$item_id,
-								'vehicle_id'=>$selected_car[0]['id'],
-								'quantity'=>$selected_car[0]['quantity'],
-								'type_id'=>$type_id,
-								'position'=>$position
-						]
-						)->execute();
-						*/
-			}
+		 
 	
 				
-		}else{
-			/*
-			$query = new Query();
-			$query->from(['a'=>'vehicles_categorys'])
-			->innerJoin(['b'=>'tours_programs_to_suppliers'],'a.id=b.vehicle_id')
-			->where(['>','a.state',-2])
-			->andWhere(['a.type'=>$pax_type,'b.item_id'=>$item_id,'supplier_id'=>$supplier_id])
-			->select(['a.*','b.quantity','maker_title'=>(new Query())->select('title')->from('vehicles_makers')->where('id=a.maker_id')])
-			;
-			$selected_car = $query->all();
-			*/
-		}
-	
+		} 
 		return $selected_car;
 	}
 	
@@ -686,6 +749,8 @@ class Zii extends yii\base\Object
 				if($cLevel < $maxLevel && !empty($l1)){
 					$cLevel = 2;
 					
+					$m .= (isset($o['preUl2']) ? $o['preUl2'] : '');
+					
 					$m .= '<ul ';
 					if(isset($o['ul2Attr']) && !empty($o['ul2Attr'])){
 						foreach ($o['ul2Attr'] as $a=>$t){
@@ -700,8 +765,9 @@ class Zii extends yii\base\Object
 						$link = $v1['type'] == 'link' ? $v1['link_target'] : cu([DS.$v1['url']]);
 						$m .= '<li data-id="'.$v1['id'].'" data-child="'.count($l2).'" class="li-child li-child-'.$k1.' li-level-'.$cLevel.' '.(isset($o['li2Class']) ? $o['li2Class'] : '').'">';
 						$m .= '<a '.(isset($v1['rel']) ? ' rel="'.$v1['rel'].'"' : '').' '.(isset($v1['target']) ? ' target="'.$v1['target'].'"' : '').' '.($link != '#' ? 'href="'.$link.'"' : 'role="none"').'>';
-						//$m .= $hTag[0];
+						$m .= isset($o['a2Pre']) ? $o['a2Pre'] : '';
 						$m .= uh($v1['title']);
+						$m .= isset($o['a2After']) ? $o['a2After'] : '';
 						//$m .= $eTag[0];
 						$m .= '</a>';
 						
@@ -752,6 +818,8 @@ class Zii extends yii\base\Object
 						$m.= '</li>';
 					}
 					$m .= '</ul>';
+					//
+					$m .= (isset($o['afterUl2']) ? $o['afterUl2'] : '');
 				}
 				
 				$m.= '</li>';
@@ -800,14 +868,14 @@ class Zii extends yii\base\Object
 		if($type > -1){
 			$query->andWhere(['a.type'=>$type]);
 		}
-		if($category_id > -1){
+		if($category_id > -2){
 			$query->andWhere(['a.category_id'=>$category_id]);
 		}
 		if($box_id > -1){
 			$query->andWhere(['a.box_id'=>$box_id]);
 		}
 		
-		 
+		//view($query->createCommand()->getRawSql()); 
 		return $query->orderBy($orderBy)->all();
 		
 	}
@@ -2550,6 +2618,36 @@ class Zii extends yii\base\Object
 		
 	}
 	
+	
+	
+	public function zipData($source, $destination) {
+		if (extension_loaded('zip')) {
+			if (file_exists($source)) {
+				$zip = new ZipArchive();
+				if ($zip->open($destination, ZIPARCHIVE::CREATE)) {
+					$source = realpath($source);
+					if (is_dir($source)) {
+						$iterator = new RecursiveDirectoryIterator($source);
+						// skip dot files while iterating
+						$iterator->setFlags(RecursiveDirectoryIterator::SKIP_DOTS);
+						$files = new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::SELF_FIRST);
+						foreach ($files as $file) {
+							$file = realpath($file);
+							if (is_dir($file)) {
+								$zip->addEmptyDir(str_replace($source . '/', '', $file . '/'));
+							} else if (is_file($file)) {
+								$zip->addFromString(str_replace($source . '/', '', $file), file_get_contents($file));
+							}
+						}
+					} else if (is_file($source)) {
+						$zip->addFromString(basename($source), file_get_contents($source));
+					}
+				}
+				return $zip->close();
+			}
+		}
+		return false;
+	}
 }
  
 

@@ -2412,21 +2412,29 @@ switch (Yii::$app->request->post('action')){
 		break;
 		
 	case 'quick-add-more-distance-supplier':
-		$item_id = post('id');
+		$item_id = post('id',0);
 		$day = post('day');
 		$time = post('time');
 		$nationality = post('nationality');
 		$guest = post('guest');
-		$type_id = post('type_id',0);
-		
+		//$type_id = post('type_id',0);
+		$item = \app\modules\admin\models\ToursPrograms::getItem($item_id);
 		$selected_value = post('selected_value',[]);
 		//
-		Yii::$app->db->createCommand()->delete('tours_programs_to_suppliers',
+		$l1 = (new \yii\db\Query())->from('tours_programs_to_suppliers')->where( 
 				['and',
 						['not in','supplier_id',$selected_value],
-						['item_id'=>$item_id,'type_id'=>$type_id]
+						['item_id'=>$item_id]
 						
-				])->execute();
+				])->all();
+		if(!empty($l1)){
+			foreach ($l1 as $k1=>$v1){
+				Yii::$app->zii->removeTransportSupplierTourProgram([
+						'supplier_id'=>$v1['supplier_id'],
+						'item_id'=>$item_id
+				]); 
+			}
+		}
 		//
 		$selected_id = post('selected_id',[]);
 		$i = 0;
@@ -2442,17 +2450,31 @@ switch (Yii::$app->request->post('action')){
 							'supplier_id'=>$id,
 							'item_id'=>$item_id,
 					])->execute();
-					/*
-					Yii::$app->zii->chooseVehicleAuto([
-							'totalPax'=>$guest,
-							'nationality'=>$nationality,
+					// Lấy xe tự động
+					$c = (Yii::$app->zii->getVehicleAuto([
+							'total_pax'=>$item['guest'],
+							'nationality_id'=>$item['nationality'],
 							'supplier_id'=>$id,
 							'auto'=>true,
-							'update'=>true,
+								
+					]));
+					if(!empty($c) && isset($c[0])){
+						$c = $c[0];
+						if((new Query())->from('tours_programs_suppliers_vehicles')->where([
+							'vehicle_id'=>$c['id'],						 
+							'supplier_id'=>$id,
 							'item_id'=>$item_id,
-							'position'=>$k
-					]);
-					*/
+						])->count(1) == 0){
+						Yii::$app->db->createCommand()->insert('tours_programs_suppliers_vehicles',[
+							'vehicle_id'=>$c['id'],
+							'quantity'=>$c['quantity'],
+							'supplier_id'=>$id,
+							'item_id'=>$item_id,  
+						])->execute();
+						}else{
+							
+						}
+					}
 				}else{
 					Yii::$app->db->createCommand()->update('tours_programs_to_suppliers',[
 							'position'=>$k
@@ -2604,22 +2626,28 @@ switch (Yii::$app->request->post('action')){
 		$item_id = post('id');
 		$supplier_id = post('supplier_id',0);
 		$time = post('time');
-		
-		
+				
 		
 		$selected_value = post('selected_value',[]);
 		//view($selected_value);
-		Yii::$app->db->createCommand()->delete('tours_programs_services_distances',[
+		Yii::$app->db->createCommand()->delete('tours_programs_services_distances',['and',[
 				'item_id'=>$item_id,
 				'supplier_id'=>$supplier_id,
 				//'time'=>$time,
-				])->execute();
+				],[
+						'not in','service_id',$selected_value
+				]])->execute();
 		$i = 0;
 		if(!empty($selected_value)){
 			$selected_type_id = post('selected_type_id');
 			foreach ($selected_value as $k => $id){
 				$type_id = $selected_type_id[$k];
-				//if(!empty($v)){
+				if((new Query())->from('tours_programs_services_distances')->where([
+						'item_id'=>$item_id,
+						'supplier_id'=>$supplier_id,
+						'service_id'=>$id,
+						'type_id'=>$type_id,
+				])->count(1) == 0){
 				//	foreach ($v as $id){
 						Yii::$app->db->createCommand()->insert('tours_programs_services_distances',[
 								'item_id'=>$item_id,
@@ -2630,7 +2658,16 @@ switch (Yii::$app->request->post('action')){
 								'position'=>$k
 						])->execute();	
 					//}
-				//}
+				}else {
+					Yii::$app->db->createCommand()->update('tours_programs_services_distances',['position'=>$k],[
+							'item_id'=>$item_id,
+							'type_id'=>$type_id,
+							'service_id'=>$id,
+							'supplier_id'=>$supplier_id,
+							//'time'=>$time,
+							
+					])->execute();
+				}
 			}
 		}
 		echo json_encode([
@@ -2649,12 +2686,12 @@ switch (Yii::$app->request->post('action')){
 		
 		$html .= '<p class="help-block">Bạn đang chọn dịch vụ vận chuyển</p>
 				<table class="table table-bordered vmiddle"><thead><tr>
-				<th class="center bold col-ws-2">Dịch vụ</th>
-				<th class="center bold col-ws-4">Dịch vụ đã chọn</th>
-				<th class="center bold col-ws-4">Dịch vụ có thể chọn</th>
+			 
+				<th class="center bold col-ws-6">Dịch vụ đã chọn</th>
+				<th class="center bold col-ws-6">Dịch vụ có thể chọn</th>
 				</tr></thead><tbody>';
 		$html .= '<tr class="vtop">
-				<td class="">
+				<td class="hide">
 				<ul class="style-none ul-style-l01">';
 		foreach (showListChooseService() as $k=>$v){
 			$html .= $v['id'] == TYPE_CODE_DISTANCE ? '<li class="'.($v['id'] == TYPE_CODE_DISTANCE ? 'li-service-first-child' : '').'"><a data-day="'.$day.'" data-time="'.$time.'" data-id="'.$v['id'].'" onclick="return change_selected_tour_service_group(this);" href="#">'.$v['title'].'</a></li>' : '';
@@ -2925,8 +2962,8 @@ change:function(event,ui){
 		$html .= '</tbody></table>';
 		
 		$html .= '<div class="modal-footer">';
-		$html .= '<button type="submit" class="btn btn-primary"><i class="glyphicon glyphicon-floppy-save"></i> Chọn</button>';
-		$html .= '<button type="button" class="btn btn-danger" data-dismiss="modal"><i class="glyphicon glyphicon-remove"></i> Đóng lại</button>';
+		$html .= '<button type="submit" class="btn btn-primary"><i class="glyphicon glyphicon-floppy-save"></i> Lưu lại</button>';
+		$html .= '<button type="button" class="btn btn-danger" data-dismiss="modal"><i class="glyphicon glyphicon-remove"></i> Đóng</button>';
 		$html .= '</div>';
 		$_POST['action'] = 'quick-' . $_POST['action'];
 		foreach ($_POST as $k=>$v){
@@ -2976,11 +3013,28 @@ change:function(event,ui){
 		$supplier_id = post('supplier_id');
 		$item_id = post('item_id');
 		//
-		Yii::$app->db->createCommand()->delete('tours_programs_suppliers_vehicles',['and',[
+		$l1 = (new Query())->from('tours_programs_suppliers_vehicles')->where(['and',[
 				'supplier_id'=>$supplier_id,
 				'item_id'=>$item_id
 				
+		],['not in','vehicle_id',$selected_value]])->all();
+		Yii::$app->db->createCommand()->delete('tours_programs_suppliers_vehicles',['and',[
+				'supplier_id'=>$supplier_id,
+				'item_id'=>$item_id
+		
 		],['not in','vehicle_id',$selected_value]])->execute();
+		
+		if(!empty($l1)){
+			foreach ($l1 as $k1=>$v1){
+				Yii::$app->db->createCommand()->delete('tours_programs_suppliers_prices',[
+						'supplier_id'=>$supplier_id,
+						'item_id'=>$item_id,
+						'vehicle_id'=>$v1['vehicle_id']
+				
+				])->execute();
+			}
+		}
+		
 		//
 		if(!empty($selected_value)){
 			foreach ($selected_value as $k=>$v){
@@ -3323,13 +3377,13 @@ change:function(event,ui){
 				'item_id'=>post('item_id'),
 				'service_id'=>post('service_id'),
 				'price1'=>$price	,
-				'distance'=>post('distance',1),	
+				'quantity'=>post('distance',1),	
 			])->execute();
 		}else{
 			Yii::$app->db->createCommand()->update('tours_programs_suppliers_prices',[
 					 
 					'price1'=>$price,
-					'distance'=>post('distance',1),
+					'quantity'=>post('distance',1),
 			],[
 					'supplier_id'=>post('supplier_id'),
 					'vehicle_id'=>post('vehicle_id'),
@@ -3350,11 +3404,59 @@ change:function(event,ui){
 		exit;
 		break;
 	case 'reloadDistanceServicePriceAuto':
+		$a  = [
+				'supplier_id',
+				'vehicle_id',
+				'service_id',
+				'distance_id',
+				'item_id',
+		
+		];
+		foreach ($a as $b){
+			$$b = post($b,0);
+		}
+		$item = \app\modules\admin\models\ToursPrograms::getItem($item_id);
+		
+		$from_date = $item['from_date'];
+		
+		$quotation = \app\modules\admin\models\Suppliers::getQuotation([
+				'supplier_id'=>$supplier_id,
+				'date'=>$from_date
+		]);
+		//view($quotation);
+		//
+		$nationality_group = \app\modules\admin\models\Suppliers::getNationalityGroup([
+				'supplier_id'=>$supplier_id,
+				'nationality_id'=>$item['nationality'],
+		]);
+		//
+		$seasons = \app\modules\admin\models\Suppliers::getSeasons([
+				'supplier_id'=>$supplier_id,
+		
+				'date'=>$from_date,
+				//'time_id'=>$time_id
+		]);
+		$groups = \app\modules\admin\models\Suppliers::getGuestGroup([
+				'supplier_id'=>$supplier_id,
+				'total_pax'=>$item['guest'],
+				'date'=>$from_date,
+				//'time_id'=>$time_id
+		]);
+		//
+		
 		$prices = Yii::$app->zii->calcDistancePrice([
-				'supplier_id'=>post('supplier_id'),
-				'vehicle_id'=>post('vehicle_id'),
-				'distance_id'=>post('service_id'),
-				//'item_id'=>post('item_id')
+				'supplier_id'=>$supplier_id,
+				'vehicle_id'=>$vehicle_id,
+				'distance_id'=>$service_id,
+				'item_id'=>$item_id,
+				'quotation_id'=>isset($quotation['id']) ? $quotation['id'] : 0,
+				'nationality_id'=>isset($nationality_group['id']) ? $nationality_group['id'] : 0,
+				'season_id'=>isset($seasons['seasons_prices']['id']) ? $seasons['seasons_prices']['id'] : 0,
+				 
+				'total_pax'=>$item['guest'],
+				'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
+				//'package_id'=>0,
+				'group_id'=>isset($groups['id']) ? $groups['id'] : 0,
 		]);
 		echo json_encode($prices);exit;
 		break;
@@ -3409,20 +3511,32 @@ change:function(event,ui){
 		break;	
 	case 'qedit-service-detail':
 		 
-		$id = post('id',0);
-		$day = post('day',0);
-		$time = post('time',0);
-		
-		$services = \app\modules\admin\models\ToursPrograms::getProgramDistanceServices(post('item_id'),post('supplier_id'),[
-				//'vehicle_id'=>post('vehicle_id')
-		]);
-		 
+		$a  = [
+				'supplier_id',
+				'vehicle_id',
+				'service_id',
+				'distance_id',
+				'item_id',
+				
+		];
+		foreach ($a as $b){
+			$$b = post($b,0);
+		}
 		$prices = Yii::$app->zii->calcDistancePrice([
-				'supplier_id'=>post('supplier_id'),
-				'vehicle_id'=>post('vehicle_id'),
-				'distance_id'=>post('service_id'),
-				'item_id'=>post('item_id')
+				'supplier_id'=>$supplier_id,
+				'vehicle_id'=>$vehicle_id,
+				'service_id'=>$service_id,
+				'distance_id'=>$service_id,
+				'item_id'=>$item_id,
+				'updateDatabase'=>false,
+				'loadDefault'=>false,
+				
 		]);
+		
+		//
+		$supplier = \app\modules\admin\models\Customers::getItem($supplier_id);
+		$vehicle = \app\modules\admin\models\VehiclesCategorys::getItem($vehicle_id);
+		$distance = \app\modules\admin\models\Distances::getItem($service_id);
 		$html = '';
 		
 		$html .= '
@@ -3438,24 +3552,18 @@ change:function(event,ui){
 		//	foreach ($services as $kv=>$sv){
 				$html .= '<tr class="">
 			
-				<td class="">
-		 '.(isset($prices['supplier']['name']) ? $prices['supplier']['name'] : '').'
-				</td>
-				<td class="">
-		 '.(isset($prices['vehicle']['title']) ? $prices['vehicle']['title'] : '').'
-				</td>
-				<td class="">
-		 		  '.(isset($prices['distance']['title']) ? $prices['distance']['title'] : '').'
-				</td>
+				<td class="center">'.($supplier['title']).'</td>
+				<td class="center">'.(isset($vehicle['title']) ? $vehicle['title'] : '-').'</td>
+				<td class="center">'.(isset($distance['title']) ? $distance['title'] : '-').'</td>
 				<td class="center">
-		  '.($prices['price_type'] == 1 ? '<input name="distance" value="'.$prices['distance']['distance'].'" type="text" class="input-distance-service-distance form-control bold center aright number-format"/>' : '-').'
+		  '.(isset($prices['price_type']) && $prices['price_type'] == 1 ? '<input name="distance" value="'.$prices['quantity'].'" type="text" class="input-distance-service-distance form-control bold center aright number-format"/>' : '-').'
 				
 		  		</td>
 				<td class=""> 
-						<input name="price" value="'.$prices['price'].'" type="text" class="input-distance-service-price form-control bold aright number-format"/>
+						<input name="price" value="'.(isset($prices['price1']) ? $prices['price1'] : 0).'" type="text" class="input-distance-service-price form-control bold aright number-format"/>
 				</td>
 				<td class="center"> 
-						<i data-vehicle_id="'.post('vehicle_id').'" data-service_id="'.post('service_id').'" data-supplier_id="'.post('supplier_id').'" onclick="reloadDistanceServicePriceAuto(this)" class="fa fa-refresh f12e pointer" title="Tính giá tự động theo số liệu hệ thống"></i>
+						<i data-item_id="'.$item_id.'" data-vehicle_id="'.$vehicle_id.'" data-distance_id="'.$service_id.'" data-service_id="'.$service_id.'" data-supplier_id="'.$supplier_id.'" onclick="reloadDistanceServicePriceAuto(this)" class="fa fa-refresh f12e pointer" title="Tính giá tự động theo số liệu hệ thống"></i>
 				</td>
 				</tr>';
 		//	}

@@ -182,9 +182,7 @@ class ToursPrograms extends \yii\db\ActiveRecord
     public static function getProgramDistanceServices($id = 0, $supplier_id = 0 ,$o = []){
     	$query = (new Query())->from(['a'=>'tours_programs_services_distances'])
     	->where(['item_id'=>$id,'supplier_id'=>$supplier_id]);
-    	if(isset($o['vehicle_id']) && $o['vehicle_id'] > 0){
-    		$query->andWhere(['vehicle_id'=>$o['vehicle_id']]);
-    	}
+    	 
     	 
     	$l = $query->orderBy(['position'=>SORT_ASC])->all();
     	 

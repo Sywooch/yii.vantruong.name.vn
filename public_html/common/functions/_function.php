@@ -4106,9 +4106,14 @@ function getClientIP(){
 }
 
 
-function loadTourProgramDistances($id = 0){
+function loadTourProgramDistances($id = 0,$o=[]){
+
+	$loadDefault = isset($o['loadDefault']) && cbool($o['loadDefault']) == 1 ? true : false;
+	$updateDatabase = isset($o['updateDatabase']) && cbool($o['updateDatabase']) == 1 ? true : false;
 	$item = \app\modules\admin\models\ToursPrograms::getItem($id);
-	 //view($item,true);
+	//
+	
+	//
 	$html = '<table class="table table-bordered table-striped table-sm vmiddle"> 
  
 <colgroup>
@@ -4130,20 +4135,49 @@ function loadTourProgramDistances($id = 0){
 <tr class="col-middle">
  <th class="bold center">Nhà xe</th>
  <th class="bold center" colspan="2">Loại xe</th>
- <th class="bold center">Số lượng</th>
+ <th class="bold center">Số lượng<p class="center font-normal italic">(1)</p></th>
  <th colspan="5" > 
  <p class="bold center">Chặng di chuyển</p>
 </th>
-<th class="bold center">Km</th>
-<th class="bold center">Đơn giá ('.Yii::$app->zii->showCurrency(isset($item['currency']) ? $item['currency'] : 1).')</th>
-<th class="bold center">Thành tiền </th> 
+<th class="bold center">Km<p class="center font-normal italic">(2)</p></th>
+<th class="bold center">Đơn giá ('.Yii::$app->zii->showCurrency(isset($item['currency']) ? $item['currency'] : 1).')<p class="center font-normal italic">(3)</p></th>
+<th class="bold center">Thành tiền <p class="center font-normal italic">(1) x (2) x (3)</p></th> 
  
 </tr>
 </thead> <tbody class="ajax-load-distance-detail" data-count="0">';	 
-	//view(Yii::$app->zii->getTourProgramSuppliers($id));
+	
 	$j=$i=-1;
 	foreach (Yii::$app->zii->getTourProgramSuppliers($id) as $k=>$v){
-	 
+		//\\//\\ *.* //\\//\\
+		$supplier_id = $v['id'];
+		$from_date = $item['from_date'];
+		
+		$quotation = \app\modules\admin\models\Suppliers::getQuotation([
+				'supplier_id'=>$supplier_id,
+				'date'=>$from_date
+		]);
+		//view($quotation);
+		//
+		$nationality_group = \app\modules\admin\models\Suppliers::getNationalityGroup([
+				'supplier_id'=>$supplier_id,
+				'nationality_id'=>$item['nationality'],
+		]);
+		//
+		$seasons = \app\modules\admin\models\Suppliers::getSeasons([
+				'supplier_id'=>$supplier_id,
+		
+				'date'=>$from_date,
+				//'time_id'=>$time_id
+		]);
+		$groups = \app\modules\admin\models\Suppliers::getGuestGroup([
+				'supplier_id'=>$supplier_id,
+				'total_pax'=>$item['guest'],
+				'date'=>$from_date,
+				//'time_id'=>$time_id
+		]);
+		
+		//
+		
 		$selected_car = Yii::$app->zii->getSelectedVehicles([
 				//'totalPax'=>post('total_pax',0),
 				//'nationality'=>post('nationality',0),
@@ -4167,6 +4201,7 @@ function loadTourProgramDistances($id = 0){
 		$html .= '</td></tr>';
 		//for($j=0;$j<4;$j++){
 		foreach ($selected_car as $k3=>$car){
+			
 			 
 			$html .= '<tr><td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="2"><a data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="label label-danger f12p">'.$car['title'].'</span></a></td>';
 			$html .= '<td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="1"><a data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="badge">'.(isset($car['quantity']) ? $car['quantity'] : 0).'</span></a></td>';
@@ -4177,19 +4212,36 @@ function loadTourProgramDistances($id = 0){
 					//
 					$distance = isset($sv['distance']) && $sv['distance'] > 0 ? $sv['distance'] : -1;
 					$prices = Yii::$app->zii->calcDistancePrice([
-							'supplier_id'=>$v['id'],
+							//'supplier_id'=>$v['id'],
 							'vehicle_id'=>$car['id'],
 							'distance_id'=>$sv['id'],
 							'item_id'=>$id,
+							'quotation_id'=>isset($quotation['id']) ? $quotation['id'] : 0,
+							'nationality_id'=>isset($nationality_group['id']) ? $nationality_group['id'] : 0,
+							'season_id'=>isset($seasons['seasons_prices']['id']) ? $seasons['seasons_prices']['id'] : 0,
+							'supplier_id'=>$supplier_id,
+							'total_pax'=>$item['guest'],
+							'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
+							//'package_id'=>0,
+							'group_id'=>isset($groups['id']) ? $groups['id'] : 0, 
 					]);
+					//view($prices);
+					if(!empty($prices) && isset($prices['price1'])){
+						$price = Yii::$app->zii->getServicePrice($prices['price1'],[
+								'item_id'=>$id,
+								//'price'=>$prices['price1'],
+								'from'=>$prices['currency'],
+								'to'=>$item['currency']
+						]);
+					}
 					//
 					$html .= '<tr><td colspan="5"><p><a data-item_id="'.$id.'" data-vehicle_id="'.$car['id'].'" data-supplier_id="'.$v['id'].'" data-service_id="'.$sv['id'].'" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">  ' .(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
 									<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$i.'_'.$j.'" name="selected_value[]"/>
 									<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>
 											</a></p></td>';
-					$html .= '<td class="center" colspan="1">'.($prices['price_type'] == 1 ? '<a data-item_id="'.$id.'" data-vehicle_id="'.$car['id'].'" data-supplier_id="'.$v['id'].'" data-service_id="'.$sv['id'].'" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">'. number_format($prices['distance']['distance']) .'</a>' : '-').'</td>';
-					$html .= '<td class="center" colspan="1"><a data-item_id="'.$id.'" data-vehicle_id="'.$car['id'].'" data-supplier_id="'.$v['id'].'" data-service_id="'.$sv['id'].'" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">'.number_format($prices['price']).'</a></td>';
-					$html .= '<td class="center" colspan="1"><b class="underline">'.number_format($prices['total_price']).'</b></td>';
+					$html .= '<td class="center" colspan="1">'.($prices['price_type'] == 1 ? '<a data-item_id="'.$id.'" data-vehicle_id="'.$car['id'].'" data-supplier_id="'.$v['id'].'" data-service_id="'.$sv['id'].'" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">'.(is_numeric($prices['quantity']) ? number_format($prices['quantity']) : '') .'</a>' : '-').'</td>';
+					$html .= '<td class="center" ><span data-decimal="'.(isset($price['decimal']) ? $price['decimal'] : 0).'" class="number-format '.(isset($price['changed']) && $price['changed'] ? 'red underline' : '').'" title="'.(isset($price['changed']) && $price['changed'] ? $price['old_price'] : '').'">'.(isset($price['price']) ? $price['price'] : '-').'</span></td>';
+					$html .= '<td class="center" ><span data-decimal="'.(isset($price['decimal']) ? $price['decimal'] : 0).'" class="bold underline number-format " >'.(isset($price['price']) ? $price['price'] * $prices['quantity'] * $car['quantity'] : '-').'</span></td>';
 					$html .= '</tr>';
 				}
 			}

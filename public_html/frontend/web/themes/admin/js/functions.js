@@ -4790,8 +4790,8 @@ function reloadDistanceServicePriceAuto($t){
 	      },
 	      success: function (data) {
 	    	  $d = JSON.parse(data);
-	    	  jQuery('.input-distance-service-price').val($d.price).addClass('green');
-	    	  jQuery('.input-distance-service-distance').val($d.distance['distance']).addClass('green');
+	    	  jQuery('.input-distance-service-price').val($d.price1).addClass('green');
+	    	  jQuery('.input-distance-service-distance').val($d.quantity).addClass('green');
 	      },
 	      complete:function(){
 	    	  $this.removeClass('fa-spin fa-refresh ').addClass('green fa-check-square-o')

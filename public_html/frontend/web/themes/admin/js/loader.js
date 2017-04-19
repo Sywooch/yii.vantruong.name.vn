@@ -300,7 +300,7 @@ var notification = {
 		 getNotis : function(callback){
 			  
 				jQuery.get($cfg.cBaseUrl +'/ajax?action=countNotifis',{},function(r){
-					min =3000; max = 10000;
+					min = 3000; max = 10000;
 //					console.log(r)
 					var nextRequest = Math.floor(Math.random()*(max-min+1)+min);
 					$n = jQuery('.item-notifications');
