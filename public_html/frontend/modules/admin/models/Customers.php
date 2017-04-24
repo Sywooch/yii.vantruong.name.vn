@@ -330,7 +330,7 @@ class Customers extends \yii\db\ActiveRecord
     	if($count){   	
     		$c = $query->count(1);
     	}
-    	$query->select(['a.*','localName'=>'b.name','title'=>'a.name'])
+    	$query->select(['a.*','localName'=>'b.name','localType'=>'b.type_id','title'=>'a.name'])
     	->orderBy($order_by)
     	->offset($offset)
     	->limit($limit);

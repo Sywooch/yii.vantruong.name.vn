@@ -180,7 +180,7 @@ function cjson($a = array(),$t = JSON_UNESCAPED_UNICODE){
 	return json_encode($a,$t);
 }
 function cbool($t = 0){
-	return  ($t === 'on' || $t == 1 ) ? 1 : 0;
+	return  ($t === 'on' || $t == 1 || $t == true) ? 1 : 0;
 }
 function isConfirm($value){
 	switch (strtolower($value)){
@@ -2097,6 +2097,7 @@ function afShowListButton($id = 0 ,$o = array()){
 	$label = isset($o['label']) ? $o['label'] : array();
 	$btn = isset($o['btn']) ? $o['btn'] : [];
 	$post_by = isset($o['post_by']) ? $o['post_by'] : 0;
+	$tab_click = isset($o['tab_click']) ? $o['tab_click'] : '';
 	//
 	if($edit !== false){
 		switch (Yii::$app->controller->id){
@@ -2124,7 +2125,7 @@ function afShowListButton($id = 0 ,$o = array()){
 	$del = $del === false ? false : Yii::$app->user->can([ROOT_USER,ADMIN_USER,Yii::$app->controller->id . '-' . (defined('CONTROLLER_CODE') && CONTROLLER_CODE != "" ? CONTROLLER_CODE . '-' : '') .'delete','site-'.$id.'-delete','form-'.getParam('type').'-delete']); 
 	
 	//
-	$html = '<a '.($edit ? '' : 'disabled').' href="'.($edit ? cu([__RCONTROLLER__.DS.'edit','id'=>$id]+get_params([],['id'])) : '#').'"';
+	$html = '<a '.($edit ? '' : 'disabled').' href="'.($edit ? cu([__RCONTROLLER__.DS.'edit','id'=>$id]+get_params([],['id'])).$tab_click : '#').'"';
 	if(isset($btn['edit']['attr']) && !empty($btn['edit']['attr'])){
 		foreach ($btn['edit']['attr'] as $k=>$v)
 		{
@@ -2272,11 +2273,14 @@ function Ad_list_show_option_field($v=[],$o=[]){
 	$check_permision = isset($o['check_permision']) ? $o['check_permision'] : false;
 	$edit = (isset($o['edit']) && $o['edit'] == false) || (isset($o['btn']['edit']) && $o['btn']['edit'] == false) ? false : true;
 	$del = (isset($o['del']) && $o['del'] == false) || (isset($o['btn']['del']) && $o['btn']['del'] == false) ? false : true;
+	$tab_click = isset($o['tab_click']) ? $o['tab_click'] : '';
+	
 	$html = '<td class="center pr">'.afShowListButton($v['id'],
         array(
         		'edit'=>$edit,
         		'del'=>$del,
         		'post_by'=>$post_by,
+        		'tab_click'=>$tab_click,
         'btn'=>[
         		'edit'=>isset($o['btn']['edit']) ? $o['btn']['edit'] : [],
         	'del'=>['attr'=>$role]
@@ -4003,6 +4007,9 @@ function showLocalName($name = '', $type_id = 0, $show_full = false){
 			['id'=>7,'title'=>'Phường ','short'=>'P'],
 			['id'=>8,'title'=>'Thị Trấn ','short'=>'TT'],
 	];
+	if(!is_numeric($type_id)){
+		return $name;
+	}
 	if(is_numeric($type_id) && $type_id > -1){
 		foreach ($r as $v){
 			if($v['id'] == $type_id){
@@ -4179,12 +4186,13 @@ function loadTourProgramDistances($id = 0,$o=[]){
 		//
 		
 		$selected_car = Yii::$app->zii->getSelectedVehicles([
-				//'totalPax'=>post('total_pax',0),
-				//'nationality'=>post('nationality',0),
+				'total_pax'=>$item['guest'],
+				'nationality_id'=>$item['nationality'],
 				'supplier_id'=>$v['id'],
 				'item_id'=>$id,
 				'default'=>true,
-				
+				'loadDefault'=>$loadDefault,
+				'updateDatabase'=>$updateDatabase
 				////'auto'=>true,
 				//'update'=>true,
 		]);
@@ -4224,6 +4232,8 @@ function loadTourProgramDistances($id = 0,$o=[]){
 							'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
 							//'package_id'=>0,
 							'group_id'=>isset($groups['id']) ? $groups['id'] : 0, 
+							'loadDefault'=>$loadDefault,
+							'updateDatabase'=>$updateDatabase
 					]);
 					//view($prices);
 					if(!empty($prices) && isset($prices['price1'])){

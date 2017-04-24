@@ -50,7 +50,7 @@ if(Yii::$app->controller->action->id == 'edit'){
 		     $l = new app\modules\admin\models\Local();
 		     $l = $l->getItem(isset($v['local_id']) ? $v['local_id'] : 0,array('show_parent'=>true));
 		     if(!empty($l)){
-		     	echo '<option value="'.$l['id'].'" selected >'.$l['name'].'</option>';
+		     	echo '<option value="'.$l['id'].'" selected >'.showLocalName($l['name'],$l['type_id']).'</option>';
 		     }else{
 		     	
 		     }

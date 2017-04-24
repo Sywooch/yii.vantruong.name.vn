@@ -264,26 +264,58 @@ class Zii extends yii\base\Object
 	public function getSelectedVehicles($o = []){
 		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;		
 		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
+		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
+		$nationality_id = isset($o['nationality_id']) ? $o['nationality_id'] : 0;
 		$default = isset($o['default']) ? $o['default'] : false;
-		// Lấy danh sách xe
-		$query = new Query();
-		$query->from(['a'=>'vehicles_categorys'])
-		->innerJoin(['b'=>'vehicles_to_cars'],'a.id=b.vehicle_id')
-		->innerJoin(['c'=>'tours_programs_suppliers_vehicles'],'a.id=c.vehicle_id')
-		->where(['>','a.state',-2])
-		->andWhere(['a.type'=>1,
-				'b.parent_id'=>$supplier_id,
-				'b.is_active'=>1,
-				'c.supplier_id'=>$supplier_id,
-				'c.item_id'=>$item_id,
-		])
+		$loadDefault = isset($o['loadDefault']) ? $o['loadDefault'] : false;
+		$updateDatabase = isset($o['updateDatabase']) ? $o['updateDatabase'] : false;
+		if($loadDefault){
+			$r = $this->getVehicleAuto([
+				'total_pax'=>$total_pax, 
+				'nationality_id'=>$nationality_id,
+				'supplier_id'=>$supplier_id,
+				'auto'=>true,
+
+			]);
+			if($updateDatabase){
+				// Clear
+				Yii::$app->db->createCommand()->delete('tours_programs_suppliers_vehicles',[
+						'supplier_id'=>$supplier_id,
+						'item_id'=>$item_id
+				])->execute();
+				// Insert 
+				if(!empty($r)){
+					foreach ($r as $k=>$v){
+						Yii::$app->db->createCommand()->insert('tours_programs_suppliers_vehicles',[
+								'supplier_id'=>$supplier_id,
+								'item_id'=>$item_id,
+								'vehicle_id'=>$v['id'],
+								'quantity'=>$v['quantity'] 
+						])->execute();
+					}
+				}
+			}
+		}else{
 		
-		 
-		->select(['a.*','c.quantity','maker_title'=>(new Query())->select('title')->from('vehicles_makers')->where('id=a.maker_id')])
-		->orderBy(['a.pmax'=>SORT_DESC]);
-		$r = $query->all();
+			// Lấy danh sách xe
+			$query = new Query();
+			$query->from(['a'=>'vehicles_categorys'])
+			->innerJoin(['b'=>'vehicles_to_cars'],'a.id=b.vehicle_id')
+			->innerJoin(['c'=>'tours_programs_suppliers_vehicles'],'a.id=c.vehicle_id')
+			->where(['>','a.state',-2])
+			->andWhere(['a.type'=>1,
+					'b.parent_id'=>$supplier_id,
+					'b.is_active'=>1,
+					'c.supplier_id'=>$supplier_id,
+					'c.item_id'=>$item_id,
+			])		 
+			->select(['a.*','c.quantity','maker_title'=>(new Query())->select('title')->from('vehicles_makers')->where('id=a.maker_id')])
+			->orderBy(['a.pmax'=>SORT_DESC]);
+			$r = $query->all();
+			 
+		}
 		if(empty($r) && $default){
-			$r = [['id'=>0,'title'=>'Chọn phương tiện','quantity'=>0,'maker_title'=>'']];
+				$r = [['id'=>0,'title'=>'Chọn phương tiện','quantity'=>0,'maker_title'=>'']];
 		}
 		return $r;
 	}
@@ -431,16 +463,17 @@ class Zii extends yii\base\Object
 					'is_default'=>1
 					
 			])->select('vehicle_id')])
+			->select(['a.*','maker_title'=>(new Query())->select('title')->from('vehicles_makers')->where('id=a.maker_id')])
 			->orderBy(['a.pmax'=>SORT_DESC]);
 			
 			$listCar = $query->all();
-			//view($listCar);
+			//$lk = [];
 			$totalCar = 0;
 			if(!empty($listCar)){
 				foreach ($listCar as $k=>$v){
 	
 					$t = (int)($totalPax/$v['pmax']);
-					view($totalPax . DS .$v['pmax']);
+					 
 					if($t == 0){
 						$t = 1;
 						$totalCar = $t;
@@ -449,29 +482,34 @@ class Zii extends yii\base\Object
 						
 						
 					}
-					view($totalCar);
+					//
+					
+					$du_khach = $totalPax - ($t* $v['pmax']);
+					if($du_khach < $v['pmax']){
+						if($du_khach > ($t * $v['factor'])){
+							$t ++;
+						}
+					}else{
+						$t ++;
+					}
+					//view($totalCar);
+					//$lk[$k] = $t;
+					//
 					if($t > $totalCar && $totalCar>0){
-						view($t);
-						view($v);
+						 
 						break;
 					}
 					$totalCar = $t;
 					$selected_car[0] = $v;
-					$selected_car[0]['quantity'] = $t;
+					$selected_car[0]['quantity'] = $totalCar;
+					
 				}
 			}else{
 				return [];
 			}
 			//
-			$du_khach = $totalPax - ($selected_car[0]['quantity'] * $selected_car[0]['pmax']);
-			if($du_khach < $selected_car[0]['pmax']){
-				if($du_khach > ($selected_car[0]['quantity'] * $selected_car[0]['factor'])){
-					$selected_car[0]['quantity'] ++;
-				}
-			}else{
-				$selected_car[0]['quantity'] ++;
-			}
-		 
+			
+		// view($lk);
 	
 				
 		} 

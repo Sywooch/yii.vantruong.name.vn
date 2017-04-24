@@ -158,6 +158,12 @@ switch (Yii::$app->request->post('action')){
 				'loadDefault'=>true,
 				'updateDatabase'=>true,
 			]);
+			loadTourProgramDistances($id,[
+				'loadDefault'=>true,
+				'updateDatabase'=>true,	
+			]);
+				
+			
 		}
 		
 		
@@ -857,10 +863,12 @@ switch (Yii::$app->request->post('action')){
 							'vehicle_id'=>$vehicle_id,
 							'parent_id'=>$supplier_id
 					])->count(1)==0){
+						$vhc = \app\modules\admin\models\VehiclesCategorys::getItem($vehicle_id);
 						Yii::$app->db->createCommand()->insert('vehicles_to_cars',[
 								'vehicle_id'=>$vehicle_id,
 								'parent_id'=>$supplier_id,
-								'quantity'=>$quantity
+								'quantity'=>$quantity,
+								'group_id'=>$vhc['seats']
 						])->execute() ;
 					}
 				}
@@ -1125,7 +1133,7 @@ switch (Yii::$app->request->post('action')){
         )).'
        			</td>
 		<td class="center">
-		<input data-field="is_default" data-supplier_id="'.$supplier_id.'" data-vehicle_id="'.$v1['id'].'" onchange="quick_change_supplier_list_vehicle(this);"  type="radio" value="'.$v1['id'].'" '.($v1['is_default'] == 1 ? 'checked' : '').' name="ckc_default['.$v1['seats'].']"/>		
+		<input data-group_id="'.$v1['seats'].'" data-field="is_default" data-supplier_id="'.$supplier_id.'" data-vehicle_id="'.$v1['id'].'" onchange="quick_change_supplier_list_vehicle(this);"  type="radio" value="'.$v1['id'].'" '.($v1['is_default'] == 1 ? 'checked' : '').' name="ckc_default['.$v1['seats'].']"/>		
 				</td>
  		<td class="center"><input type="hidden" name="c['.$k1.'][id]" value="'.$v1['id'].'"/><input type="hidden" name="existed[]" value="'.$v1['id'].'"/><i data-class="modal-sm" data-supplier_id="'.$supplier_id.'" data-vehicle_id="'.$v1['id'].'" title="Xóa" data-title="Xác nhận xóa ?" data-action="open-confirm-dialog" data-confirm-action="delete-supplier-vehicle" class="glyphicon glyphicon-trash pointer" data-name="delete_car_id" onclick="open_ajax_modal(this);"></i></td>         
         </tr> ';
@@ -1527,6 +1535,10 @@ switch (Yii::$app->request->post('action')){
 			'parent_id'=>post('supplier_id',0),
 			//'type_id'=>post('type_id',0),
 		];
+		$group_id = post('group_id',0);
+		if($group_id>0){
+			$con['group_id'] = $group_id;
+		}
 		if(post('parent_id')>0){
 			$con['supplier_id'] = post('supplier_id'); 
 		}
@@ -1539,7 +1551,7 @@ switch (Yii::$app->request->post('action')){
 		if(in_array(post('field'), ['is_default'])){
 			Yii::$app->db->createCommand()->update('vehicles_to_cars',[
 					post('field')=>0
-			],['parent_id'=>post('supplier_id',0)])->execute();
+			],['parent_id'=>post('supplier_id',0),'group_id'=>$group_id])->execute();
 			$new_value = 1;
 		}
 		if(in_array(post('field'), ['is_active'])){
@@ -2304,47 +2316,65 @@ switch (Yii::$app->request->post('action')){
 						'filter_text'=>post('value'),
 						'not_in'=>post('selected')
 				]);
-				//$html .= json_encode($l);
 				if(!empty($l['listItem'])){
 					foreach($l['listItem'] as $k=>$v){
-						$html .= '<li data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['name']).'</li>';
+						// Lay package
+						$packages = \app\modules\admin\models\PackagePrices::getPackages($v['id']);
+						if(empty($packages)){
+							$packages = [['id'=>0,'title'=>'']];
+						}
+						foreach ($packages as $package){
+							$html .= '<li data-package_id="'.$package['id'].'" data-type_id="'.$id.'" data-id="'.$v['id'].'" data-supplier_id="'.$v['id'].'" class="ui-state-highlight">'.($package['id']>0 ? '<i class="green underline">['.uh($package['title']).']</i>&nbsp;' : '').''.uh($v['name']).'</li>';
+						}
 					}
 				}
 				break;
 			case TYPE_CODE_DISTANCE:
-				$model = load_model('distances');
-			
-				$l = $model->getAll(TYPE_ID_VECL, [
-						'limit'=>100,
-						'p'=>1,
-						'place_id'=>$place_id,
-						'filter_text'=>post('value'),
-						'not_in'=>post('selected')
-				]);
-				//$html .= json_encode($l);
-				if(!empty($l)){
-					foreach($l as $k=>$v){
-						$html .= '<li data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).'</li>';
+					$model = load_model('distances');
+				
+					$l = $model->getAll(TYPE_ID_VECL, [
+							'limit'=>100,
+							'place_id'=>$place_id,
+							'not_in'=>post('selected'),
+							'p'=>1
+					]);
+					//$html .= json_encode($l);
+					if(!empty($l)){
+						foreach($l as $k=>$v){
+							// Lay package
+							$packages = \app\modules\admin\models\PackagePrices::getPackages($v['id']);
+							if(empty($packages)){
+								$packages = [['id'=>0,'title'=>'']];
+							}
+							foreach ($packages as $package){
+								$html .= '<li data-package_id="'.$package['id'].'" data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).'</li>';
+							}
+						}
 					}
-				}
-				break;
+					break;
 			case TYPE_ID_SHIP:
-				$model = load_model('distances');
-			
-				$l = $model->getAll(TYPE_ID_SHIP, [
-						'limit'=>100,
-						'p'=>1,
-						'place_id'=>$place_id,
-						'filter_text'=>post('value'),
-						'not_in'=>post('selected')
-				]);
-				//$html .= json_encode($l);
-				if(!empty($l)){
-					foreach($l as $k=>$v){
-						$html .= '<li data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).'</li>';
+					$model = load_model('distances');
+				
+					$l = $model->getAll(TYPE_ID_SHIP, [
+							'limit'=>100,
+							'place_id'=>$place_id,
+							'not_in'=>post('selected'),
+							'p'=>1
+					]);
+					//$html .= json_encode($l);
+					if(!empty($l)){
+						foreach($l as $k=>$v){
+							// Lay package
+							$packages = \app\modules\admin\models\PackagePrices::getPackages($v['id']);
+							if(empty($packages)){
+								$packages = [['id'=>0,'title'=>'']];
+							}
+							foreach ($packages as $package){
+								$html .= '<li data-package_id="'.$package['id'].'" data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).'</li>';
+							}
+						}
 					}
-				}
-				break;	
+					break;
 				
 			case TYPE_ID_SCEN:
 				$model = load_model('tickets');
@@ -2364,22 +2394,52 @@ switch (Yii::$app->request->post('action')){
 				}
 				break;	
 				
-			case TYPE_ID_GUIDES:
-				$model = load_model('guides');
-				$l = $model->getGuidesByPlace([
-						'limit'=>100,
-						'p'=>1,
-						'place_id'=>$place_id,
-						'filter_text'=>post('value'),
-						'not_in'=>post('selected')
-				]);
-				//$html .= json_encode($l);
-				if(!empty($l)){
-					foreach($l as $k=>$v){
-						$html .= '<li data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).' <i class="underline font-normal green">['.uh($v['supplier_name']).']</i></li>';
+				case TYPE_ID_GUIDES:
+					$model = load_model('guides');
+					$l = $model->getGuidesByPlace([
+							'limit'=>100,
+							'p'=>1,
+							'place_id'=>$place_id,
+							'filter_text'=>post('value'),
+							'not_in'=>post('selected')
+					]);
+					//$html .= json_encode($l);
+					if(!empty($l)){
+						foreach($l as $k=>$v){
+							// Lay package
+							$packages = \app\modules\admin\models\PackagePrices::getPackages(Yii::$app->zii->getSupplierIDFromService($v['id'],TYPE_ID_GUIDES));
+							if(empty($packages)){
+								$packages = [['id'=>0,'title'=>'']];
+							}
+							foreach ($packages as $package){
+								$html .= '<li data-package_id="'.$package['id'].'" data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).' &nbsp;<i class="underline font-normal green">['.uh($v['supplier_name']).']</i></li>';
+							}
+						}
 					}
-				}
-				break;	
+				
+					break;
+				
+				case TYPE_ID_TEXT:
+					//$model = load_model('guides');
+					$l = \app\modules\admin\models\TextInstructions::getAll([
+					'limit'=>100,
+					'p'=>1,
+					'place_id'=>$place_id,
+					'filter_text'=>post('value'),
+					'not_in'=>post('selected')
+					]);
+					//$html .= json_encode($l);
+					if(!empty($l)){
+						foreach($l as $k=>$v){
+							$html .= '<li data-package_id="0" data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).'</li>';
+						}
+					}
+					$html .= '<li data-package_id="0" data-type_id="'.$id.'" data-id="0" class="ui-state-highlight">
+				
+						<input type="text" name="new['.$id.'][]" class="form-control" placeholder="Thêm nhanh" title="Kéo thả sang ô bên trái rồi điền giá trị"/>
+						</li>';
+				
+					break;
 			 
 			case TYPE_CODE_VEHICLE:
 				 
@@ -2394,7 +2454,7 @@ switch (Yii::$app->request->post('action')){
 				//$html .= json_encode($l);
 				if(!empty($l)){
 					foreach($l as $k=>$v){
-						$html .= '<li data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">
+						$html .= '<li data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight li_child_item_id_'.$v['id'].'">
 								<div class="col-sm-8 col-index-1 col-border-right">'.uh($v['title']).' <i class="underline font-normal green">['.uh($v['maker_title']).']</i></div>
 								<div class="col-sm-4 col-index-2"><input type="text" class="form-control center number-format selected_quantity" data-name="selected_quantity[]" placeholder="Số lượng"/></div>
 								</li>';
@@ -3066,13 +3126,42 @@ change:function(event,ui){
 			'callback_function'=>'console.log(data);reloadAutoPlayFunction();'
 		]); exit;
 		break;
+	case 'quickGetAutoVehicleAjax':
+		$a = [
+			'supplier_id', 'item_id', 'total_pax' , 'nationality_id'
+		];
+		foreach ($a as $b){
+			$$b = post($b,0);
+		}
+		$l = Yii::$app->zii->getVehicleAuto([
+		'total_pax'=>$total_pax, 
+		'nationality_id'=>$nationality_id,
+		'supplier_id'=>$supplier_id,
+		'auto'=>true,
+
+		]);
+		$html = ''; $sl = [];
+		if(!empty($l)){
+			foreach ($l as $kv=>$sv){
+				$sv['type_id'] = TYPE_CODE_VEHICLE;
+				$html .= '<li style="background:gold" data-type_id="'.$sv['type_id'].'" data-id="'.$sv['id'].'" class="ui-state-default li_child_item_id_'.$sv['id'].'">
+				<div class="col-sm-8 col-index-1 col-border-right">Chọn tự động: '.uh($sv['title']).' <i class="underline font-normal green">['.uh($sv['maker_title']).']</i></div>
+				<div class="col-sm-4 col-index-2"><input type="text" class="form-control center number-format selected_quantity" name="selected_quantity[]" data-name="selected_quantity[]" placeholder="Số lượng" value="'.$sv['quantity'].'"/></div>
+				<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_0_0" name="selected_value[]"/>
+				<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>	
+				</li>';
+				$sl[] = '.li_child_item_id_'.$sv['id'];
+			}
+		}
+		echo json_encode(['html'=>$html,'remove_item'=>implode(',', $sl)]+$_POST);exit;
+		break;
 	case 'quick-edit-supplier-services':
 		 
 		$item_id = post('item_id',0);
 		$day = post('day',0);
 		$time = post('time',0);
 		$supplier_id = post('supplier_id',0);
-		
+		$item = \app\modules\admin\models\ToursPrograms::getItem($item_id);
 		$services = Yii::$app->zii->getSelectedVehicles([
 				//'totalPax'=>post('total_pax',0),
 				//'nationality'=>post('nationality',0),
@@ -3106,7 +3195,7 @@ change:function(event,ui){
 				<td class="">
 		<div class="col-sm-8 bold col-border-left col-border-top col-border-right pd8">Tên phương tiện</div>
 		<div class="center col-sm-4 bold col-border-right col-border-top pd8">Số lượng</div>
-				<ul id="sortable1" class="connectedSortable style-none">';
+				<ul id="sortable1" class="connectedSortable style-none ajax-result-get-auto-b3091">';
 		if(!empty($services)){
 			foreach ($services as $kv=>$sv){
 				$sv['type_id'] = TYPE_CODE_VEHICLE;
@@ -3133,7 +3222,7 @@ change:function(event,ui){
 						<div title="Chọn địa danh" class="hide">
 						<select data-placeholder="Chọn địa danh" onchange="quick_search_tour_service(\'.input-quick-search-service\');" data-action="load_dia_danh" data-role="load_dia_danh" class="form-control input-sm ajax-chosen-select-ajax input-quick-search-local"></select>
 						</div><div class="fl w100">
-						<input data-supplier_id="'.post('supplier_id',0).'" data-time="'.$time.'" data-day="'.$day.'" data-type_id="'.TYPE_CODE_VEHICLE.'" type="text" onkeyup="quick_search_tour_service(this);" onkeypress="return disabledFnKey(this);" placeholder="Tìm kiếm nhanh" class="form-control input-quick-search-service"/></div></div>
+						<input data-supplier_id="'.$supplier_id.'" data-time="'.$time.'" data-day="'.$day.'" data-type_id="'.TYPE_CODE_VEHICLE.'" type="text" onkeyup="quick_search_tour_service(this);" onkeypress="return disabledFnKey(this);" placeholder="Tìm kiếm nhanh" class="form-control input-quick-search-service"/></div></div>
 <div class="fl100"><div class="available_services div-slim-scroll" data-height="auto">	
 		
 <ul id="sortable2" class="connectedSortable style-none">
@@ -3146,7 +3235,16 @@ change:function(event,ui){
 		$html .= '</tbody></table>';
 		
 		$html .= '<div class="modal-footer">';
-		$html .= '<button type="submit" class="btn btn-primary"><i class="glyphicon glyphicon-floppy-save"></i> Lưu lại</button>';
+		$html .= '<button
+				data-toggle="tooltip"
+				title="Chọn lại danh sách xe cho nhà xe này. Loại xe và số lượng xe sẽ được lấy tự động từ hệ thống."
+				onclick="quickGetAutoVehicleAjax(this)" 
+				data-target=".ajax-result-get-auto-b3091"
+				data-supplier_id="'.$supplier_id.'" 
+				data-item_id="'.$item_id.'" 
+				data-total_pax="'.$item['guest'].'" 
+				data-nationality_id="'.$item['nationality'].'"
+				type="button" class="btn btn-success"><i class="fa fa-hand-lizard-o"></i> Chọn tự động</button><button type="submit" class="btn btn-primary"><i class="glyphicon glyphicon-floppy-save"></i> Lưu lại</button>';
 		$html .= '<button type="button" class="btn btn-danger" data-dismiss="modal"><i class="glyphicon glyphicon-remove"></i> Đóng</button>';
 		$html .= '</div>';
 		$_POST['action'] = 'quick-' . $_POST['action'];
@@ -3159,7 +3257,7 @@ change:function(event,ui){
 				'html'=>$html,
 				'event'=>$_POST['action'],
 				'callback'=>true,
-				'callback_function'=>'loadScrollDiv();quick_search_tour_service(\'.input-quick-search-service\');loadSelectTagsinput1();jQuery(\'.li-service-first-child a\').click();jQuery("#sortable2").sortable({connectWith: ".connectedSortable",
+				'callback_function'=>'reloadTooltip();loadScrollDiv();quick_search_tour_service(\'.input-quick-search-service\');loadSelectTagsinput1();jQuery(\'.li-service-first-child a\').click();jQuery("#sortable2").sortable({connectWith: ".connectedSortable",
 receive:function(event,ui){
 				var $type_id = ui.item.attr(\'data-type_id\');
 				(ui.item).addClass(\'ui-state-highlight\').removeClass(\'ui-state-default\')
@@ -3698,6 +3796,11 @@ change:function(event,ui){
 		exit;
 		break;		
 	case 'loadTourProgramDistances':
+		
+		echo json_encode([
+			'html'=>loadTourProgramDistances(post('id',0))
+		]+$_POST);exit; 
+		
 		$html = ''; 
 		 
 		$model = load_model('tours_programs');

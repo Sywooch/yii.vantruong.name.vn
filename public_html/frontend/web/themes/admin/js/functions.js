@@ -5466,7 +5466,37 @@ function genTourCode(t){
 				}
 	    });
 } 
-
+ 
+function quickGetAutoVehicleAjax($t){
+	var $this = jQuery($t);
+	var $data = getAttributes($this);
+	$data['action'] =  'quickGetAutoVehicleAjax';
+	var $target = $this.attr('data-target'); 
+	if($this.attr('data-old') != $this.val()){
+	jQuery.ajax({
+	    type: 'post',
+	    datatype: 'json',
+		url: $cfg.adminUrl  + '/ajax',						 		 
+	    data: $data,
+	    beforeSend:function(){
+	    show_left_small_loading('show'); 
+	    },
+	    success: function (data) {	   
+	    	//console.log($target)
+	    	$d = parseJsonData(data);	
+	    	jQuery($d.remove_item).remove();
+	     	jQuery($target).html($d.html);   
+	     	
+	    },
+	    complete:function(){
+	    	show_left_small_loading('hide');   
+	    },
+	    error : function(err, req) {
+	           
+		}
+	}); 
+	}
+}
 
 
 

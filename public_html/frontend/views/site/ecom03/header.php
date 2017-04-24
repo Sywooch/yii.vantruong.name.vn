@@ -164,7 +164,7 @@ echo Yii::$app->zii-> getMenuItem([
 <div class="container-fluid" style="margin-bottom:1px;">
 <div class="row">
 <?php 
-$sliders = Yii::$app->zii->getAdvert(['code'=>'ADV_SLIDER','category_id'=>Yii::$app->controller->action->id == 'index' ? -1 : (__CATEGORY_ID__ > 0 ? __CATEGORY_ID__ : 1)]);
+$sliders = Yii::$app->zii->getAdvert(['code'=>'ADV_SLIDER','category_id'=>__CATEGORY_ID__]);
 if(!empty($sliders)){
 	echo '<div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
 <ol class="carousel-indicators">';

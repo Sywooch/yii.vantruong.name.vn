@@ -1,11 +1,14 @@
 <?php 
+/*
 view(Yii::$app->zii->getVehicleAuto([
-		'total_pax'=>24,
+		'total_pax'=>10, 
 		'nationality_id'=>234,
 		'supplier_id'=>11,
 		'auto'=>true,
 
 ]));
+
+*/
 ?>
 <div class="col-sm-12 bang-thong-tin-chung" style=""><div class="row">
 <div class="" style="margin-top: 10px">

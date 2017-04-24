@@ -368,7 +368,7 @@ switch (Yii::$app->controller->action->id){
 						//$item = $m->getItem(getParam('local_id'));
 						$item = \app\modules\admin\models\Local::getItem(getParam('local_id'));
 						if(!empty($item)){
-							echo '<option selected value="'.$item['id'].'">'.uh($item['name']).'</option>';
+							echo '<option selected value="'.$item['id'].'">'.showLocalName(uh($item['name']),$item['type_id']).'</option>'; 
 						}
 					}
 					//foreach ($_all_categorys as $k=>$v){

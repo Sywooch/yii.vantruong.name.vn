@@ -1,14 +1,14 @@
 <?php
-@ini_set('display_startup_errors',0);@ini_set('display_errors',0);$img_path = dirname(__FILE__);
-require_once $img_path .'/libs/thumb/ThumbLib.inc.php';
+@ini_set('display_startup_errors',1);@ini_set('display_errors',1);$img_path = dirname(__FILE__);
+require_once $img_path .'/libs/thumb/ThumbLib.inc.php'; 
 $src = isset($_GET['src']) ? trim($_GET['src']) : '';
 $w  = isset($_GET['w']) ? (int)$_GET['w'] : 0 ;$h = isset($_GET['h']) ? (int)$_GET['h'] : 0;
 $rename = isset($_GET['rename']) && $_GET['rename'] == 'false' ? false : true; 
 if($w > 0 && $h > 0){ $fn = 'adaptiveResize';}else $fn = 'resize';
 $src = str_replace(" ",'%20',$src);
-$thumb = PhpThumbFactory::create($src);
+$thumb = PhpThumbFactory::create(str_replace('https://', 'http://',  $src));
 $img = $thumb->$fn($w,$h);
-//$hash_file = $rename ? md5($src) : unMark($file_name);    
+   
 $thumb->show();
 if($w + $h > 0) {
 	$pos = strrpos($src,'/',1);

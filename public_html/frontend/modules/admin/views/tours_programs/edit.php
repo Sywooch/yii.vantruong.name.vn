@@ -11,7 +11,8 @@
     <!-- Nav tabs -->
 <ul class="nav form-edit-tab nav-tabs" role="tablist">
 <?php 
-echo '<li role="presentation" class="active"><a href="#tab-general" role="tab" data-toggle="tab">'.getTextTranslate(68,ADMIN_LANG).'</a></li>
+echo '<li role="presentation" class="active"><a href="#tab-general1" role="tab" data-toggle="tab">Yêu cầu / CT vắn tắt</a></li>
+	<li role="presentation" class=""><a href="#tab-general" role="tab" data-toggle="tab">'.getTextTranslate(68,ADMIN_LANG).'</a></li>
    
  <li role="presentation" class=""><a href="#tab-help" role="tab" data-toggle="tab">'.getTextTranslate(73,ADMIN_LANG).'</a></li>';
  
@@ -23,7 +24,7 @@ echo '<li role="presentation" class="active"><a href="#tab-general" role="tab" d
 
 <!-- Tab panes -->
 <div class="tab-content edit-form-content-tab">
-<div role="tabpanel" class="tab-panel active" id="tab-general">
+<div role="tabpanel" class="tab-panel " id="tab-general">
 <div class="p-contentxx">
 <?php 
 include_once '_forms/thong_tin_chung.php';
@@ -60,7 +61,13 @@ echo Ad_edit_show_check_field([
 */
 ?>   
 </div></div> 
-
+<div role="tabpanel" class="tab-panel active" id="tab-general1">
+   <div class="fl100">
+        <div class="p-content f12e help-panel-<?php echo Yii::$app->controller->id;?>">
+            
+        </div>
+    </div>
+</div>
 <div role="tabpanel" class="tab-panel" id="tab-help">
    <div class="fl100">
         <div class="p-content f12e help-panel-<?php echo Yii::$app->controller->id;?>">
