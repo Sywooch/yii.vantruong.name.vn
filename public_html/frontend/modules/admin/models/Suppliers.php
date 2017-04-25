@@ -96,10 +96,12 @@ class Suppliers extends Customers
 				->andWhere("'$date' between c.from_date and c.to_date")
 				->select('d.parent_id')
 		]);
-		
+		 	
 		$r['seasons'] = $query->orderBy(['b.price_type'=>SORT_ASC])->all();
-		$r['seasons_prices'] = $query->andWhere(['b.price_type'=>[0]])->one();
-		//$r['s']= $query->createCommand()->getRawSql();
+		$r['direct_seasons_prices'] = $r['incurred_seasons_prices'] = [];
+		//
+		
+		
 		// Danh sách cuối tuần, ngày thường
 		
 		$thu_trong_tuan = date('w',strtotime($date));
@@ -181,9 +183,85 @@ class Suppliers extends Customers
 		
 		$r['time_day'] = $query->orderBy(['b.price_type'=>SORT_ASC])->all();
 		$r['time_day_prices'] = $query->andWhere(['b.price_type'=>[0]])->one(); 
+		// Tổng hợp dữ liệu
+		$rx = array_merge($r['seasons'],$r['week_day'],$r['time_day']);
+		 
+		if(!empty($r['seasons'])){ $cPriceType0 = 0;
+		foreach ($r['seasons'] as $k=>$v){
 		
+			if($v['price_type'] == 0){
+				if($cPriceType0 == 0){
+					$r['seasons_prices'] = $v;++$cPriceType0;
+				}
+				$r['direct_seasons_prices'][] = $v;
+			}else{
+				$r['incurred_seasons_prices'][] = $v;
+			}
+			if(!isset($r['seasons_price_type_'.$v['price_type']])){
+				$r['seasons_price_type_'.$v['price_type']][0] = $v;
+			}else{
+				$r['seasons_price_type_'.$v['price_type']][] = $v;
+			}
+		
+		}
+		}
+		 
+		view(self::getDirectSeason(['season_id'=>7,'supplier_id'=>$supplier_id]));
+		
+		$directSeasons = [];
+		
+		if(!empty($r['incurred_seasons_prices'])){
+			foreach ($r['incurred_seasons_prices'] as $i){
+				//$a = self::getDirectSeason(['season_id'=>$i['id'],'supplier_id'=>$supplier_id]);
+				//view($a);
+				 
+			}
+		}
 		
 		return $r;
+	}
+	
+	public static function getDirectSeason($o = []){
+		//
+		$season_id = isset($o['season_id']) ? $o['season_id'] : 0;
+		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
+		$price_incurred1 = isset($o['price_incurred1']) ? $o['price_incurred1'] : 0;
+		$price_incurred2 = isset($o['price_incurred2']) ? $o['price_incurred2'] : 0;
+		$last_season_id = isset($o['last_season_id']) ? $o['last_season_id'] : 0;
+		$unit_price = isset($o['unit_price']) ? $o['unit_price'] : 0;
+		//
+		//view($price_incurred);
+		//
+		$season = Seasons::getUserSeason($season_id,$supplier_id);
+		view($season);
+		if($season['price_type'] == 0){
+			 
+		}
+		if($season['price_type'] == 1){
+			// tinh gia truc tiep
+			$season['last_season_id'] = $season['id'];
+			
+			$o['last_season_id'] = $last_season_id = $season['id'];
+			if($season['parent_id'] > 0){
+				$price_incurred1 += $season['price_incurred'];
+				$o['season_id'] = $season['parent_id'];
+				$o['price_incurred1'] = $price_incurred1;
+				
+				return self::getDirectSeason($o);
+			}
+		}elseif($season['price_type'] == 2){
+			// Tinh gia pha sinh
+			$price_incurred2 += $season['price_incurred'];
+			//if($last_season_id>0){
+				$unit_price = $season['unit_price'];
+				$seasonx = Seasons::getUserSeason(0,$supplier_id,[0]);
+				$season['unit_price'] = $unit_price;
+			//}
+		}
+		$season['price_incurred1'] = $price_incurred1;
+		$season['last_season_id'] = $last_season_id;
+		$season['price_incurred2'] = $price_incurred2;
+		return $season;
 	}
 	
 	/*
