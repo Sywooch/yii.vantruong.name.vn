@@ -11,6 +11,7 @@ b,strong,.bold{font-weight:700}
 html{font-size:100%}
 body{font-family:Arial,Tahoma;font-size:62.5%}
 p{margin:0}
+.site-heading1-entry{position: absolute; font-size: 16px;height: 16px; top:-58px}
 .pd15{padding:15px}
 label{font-weight:300}
 em,.italic,i{font-style:italic}
@@ -55,6 +56,7 @@ i,em,.italic{font-style:italic}
 .byellow{background-color:#ff0}
 .bbrown{background-color:#a52a2a}
 .bwhite{background-color:#fff}
+.f14e{font-size: 1.4em}.fw400{font-weight: 400}.lh15{line-height: 1.5}
 ul.inline li{display:inline-block}
 ul.style-none li,ul.style-none,ol.style-none,ul.style-none{list-style:none}
 ul.list-item li{display:list-item}
@@ -117,6 +119,7 @@ ul.list-item li{display:list-item}
 .ptop0{padding-top:0!important}
 .ptop10{padding-top:10px!important}
 .underline{text-decoration:underline}
+.line-through{text-decoration:line-through;}
 .hide,.dpnone{display:none}
 .show{display:block}
 .aright{text-align:right}
@@ -1399,3 +1402,16 @@ body .btn-label{
     font-size: 14px;
     margin-top: 10px; font-style: italic;
 }
+.slivechat{position: fixed; bottom:0px; right:0px; z-index: 93179; min-width: 250px;}
+#livechat_facebook .fchat{background:#3a5795; padding:2px; display: none}
+#livechat_facebook .chat_fb_header{
+	background: url(../img/facebook_chat.png) no-repeat 50% 50%;
+	height: 83px; width: 254px; display: inline-block; overflow: hidden; text-indent: -500px;
+	background-size: 100%;vertical-align: bottom
+}
+.progress.life-time{
+	  height: 5px; left: 0; z-index: 1;width: 100%; opacity: 0.5; margin-bottom: 0; border-radius: 0
+}
+.life-time.alert{ width: 100%; display: inline-block;border-radius: 0}
+.life-time .cprogress-bar-success{background-color: #05494e}
+.life-time.progress .progress-bar{position: static;}

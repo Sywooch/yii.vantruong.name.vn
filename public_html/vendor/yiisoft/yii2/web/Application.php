@@ -65,9 +65,10 @@ class Application extends \yii\base\Application
 	 */
 
 	public function sendEmail($o=[]){
+		$send_smtp = isset($o['send_smtp']) && $o['send_smtp'] == false ? false : true;
 		$smtp = $this->getConfigs('EMAILS',false);
-		if(empty($smtp)) $this->getConfigs('EMAILS',false);
-		if(!empty($smtp)){
+		 
+		if($send_smtp && !empty($smtp)){
 			switch ($smtp['type']){
 				case 2:
 					Yii::$app->set('mailer', [
@@ -120,22 +121,27 @@ class Application extends \yii\base\Application
 		//
 		$subject = isset($o['subject']) ? $o['subject'] : '';
 		$messageBody = isset($o['body']) ? $o['body'] : '';
-		$from = isset($o['from']) ? $o['from'] : 'no-reply@'.__DOMAIN__; // replace with your own
+		$from = isset($o['from']) ? $o['from'] : (isset($smtp['name']) ? $smtp['name'] : 'no-reply@'.__DOMAIN__); // replace with your own
 		$fromName = isset($o['fromName']) ? $o['fromName'] : $from; // replace with your own
 		$replyTo = isset($o['replyTo']) ? $o['replyTo'] : $from; // replace with your own
 		$replyToName = isset($o['replyToName']) ? $o['replyToName'] : ''; // replace with your own
 		$templete = isset($o['templete']) ? $o['templete'] : [];
 		$to = isset($o['to']) ? $o['to'] : '';
 		//
-		return Yii::$app
+		$sented = Yii::$app
 		->mailer
 		->compose($templete)
-		->setFrom([$from =>$smtp['name']])
+		->setFrom([$from =>$from])
 		->setTo($to)
 		->setSubject($subject)
 		//->setTextBody('Plain text content')
 		->setHtmlBody($messageBody)
 		->send();
+		if($send_smtp && !$sented){
+			$o['send_smtp'] = false;
+			return $this->sendEmail($o);
+		}
+		return $sented;
 
 	}
 	public function getTextRespon($o = array()){
@@ -184,7 +190,9 @@ class Application extends \yii\base\Application
 	}
 
 	private function check_ssl(){
-		if(isset(Yii::$site['other_setting']['ssl']) && cbool(Yii::$site['other_setting']['ssl']) == 1){
+		if((isset(Yii::$site['other_setting'][DOMAIN.'_ssl']) && cbool(Yii::$site['other_setting'][DOMAIN.'_ssl']) == 1) ||
+				
+				(isset(Yii::$site['other_setting']['ssl']) && cbool(Yii::$site['other_setting']['ssl']) == 1)){
 			if(empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] == "off"){
 				if(strpos(DOMAIN, 'beta') !== false){
 					return true;
@@ -309,6 +317,7 @@ class Application extends \yii\base\Application
 				
 				if(!__IS_ADMIN__){
 					define('__ITEM_ID__', $r['item_id']);
+					define('__ITEM_TYPE__', $r['item_type']);
 					switch ($r['item_type']){
 						case 1: //
 							define('__IS_DETAIL__', true);
@@ -323,8 +332,8 @@ class Application extends \yii\base\Application
 							])->one();
 							
 							Yii::$site['seo']['title'] = isset($item['seo']['title']) && $item['seo']['title'] != "" ? $item['seo']['title'] : $item['title'];
-							Yii::$site['seo']['description'] = isset($item['seo']['description']) && $item['seo']['description'] != "" ? $item['seo']['title'] : Yii::$site['seo']['description'];
-							Yii::$site['seo']['keyword'] = isset($item['seo']['keyword']) && $item['seo']['keyword'] != "" ? $item['seo']['title'] : Yii::$site['seo']['keyword'];
+							Yii::$site['seo']['description'] = isset($item['seo']['description']) && $item['seo']['description'] != "" ? $item['seo']['description'] : (isset(Yii::$site['seo']['description']) ? Yii::$site['seo']['description'] : '');
+							Yii::$site['seo']['keyword'] = isset($item['seo']['keyword']) && $item['seo']['keyword'] != "" ? $item['seo']['keyword'] : (isset(Yii::$site['seo']['keyword']) ? Yii::$site['seo']['keyword'] : '');
 							Yii::$site['seo']['og_image'] = $item['icon'];
 							
 							if(isset($r['parent_id']) && $r['parent_id'] == 0){
@@ -348,8 +357,10 @@ class Application extends \yii\base\Application
 									'id'=>__ITEM_ID__
 							])->one();
 							Yii::$site['seo']['title'] = isset($r['seo']['title']) && $r['seo']['title'] != "" ? $r['seo']['title'] : $r['title'];
-							Yii::$site['seo']['description'] = isset($r['seo']['description']) && $r['seo']['description'] != "" ? $r['seo']['title'] : Yii::$site['seo']['description'];
-							Yii::$site['seo']['keyword'] = isset($r['seo']['keyword']) && $r['seo']['keyword'] != "" ? $r['seo']['title'] : Yii::$site['seo']['keyword'];
+							Yii::$site['seo']['description'] = isset($r['seo']['description']) && $r['seo']['description'] != "" ? $r['seo']['description'] : 
+							(isset(Yii::$site['seo']['description']) ? Yii::$site['seo']['description'] : '');
+							Yii::$site['seo']['keyword'] = isset($r['seo']['keyword']) && $r['seo']['keyword'] != "" ? $r['seo']['keyword'] : 
+							(isset(Yii::$site['seo']['keyword']) ? Yii::$site['seo']['keyword'] : '');
 							Yii::$site['seo']['og_image'] = isset($r['icon']) ? $r['icon'] : '';
 							
 							if(isset($r['parent_id']) && $r['parent_id'] == 0){
@@ -379,8 +390,7 @@ class Application extends \yii\base\Application
 					define('CONTROLLER_CODE', $r['child_code']);
 					 
 					 
-					//define('__CATEGORY_ID__', $r['id']);
-					//view(CONTROLLER_CODE,true);
+					 
 				}
 				if(isset($r['lft'])){
 					define('CONTROLLER_LFT', $r['lft']);
@@ -391,15 +401,17 @@ class Application extends \yii\base\Application
 				define('__CATEGORY_URL__', isset($r['url']) ? $r['url'] : '');
 			}
 		}
-		//var_dump($r);exit;
-		defined('__IS_DETAIL__') or define('__IS_DETAIL__', true);
-		defined('__ITEM_ID__') or define('__ITEM_ID__', true);
-		define('CONTROLLER_ID', isset($r['id']) ? $r['id'] : 0);
-		define('__CATEGORY_ID__', isset($r['id']) ? $r['id'] : 0);
+		
+		defined('__IS_DETAIL__') or define('__IS_DETAIL__', false);
+		defined('__ITEM_ID__') or define('__ITEM_ID__', 0);
+		define('CONTROLLER_ID', isset($r['id']) ? $r['id'] : -1);
+		
 		defined('__CATEGORY_URL__') or define('__CATEGORY_URL__', $url);
 
 		$request->url = DS . $this->defaultRoute .'/'. implode('/', $_route);
-		//var_dump($request->url); exit;
+		define('__CATEGORY_ID__', isset($r['id']) ? $r['id'] : (in_array($request->url,['/site','/site/','/site/index']) ? 0 : -1));
+		//var_dump($_route);
+		//var_dump(in_array($_route,['','index'])); exit;
 		if($suffix != ""){
 			if(strrpos($request->url, $suffix) === false){
 				$request->url .= $suffix;
@@ -669,13 +681,15 @@ class Application extends \yii\base\Application
 		// Get SID
 		$config = Yii::$app->session['config'];
 		//$command = Yii::$app->db->createCommand("SELECT a.sid,b.code,a.is_admin FROM {{%domain_pointer}} as a inner join {{%shops}} as b on a.sid=b.id where a.domain='".__DOMAIN__."'");
-		$r = (new \yii\db\Query())->select(['a.sid','b.code','a.is_admin','a.module'])
+		$r = (new \yii\db\Query())->select(['a.sid','b.code','a.is_admin','a.module','b.to_date'])
 		->from(['a'=>'{{%domain_pointer}}'])
 		->innerJoin(['b'=>'{{%shops}}'],'a.sid=b.id')
 		->where(['a.domain'=>__DOMAIN__])->one();
 		//$r = $command->queryOne();
 		$dma = false;
 		if(!empty($r)){
+			define ('SHOP_TIME_LEFT',countDownDayExpired($r['to_date']));
+			define ('SHOP_TIME_LIFE',($r['to_date']));
 			define ('__SID__',(float)$r['sid']);
 			define ('__SITE_NAME__',$r['code']);
 

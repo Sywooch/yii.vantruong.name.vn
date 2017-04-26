@@ -283,6 +283,6 @@ class Suppliers extends Customers
 	 * 	 
 	 */
 	
-	
+	 
 	
 }

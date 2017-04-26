@@ -280,9 +280,12 @@ if(!empty($adverts)){
               
            
 </div>
-<?php 
+<?php
+echo '<div data-time="'.SHOP_TIME_LEFT.'" data-alert="'.date('d/m/Y',strtotime(SHOP_TIME_LIFE)).'" class="progcess-bar-life-time"></div>';
+//echo '';
 echo AdminMenu::get_bread_crumbs();
 //
+echo '<div class="sys-alert-time-left" data-time="'.SHOP_TIME_LEFT.'" data-alert="'.date('d/m/Y',strtotime(SHOP_TIME_LIFE)).'"></div>';
 //var_dump(Yii::$app->session['config']);
 switch (Yii::$app->controller->action->id){
 	case 'add':case 'create':case 'edit': case 'update':

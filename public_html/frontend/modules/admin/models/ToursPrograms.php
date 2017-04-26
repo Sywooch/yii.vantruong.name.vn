@@ -12,7 +12,7 @@ class ToursPrograms extends \yii\db\ActiveRecord
 	
 	public static function getDateTimeFields(){
 		return [
-				'from_date',
+				'from_date', 
 				'to_date',
 		];
 	}

@@ -6,6 +6,71 @@ jQuery.get($cfg.cBaseUrl +'/ajax',{action:'load_css',controller:$cfg.controller,
 jQuery.get($cfg.cBaseUrl +'/ajax',{action:'load_js',controller:$cfg.controller,view:$cfg.action},function($r){LazyLoad.js($r.script, function(){
 	// Common js	
 	var $body = $('body'); $window = $(window);
+	/*
+	var date = new Date();
+	var minutes = 0.6;
+	date.setTime(date.getTime() + (minutes * 60 * 1000));
+	Cookies.set('expried_alert_time_left', 'value', { expires: date });
+	console.log(Cookies.get('expried_alert_time_left'));
+	*/
+	
+	var $_progress = jQuery('.progcess-bar-life-time');
+	//
+	var SHOP_TIME_LEFT = parseInt($_progress.attr('data-time'));
+	var $s = SHOP_TIME_LEFT * 100 / 365;
+	var $w = (15 * 100 / 365) + SHOP_TIME_LEFT;	 
+	var $d = 100 - $s - $w;
+	//
+	var $progress = '<div data-toggle="tooltip" title="Bạn còn '+SHOP_TIME_LEFT+' ngày sử dụng" data-placement="bottom" class="progress life-time"><div class="progress-bar progress-bar-success" style="width: '+$s+'%"><span class="sr-only">'+$s+'% Complete (success)</span></div>';
+	$progress += '<div class="progress-bar progress-bar-warning progress-bar-striped" style="width: '+$w+'%"><span class="sr-only">'+$w+'% Complete (warning)</span></div>';
+	$progress += '<div class="progress-bar progress-bar-danger" style="width: '+$d+'%"><span class="sr-only">'+$d+'% Complete (danger)</span></div></div>';
+	jQuery('.progcess-bar-life-time').html($progress);
+	if(!Cookies.get('expried_alert_time_left')){
+		var $tlf = jQuery('.sys-alert-time-left');
+		
+		//console.log(SHOP_TIME_LEFT < 31);
+		//var $px = SHOP_TIME_LEFT * 100 / 365; 
+		$alert = '';
+		if(SHOP_TIME_LEFT < 31){
+			
+			$alert += '<div class="alert life-time alert-danger alert-dismissible fade in" role="alert">'; 
+			$alert += SHOP_TIME_LEFT > 0 ? '<button title="Đóng" type="button" onclick="setCookieExpried(this)" data-time="60" data-name="expried_alert_time_left" data-value="1" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' : ''; 
+			$alert += '<strong>Gấp gấp gấp!</strong> ';
+			$alert += 'Tài khoản của bạn sắp hết hạn sử dụng. Hệ thống sẽ tự động tạm ngưng dịch vụ sau '; 
+			$alert += '<b>'+SHOP_TIME_LEFT+'</b> ngày nữa ('+$tlf.attr('data-alert')+')'; 
+			$alert += '. Vui lòng liên hệ hotline: <b class="underline"><a class="red " href="tel:0985527788">098 552 77 88</a> - Mr. Trường</b> để được hỗ trợ gia hạn dịch vụ.';
+			$alert += '<br/><i>Sau <b>15</b> ngày kể từ ngày tạm ngưng dịch vụ, tài khoản của bạn sẽ bị khóa toàn bộ các dịch vụ.</i>';
+			$alert += '</div>';
+			if(SHOP_TIME_LEFT > 0 && SHOP_TIME_LEFT < 7){
+				showZModal('Cảnh báo !!!',$alert);
+			}else{
+				if(SHOP_TIME_LEFT<1) {
+					$alert = '<div class="alert life-time alert-danger alert-dismissible fade in" role="alert">'; 
+					$alert += SHOP_TIME_LEFT > 0 ? '<button title="Đóng" type="button" onclick="setCookieExpried(this)" data-time="60" data-name="expried_alert_time_left" data-value="1" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' : ''; 
+					$alert += '<strong>Gấp gấp gấp!</strong> ';
+					$alert += 'Tài khoản của bạn đã hết hạn <b>'+(-1*SHOP_TIME_LEFT)+'</b> ngày.<br/>'; 
+					//$alert += '<b>'+SHOP_TIME_LEFT+'</b> ngày nữa '+$tlf.attr('data-alert'); 
+					$alert += 'Vui lòng liên hệ hotline: <b class="underline"><a class="red " href="tel:0985527788">098 552 77 88</a> - Mr. Trường</b> để được hỗ trợ gia hạn dịch vụ.';
+					$alert += '<br/><i>Sau <b>15</b> ngày kể từ ngày tạm ngưng dịch vụ, tài khoản của bạn sẽ bị khóa toàn bộ các dịch vụ.</i>';
+					$alert += '</div>';
+					showXModal($alert);
+				}
+			}
+		}else{
+			if(SHOP_TIME_LEFT < 60){
+				$alert += '<div class="alert life-time alert-warning alert-dismissible fade in" role="alert">'; 
+				$alert += '<button title="Đóng" type="button" onclick="setCookieExpried(this)" data-time="480" data-name="expried_alert_time_left" data-value="1" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>'; 
+				$alert += '<strong>Cảnh báo!</strong> ';
+				$alert += 'Tài khoản của bạn sắp hết hạn sử dụng. Hệ thống sẽ tự động tạm ngưng dịch vụ sau '; 
+				$alert += '<b>'+SHOP_TIME_LEFT+'</b> ngày nữa ('+$tlf.attr('data-alert')+')'; 
+				$alert += '. Vui lòng liên hệ hotline: <b class="underline"><a class="red " href="tel:0985527788">098 552 77 88</a> - Mr. Trường</b> để được hỗ trợ gia hạn dịch vụ.';
+				$alert += '<br/><i>Sau <b>15</b> ngày kể từ ngày tạm ngưng dịch vụ, tài khoản của bạn sẽ bị khóa toàn bộ các dịch vụ.</i>';
+				$alert += '</div>';
+			}
+		}
+	 
+		$tlf.html($alert);
+	}
 	$('.superfish').superfish({});load_select2();load_chosen_select();load_number_format();load_datetimepicker();
     $href = window.location.href.split('#');if($href.length > 1){$href = '#' + $href[1];if($($href).length > 0){if($($href).length>0) $('.nav-tabs a[href="'+$href+'"]').tab('show')  ;}}
 	$('.form-edit-tab>li>a').click(function(){
@@ -284,7 +349,7 @@ jQuery.get($cfg.cBaseUrl +'/ajax',{action:'load_js',controller:$cfg.controller,v
      loadAutocomplete();
      /////////////////////////////
      loadSelectTagsinput();
-      
+     //reloadTooltip(); 
      /////////////////////////////
       
 })},'json');
