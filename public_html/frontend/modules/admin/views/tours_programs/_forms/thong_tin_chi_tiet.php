@@ -1,14 +1,23 @@
 <?php 
+ 
+//view($seasons);
 /*
-view(Yii::$app->zii->getVehicleAuto([
-		'total_pax'=>10, 
-		'nationality_id'=>234,
-		'supplier_id'=>11,
-		'auto'=>true,
-
-]));
-
-*/
+view(Yii::$app->zii->getServiceDetailPrices([
+			'supplier_id'=>60,
+			'package_id'=>0,
+			'type_id'=>4,
+			'item_id'=>4,
+			'sub_item_id'=>0,
+			'day_id'=>0,
+			'time_id'=>-1,
+			'service_id'=>60,
+			'from_date'=>$v['from_date'],
+			'nationality_id'=>$v['nationality']	,
+			'total_pax'=>$v['guest'],	
+			'loadDefault'=>true	,
+			'updateDatabase'=>false,	
+		]));
+	*/				
 ?>
 <div class="col-sm-12 bang-thong-tin-chung" style=""><div class="row">
 <div class="" style="margin-top: 10px">
@@ -47,7 +56,7 @@ view(Yii::$app->zii->getVehicleAuto([
 </thead> <tbody class="ajax-load-time-detail" data-count="0">  
 <?php 
  
- 
+//view(loadTourProgramDetail(['id'=>$v['id']])); 
  
 ?>
 </tbody> </table> 

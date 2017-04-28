@@ -23,7 +23,7 @@ if(isset($l)){
   		),
   		array(
   				'name'=>'Địa chỉ',
-  				'class'=>'',
+  				'class'=>'hide',
   		),
   		array(
   				'name'=>'Điện thoại',
@@ -63,7 +63,7 @@ echo '<tr class="tr_item_'.$v['id'].'">
   		<td class="center nowrap"><a href="'.get_link_edit($v['id']).'">'.($v['short_name']).'</a></td> 
         <td class="nowrap"><a href="'.get_link_edit($v['id']).'">'.uh($v['name']).'</a></td>
   		<td class="center nowrap">'.showLocalName($v['localName'],$v['localType']).'</td>
-  		<td class="">'.$v['address'].'</td> 
+  		<td class="hide">'.$v['address'].'</td> 
         <td class="nowrap center">'.$v['phone'].'</td>
 		<td class="nowrap center">'.$v['email'].'</td>';
 echo Ad_list_show_checkbox_field($v,[

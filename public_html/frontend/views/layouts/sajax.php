@@ -5,6 +5,72 @@ use yii\db\Query;
 use yii\base\View;
 AppAsset::register($this);
 switch (getParam('action')){
+	case 'execute_cronjobs':
+		//
+		if(SHOP_TIME_LEFT<60){
+			Yii::$app->zii->setNotificationDateExpired(SHOP_TIME_LEFT);
+		}
+		//
+		foreach (\common\models\Cronjobs::getTodayTask() as $k=>$v){
+			$state = 1;
+			if(!Yii::$app->user->can(ROOT_USER)) break;
+			switch ($v['type_code']) {
+				case SHOP_EXPIRED: // Tài khoản hết hạn
+					$text1 = Yii::$app->zii->getTextRespon(['code'=>'RP_SHOP_EXPRIED', 'show'=>false]);
+					//
+					$fx = Yii::$app->zii->getConfigs('CONTACTS');
+				 	$user = \app\modules\admin\models\Users::getAdminUser($v['sid']);
+				 	 
+					//
+					$regex = [
+							'{LOGO}' => isset(Yii::$site['logo']['logo']['image']) ? '<img src="'.Yii::$site['logo']['logo']['image'].'" style="max-height:100px"/>' : '',
+							'{DOMAIN}' => __DOMAIN__,
+							'{COMPANY_NAME}'=>$fx['name'],
+							'{COMPANY_ADDRESS}'=>$fx['name'],
+							'{TIME_SENT}'=>date('H:i:s d/m/Y'),
+							'{ADMIN_NAME}'=>$user['lname'] . ' ' . $user['fname'],
+							'{ADMIN_ADDRESS}' => $user['address'] != "" ? $user['address'] : $fx['address'],
+							'{ADMIN_EMAIL}'=>$user['email'],
+							'{ADMIN_PHONE}'=>$user['phone'],
+					
+					];
+					 
+					$form1 = replace_text_form($regex, uh($text1['value']));
+					 
+					$fx1 = Yii::$app->zii->getConfigs('EMAILS_RESPON');
+					//view($fx1,true);
+					$fx['sender'] = $fx['email'];
+					$fx['short_name']  = $fx['short_name'] != "" ? $fx['short_name'] : $fx['name'];
+					if(isset($fx1['RP_CONTACT'])){
+						$fx['email'] = $fx1['RP_CONTACT']['email'] != "" ? $fx1['RP_CONTACT']['email'] : $fx['email'];
+					}
+					
+					if(Yii::$app->zii->sendEmail([
+							'subject'=>replace_text_form($regex , $text1['title'])  ,
+							'body'=>$form1,
+							'from'=>'info@codedao.info',
+							//'from'=>'noreply.thaochip@gmail.com',
+							'fromName'=>$fx['short_name'],
+							//'replyTo'=>'zinzin',
+							//'replyToName'=>$f['guest']['full_name'],
+							//'to'=>$fx['email'],
+							'to'=>'zinzinx8@gmail.com',
+							'toName'=>$fx['short_name']
+					])){
+						 
+						 
+					}
+					break;
+			}
+			if($state !== -1) {
+				Yii::$app->db->createCommand()->update(\common\models\Cronjobs::tableName(),
+						['state'=>$state],
+						['type_code'=>$v['type_code'],'item_id'=>$v['item_id'],'sid'=>__SID__])->execute();
+			}
+		}
+		//
+		exit;
+		break;
 	case 'load_taskscheduler':
 		foreach (\app\modules\admin\models\TaskScheduler::getTodayTask() as $k=>$v){
 			$state = 1;
@@ -49,12 +115,20 @@ switch (post('action')){
 	case 'loadChildsProvinces':
 		$html = '';
 		$parent_id = post('parent_id',-1);
+		if(!is_numeric($parent_id)) $parent_id = -1;
+		$selected = post('selected',0);
 		$l = (new Query())->from('local')->where(['parent_id'=>$parent_id])->orderBy(['lft'=>SORT_ASC])->all();
-		 
+		// 
+		$local_id = 0;
+		if(post('level') == 2){
+			$html .= '<option></option>';
+			$local_id = $parent_id;
+		}
+		//
 		if(!empty($l)){
 		foreach ($l as $k=>$v){
-			$html .= '<option value="'.$v['id'].'">'.showLocalName(uh($v['title']),$v['type_id']).'</option>';
-			if($k==0){
+			$html .= '<option '.($selected == $v['id'] ? 'selected' : '').' value="'.$v['id'].'">'.showLocalName(uh($v['title']),$v['type_id']).'</option>';
+			if($k==0 && $local_id == 0){
 				$local_id = $v['id'];
 			}
 		}}else{
@@ -62,7 +136,8 @@ switch (post('action')){
 		}
 		echo json_encode([
 			'html'=>$html,
-			'local_id'=>$local_id	
+			'local_id'=>$local_id,
+			'selected'=>$selected	
 		]+$_POST);
 		exit;
 		break;

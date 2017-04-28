@@ -364,13 +364,11 @@ function getUrl($igr=array(),$o = array()){
 	}
 	return $link;
 }
-function setPagi($o = array()){
+function setPagi($o = []){
 	$style = isset($o['style']) ? ($o['style']) : ' default ';
 	$key = isset($o['key']) ?  ($o['key']) : false;
 	$class = isset($o['class']) ?  ($o['class']) : ' ';
-	$rewrite = isset($o['rewrite']) && ($o['rewrite']) == false ? false  : true;
-
-
+	$rewrite = isset($o['rewrite']) && ($o['rewrite']) == true ? true : false;
 	$id = isset($o['id']) ?  ($o['id']) : false;
 	$total_records = isset($o['total_records']) && $o['total_records'] > 0 ? $o['total_records'] : 0;
 	$limit = isset($o['limit']) && $o['limit'] > 0 ? $o['limit'] : 30;
@@ -379,9 +377,15 @@ function setPagi($o = array()){
 	$prev_letter = isset($o['prev']) ?  ($o['prev']) : '<';
 	$next_letter = isset($o['next']) ?  ($o['next']) : '>';
 	$last_letter = isset($o['last']) ?  ($o['last']) : '>>';
+	
+	$first_class = isset($o['first_class']) ?  ($o['first_class']) : '';
+	$prev_class= isset($o['prev_class']) ?  ($o['prev_class']) : '';
+	$next_class= isset($o['next_class']) ?  ($o['next_class']) : '';
+	$last_class= isset($o['last_class']) ?  ($o['last_class']) : '';
+	$page_class= isset($o['page_class']) ?  ($o['page_class']) : '';
 
 	$p =  isset($o['p']) && $o['p'] > 0 ? (int)$o['p'] : 1;
-	$t = '<ul class="center system-pagi '.$style .$class.' inline " ';
+	$t = '<ul class="center system-pagi '.$style .$class.' inline" ';
 	$t .= $id != false ? ' id="'.$id.'" ' : '';
 	$t .= '>';
 	$total_page = ceil($total_records/$limit);
@@ -402,18 +406,18 @@ function setPagi($o = array()){
 		if($p > 1){
 			$link_first = $rewrite === false ? getUrl(array('p')).'p='.$first : $link.DS.$page.$first.'.html';
 			$link_prev = $rewrite === false ? getUrl(array('p')).'p='.$prev : $link.DS.$page.$prev.'.html';
-			$t .= '<li class="pagi-li p-li-first" role="'.$first.'"><a rel="nofollow" href="'.$link_first.'">'.$first_letter.'</a></li>';
-			$t .= '<li class="pagi-li p-li-prev" role="'.$prev.'"><a rel="nofollow" href="'.$link_prev.'">'.$prev_letter.'</a></li>';
+			$t .= '<li class="pagi-li p-li-first" role="'.$first.'"><a class="'.$first_class.'" rel="nofollow" href="'.$link_first.'">'.$first_letter.'</a></li>';
+			$t .= '<li class="pagi-li p-li-prev" role="'.$prev.'"><a class="'.$prev_class.'" rel="nofollow" href="'.$link_prev.'">'.$prev_letter.'</a></li>';
 		}
 		for($i=$start; $i<$total_page+1;$i++){
 			$link_page = $rewrite === false ? getUrl(array('p')).'p='.$i : $link.DS.$page.$i.'.html';
-			$t .= '<li class="pagi-li p-li-'.$i.' '.($i == $p ? 'active' : '').'" role="'.$i.'"><a class="pagi-link '.($i == $p ? 'active' : '').'" role="'.$i.'" rel="nofollow" href="'.$link_page.'">'.$i.'</a></li>';
+			$t .= '<li class="pagi-li p-li-'.$i.' '.($i == $p ? 'active' : '').'" role="'.$i.'"><a class="'.$page_class.' pagi-link '.($i == $p ? 'active' : '').'" role="'.$i.'" rel="nofollow" href="'.$link_page.'">'.$i.'</a></li>';
 		}
 		if($p < $total_page ){
 			$link_next = $rewrite === false ? getUrl(array('p')).'p='.$next : $link.DS.$page.$next.'.html';
 			$link_last = $rewrite === false ? getUrl(array('p')).'p='.$last : $link.DS.$page.$last.'.html';
-			$t .= '<li class="pagi-li p-li-next" role="'.$next.'"><a rel="nofollow" href="'.$link_next.'">'.$next_letter.'</a></li>';
-			$t .= '<li class="pagi-li p-li-last" role="'.$last.'"><a rel="nofollow" href="'.$link_last.'">'.$last_letter.'</a></li>';
+			$t .= '<li class="pagi-li p-li-next" role="'.$next.'"><a class="'.$next_class.' rel="nofollow" href="'.$link_next.'">'.$next_letter.'</a></li>';
+			$t .= '<li class="pagi-li p-li-last" role="'.$last.'"><a class="'.$last_class.' rel="nofollow" href="'.$link_last.'">'.$last_letter.'</a></li>';
 		}
 		$t .= '</ul>';
 		return $t;
@@ -3726,7 +3730,7 @@ function loadTourProgramDetail($o = []){
 	
 	$v = \app\modules\admin\models\ToursPrograms::getItem($id);
 	$day = max($v['day'],$v['night']);
-	
+	//view($v);
 	$v['from_date'] = check_date_string($v['from_date']) ? $v['from_date'] : date('Y-m-d');
 	
 	for($i = 0; $i<$day;$i++){
@@ -4280,11 +4284,57 @@ function loadTourProgramDistances($id = 0,$o=[]){
 	return $html;
 }
 
+function discountPrice($price2 = 0, $price1 = 0, $price_type = 0){ // 0: % 
+	if($price1 > $price2 && $price2 > 0){
+		$du = $price1 - $price2;
+		$pt = $du * 100 / $price1; 
+		 
+		return '<div class="onsale">' . number_format((-1) * $pt,(strpos($pt, '.') === false ? 0 : 1)) . '% </div>';
+	}
+	return '';
+}
 
+function array_sort($array, $on, $order=SORT_ASC) 
+{
+	$new_array = array();
+	$sortable_array = array();
 
+	if (count($array) > 0) {
+		foreach ($array as $k => $v) {
+			if (is_array($v)) {
+				foreach ($v as $k2 => $v2) {
+					if ($k2 == $on) {
+						$sortable_array[$k] = $v2;
+					}
+				}
+			} else {
+				$sortable_array[$k] = $v;
+			}
+		}
 
+		switch ($order) {
+			case SORT_ASC:
+				asort($sortable_array);
+				break;
+			case SORT_DESC:
+				arsort($sortable_array);
+				break;
+		}
 
+		foreach ($sortable_array as $k => $v) {
+			$new_array[$k] = $array[$k];
+		}
+	}
 
+	return $new_array;
+}
+
+function countDownDayExpired($time){
+	if(!is_numeric($time)){
+		$time = ctime(['string'=>$time,'return_type'=>1]);
+	}
+	return ceil(($time - time())/86400);	
+}
 
 
 

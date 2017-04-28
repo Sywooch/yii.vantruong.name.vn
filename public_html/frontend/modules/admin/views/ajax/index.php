@@ -176,7 +176,7 @@ switch (Yii::$app->request->post('action')){
 		$night = post('night',0);
 		$from_date = post('from_date');
 		$time = ctime(['string'=>$from_date,'return_type'=>1]);
-		$to_date = date('d/m/Y',mktime(0,0,0,date('m',$time),date('d',$time)+max($day,$night),date('Y',$time)));
+		$to_date = date('d/m/Y',mktime(0,0,0,date('m',$time),date('d',$time)+min($day,$night),date('Y',$time)));
 		
 		echo json_encode([
 			'html'=>$to_date,

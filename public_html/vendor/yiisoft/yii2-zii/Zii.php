@@ -780,6 +780,11 @@ class Zii extends yii\base\Object
 				$m .= '<li data-id="'.$v['id'].'" data-child="'.count($l1).'" class="li-child li-child-'.$k.' li-level-'.$cLevel.' '. $liActive.' '.(isset($o['li1Class']) ? $o['li1Class'] : '').' '.$li1Class.'">';
 				$link = $v['type'] == 'link' ? $v['link_target'] : cu([DS.$v['url']]);				
 				$m .= '<a '.(isset($v['rel']) ? ' rel="'.$v['rel'].'"' : '').' '.(isset($v['target']) ? ' target="'.$v['target'].'"' : '').' '.($link != '#' ? 'href="'.$link.'"' : 'role="none"').'  class="'.$aActive.'">';
+				
+				if(isset($v['icon_class']) && $v['icon_class'] != ""){
+					$m .= '<i class="'.$v['icon_class'].'"></i>';
+				}
+				
 				//$m .= $hTag[0];
 				$m .= uh($v['title']);
 				//$m .= $eTag[0];
@@ -861,6 +866,11 @@ class Zii extends yii\base\Object
 				}
 				
 				$m.= '</li>';
+				// after ul1
+				
+			}
+			if(isset($o['afterUl1'])){
+				$m.= $o['afterUl1'];
 			}
 			$m .= '</ul>';
 		}
@@ -869,7 +879,7 @@ class Zii extends yii\base\Object
 	
 	public function getAdvert($o = []){
 		$type = isset($o['type']) && is_numeric($o['type']) ? $o['type'] : -1;
-		$category_id = isset($o['category_id']) && is_numeric($o['category_id']) ? $o['category_id'] : -1;
+		$category_id = isset($o['category_id']) && is_numeric($o['category_id']) ? $o['category_id'] : -2;
 		$box_id = isset($o['box_id']) && is_numeric($o['box_id']) ? $o['box_id'] : -1;
 		$lang = isset($o['lang']) ? $o['lang'] : __LANG__;
 		$code = isset($o['code']) ? $o['code'] : false;
@@ -877,7 +887,7 @@ class Zii extends yii\base\Object
 		$is_all = isset($o['is_all']) ? $o['is_all'] : -1;
 		if($index){
 			if($category_id  == -1){
-				$category_id = __CATEGORY_ID__;
+				//$category_id = __CATEGORY_ID__;
 			}
 		}
 		$orderBy = isset($o['orderBy']) ? $o['orderBy'] : ['a.position'=>SORT_ASC,'a.title'=>SORT_ASC];
@@ -943,7 +953,9 @@ class Zii extends yii\base\Object
 		$sort_subtitle = isset($o['sort_subtitle']) && $o['sort_subtitle'] == true ? true : false;
 		$tabs = isset($o['tabs']) && $o['tabs'] == true ? true : false;
 		$check_dateprice = isset($o['check_dateprice']) && $o['check_dateprice'] == false ? false : true;
-		$sort = isset($o['sort']) ? $o['sort'] : false;
+		$orderby = isset($o['orderby']) ? $o['orderby'] : false;
+		$sort = isset($o['sort']) ? $o['sort'] : $orderby;
+		
 		$attr = isset($o['attr']) ? $o['attr'] : false;
 		$box = !empty($box) ? $box : (strlen($key)>0 ?  \app\models\Box::getBox($key) : []);
 		//view($box);
@@ -1056,12 +1068,21 @@ class Zii extends yii\base\Object
 				//" and (a.id in(select item_id from {$this->table('items_to_category')} where category_id in(".implode(',',Zii::$CRouter->_get_all_child_id($category,array(),0,array('type'=>$type))).")) ".(isset($c['listItem']) && !empty($c['listItem']) ? " or id in(".implode(',',$c['listItem']).")" : "" ).")" : "");
 				break;
 		}
-		//view($attr);
+		$recent = false;
 		// Check Attr
+		if($attr == 'recent'){
+			$recent = true;  $attr = false;
+		}
+		 
 		if($attr !== false){
 			if(is_array($attr) && !empty($attr)){
 				$vtx = array();
 				foreach ($attr as $kt=>$at){
+					 
+					if($at == 'recent'){
+						$recent = true;
+						unset($attr[$kt]);
+					}else{
 					$vt = $this->_get_item_id_by_attr($at);
 					$existed = array();
 					if(!empty($vt)){
@@ -1079,22 +1100,24 @@ class Zii extends yii\base\Object
 								unset($vtx[$kt]);
 							}
 						}
-					}
+					}}
+					
 				}
 				if(empty($vtx)){
 					$vtx = array(0);
 				}
-				$query->andWhere(['in','a.id',$vtx]);
-				//$where .= " and a.id in(".implode(',', $vtx).")";
+				if(!$recent) $query->andWhere(['in','a.id',$vtx]);				
+				
 			}else{
 				$subQuery = (new Query())->select('g.item_id')->from(['g'=>'{{%articles_to_attrs}}'])
 				->innerJoin(['h'=>Articles::tableName()],'g.item_id=h.id')
 				->where(['h.sid'=>__SID__,'g.state'=>1,'g.attr_id'=>$attr]);
 				$query->andWhere(['in','a.id',$subQuery]);
-				//$where .= " and a.id in(select item_id from {$this->table('articles_to_attrs')} as a inner join {$this->table('articles')} 
-				//as b on a.item_id=b.id and b.sid=".__SID__." where a.state=1 and a.attr_id='".$attr."')";
+				 
 			}
 		}
+		//
+		
 		//
 		
 		if($search){
@@ -1323,6 +1346,12 @@ class Zii extends yii\base\Object
 				$query->orderBy(['a.position'=>SORT_ASC,'a.time'=>SORT_DESC]);
 				break;
 		}
+		if($recent){
+			//view($query->createCommand()->getRawSql());
+			$cookies1 = Yii::$app->request->cookies;
+			$r = $cookies1->getValue('recent_viewed', []);
+			$query->andWhere(['a.id'=>(array_slice($r, 0, $limit))]); 
+		}
 		
 		$query->addSelect(['post_by_name'=>'concat(z.lname, \' \' , z.fname)']);
 		$query->leftJoin(['z'=>'{{%users}}'],'a.owner=z.id');
@@ -1488,6 +1517,7 @@ class Zii extends yii\base\Object
 	}
 	public function getTextRespon($o = []){
 		$id = is_array($o) && isset($o['id']) ? $o['id'] : 0;
+		$sid = is_array($o) && isset($o['sid']) ? $o['sid'] : __SID__;
 		$category_id = is_array($o) && isset($o['category_id']) ? $o['category_id'] : 0;
 		$lang = is_array($o) && isset($o['lang']) ? $o['lang'] : __LANG__;
 		//view(isset($o['lang']));
@@ -1518,7 +1548,7 @@ class Zii extends yii\base\Object
 		if($default){
 			$query->andWhere(['a.state'=>2]);
 		}else{
-			$query->andWhere(['and', 'a.sid=' . __SID__,['>','a.state',-2]]);			
+			$query->andWhere(['and', 'a.sid=' . $sid,['>','a.state',-2]]);			
 		}
 		$query->orderBy(['a.title'=>SORT_ASC]);
 		if($show) {
@@ -1800,11 +1830,11 @@ class Zii extends yii\base\Object
 		]);
 		//
 		$seasons = \app\modules\admin\models\Suppliers::getSeasons([
-				'supplier_id'=>$supplier_id,
-				 
+				'supplier_id'=>$supplier_id,				 
 				'date'=>$from_date,
 				'time_id'=>$time_id
 		]);
+	//	view($seasons);
 	 	$groups = \app\modules\admin\models\Suppliers::getGuestGroup([
 				'supplier_id'=>$supplier_id,
 				 
@@ -1880,6 +1910,7 @@ class Zii extends yii\base\Object
 							'total_pax'=>$total_pax,
 							'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
 							'package_id'=>$package_id,
+							'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
 					]);
 					 
 					break;
@@ -2056,7 +2087,7 @@ class Zii extends yii\base\Object
 				'a.package_id'=>$package_id,
 				'a.supplier_id'=>$supplier_id,
 				'a.nationality_id'=>$nationality_id,
-				//'a.season_id'=>$season_id,
+				'a.season_id'=>$season_id,
 				//'a.group_id'=>$group_id,
 				//'a.weekend_id'=>$weekend_id,
 				//'a.time_id'=>$time_id,
@@ -2067,6 +2098,7 @@ class Zii extends yii\base\Object
 		;
 		//view($query->createCommand()->getRawSql());
 		$item = $query->one();
+		//view($item);
         $item_id = 0;
 		if(!empty($item)){
 			//
@@ -2079,6 +2111,7 @@ class Zii extends yii\base\Object
 					'total_pax'=>$total_rooms
 			]);
 			$group_id = isset($groups['id']) ? $groups['id'] : 0;
+			//view($groups);
 			//
 			$query = (new Query())->from(['a'=>\app\modules\admin\models\Hotels::tablePrice()])
 			->innerJoin(['b'=>\app\modules\admin\models\RoomsCategorys::tableName()],'a.item_id=b.id')
@@ -2099,7 +2132,7 @@ class Zii extends yii\base\Object
 			->select(['b.*','a.price1','a.currency'])
 			;
 			 
-			 
+			//view($query->createCommand()->getRawSql());
 			$item = $query->one();
 			// view($item,true);
 			$item['sub_item_id'] = $item_id;
@@ -2656,7 +2689,10 @@ class Zii extends yii\base\Object
 		
 	}
 	
-	
+	public function getSupports($o = []){
+		$r = $this->getConfigs('SUPPORTS');
+		return isset($r['supports']) ? $r['supports'] : [];
+	}
 	
 	public function zipData($source, $destination) {
 		if (extension_loaded('zip')) {
@@ -2686,6 +2722,48 @@ class Zii extends yii\base\Object
 		}
 		return false;
 	}
+	
+	public function setNotificationDateExpired($time_left = SHOP_TIME_LEFT){
+		$session = Yii::$app->session;
+		$state = false;		
+		if (!$session->has('time_cookie_sexpired')) {
+		switch (true){
+			case ($time_left < 60 && $time_left > 30): // Thông báo lần 1
+				$state = 1;
+				break;
+			case ($time_left > 15 && $time_left < 31): // Thông báo lần 2
+				$state = 2;
+				break;
+			case ($time_left > 5 && $time_left < 16): // Thông báo lần 3
+				$state = 3;
+				break;
+			case ($time_left > 2 && $time_left < 6): // Thông báo lần 4
+				$state = 4;
+				break;
+			case ($time_left > -1 && $time_left < 3): // Thông báo lần 5
+				$state = 5;
+				break;
+			case ($time_left > -5 && $time_left < -1): // Thông báo tạm ngưng dịch vụ
+				$state = 6;
+				break;
+			case ($time_left > -16 && $time_left < -14): // Thông báo ngừng toàn bộ dịch vụ
+				$state = 7;
+				break;
+		}
+		if((new \yii\db\Query())->from(['a'=>'cronjobs'])->where([
+				'type_code'=>SHOP_EXPIRED,'sid'=>__SID__,'item_id'=>$state
+		])->count(1) == 0){
+			Yii::$app->db->createCommand()->insert('cronjobs',[
+				'type_code'=>SHOP_EXPIRED,'sid'=>__SID__,'item_id'=>$state
+			])->execute();
+		}
+		
+		$session->set('time_cookie_sexpired', $state);
+		 
+		}
+	 
+	}
+	
 }
  
 

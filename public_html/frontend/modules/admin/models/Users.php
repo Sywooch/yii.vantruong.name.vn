@@ -120,7 +120,7 @@ class Users extends User
     		//view($text); exit;
     		$form = str_replace($search, $replace, uh($text['value'],2));
     		$fx = Yii::$app->getConfigs('CONTACTS');
-    		Yii::$app->sendEmail(array(
+    		Yii::$app->sendEmail([
     				'subject'=>str_replace($search, $replace, $text['title'])  ,
     				'body'=>$form,
     				'from'=>$fx['email'],
@@ -128,7 +128,7 @@ class Users extends User
     				'replyTo'=>$fx['email'],
     				'replyToName'=>$fx['short_name'],
     				'to'=>$item['email'],'toName'=>$item['lname'] . ' ' . $item['fname']
-    		));
+    		]);
     	}
     }
     
@@ -139,6 +139,9 @@ class Users extends User
     		if(!empty($item)){
     			//
     			$user_id = $item['id'];
+    			// Cập nhật bảng user
+    			Yii::$app->db->createCommand()->update(self::tableName(),['state'=>1,'status'=>10,'is_active'=>1],['id'=>$item['id'],'sid'=>$sid])->execute();
+    			//
     			Yii::$app->authManager->revokeAll ( $item['id'] );
     			Yii::$app->db->createCommand()->update(self::tableToShop(),['state'=>2],['sid'=>$sid])->execute();
     			if((new Query())->from(self::tableToShop())->where(['user_id'=>$item['id'],'sid'=>$sid])->count(1) == 0){
@@ -146,18 +149,13 @@ class Users extends User
     			}else{
     				Yii::$app->db->createCommand()->update(self::tableToShop(),['state'=>1],['user_id'=>$item['id'],'sid'=>$sid])->execute();
     			}
-    			//view($user_id,true); 
-    			//if(Yii::$app->db->createCommand()->update(self::tableToShop(),['state'=>1],['user_id'=>$item['id'],'sid'=>$sid])->execute()==0){
-    			///	Yii::$app->db->createCommand()->insert(self::tableToShop(),['state'=>1,'user_id'=>$item['id'],'sid'=>$sid]);
-    			//	Yii::$app->authManager->assign(Yii::$app->authManager->createRole(ADMIN_USER), $item['id']);
-    			//}
+    			 
     			Yii::$app->authManager->assign(Yii::$app->authManager->createRole(ADMIN_USER), $item['id']);
-    			//self::updatePassword($user_id,$sid);
+    			 
     		}else{
-    			Yii::$app->db->createCommand()->insert(self::tableName(),['email'=>$email,'sid'=>$sid])->execute();
+    			Yii::$app->db->createCommand()->insert(self::tableName(),['email'=>$email,'sid'=>$sid,'status'=>10,'is_active'=>1])->execute();
     			$user_id = Yii::$app->db->createCommand("select max(id) from ".self::tableName())->queryScalar();
-    			//view($user_id,true);
-    			//
+    			 
     			if($user_id>0){
     				Yii::$app->db->createCommand()->insert(self::tableToShop(),['state'=>1,'user_id'=>$user_id,'sid'=>$sid])->execute();
     				Yii::$app->authManager->assign(Yii::$app->authManager->createRole(ADMIN_USER), $user_id);
@@ -165,10 +163,22 @@ class Users extends User
     			
     			}
     		}
+    		// Cập nhật nhóm admin
+    		// Lấy admin group id
+    		$g = (new Query())->from(self::tableGroup())->where(['sid'=>$sid,'name'=>ADMIN_USER])->one();
+    		if(!empty($g)){
+    			if((new Query())->from(self::tableToGroup())->where(['group_id'=>$g['id'],'user_id'=>$user_id])->count(1) == 0){
+    				Yii::$app->db->createCommand()->insert(self::tableToGroup(),['group_id'=>$g['id'],'user_id'=>$user_id])->execute();
+    			}
+    		}
     		//
-    		if((new Query())->from(self::tableName())->where(['username'=>ADMIN_USER,'sid'=>$sid])->count(1) == 0){
+    		Yii::$app->db->createCommand()->update(self::tableToShop(),['state'=>2],['sid'=>$sid])->execute();
+    		Yii::$app->db->createCommand()->update(self::tableToShop(),['state'=>1],['user_id'=>$user_id,'sid'=>$sid])->execute();
+    		//
+    		if(!(isset($item['username']) && $item['username'] == ADMIN_USER)){
     			Yii::$app->db->createCommand()->update(self::tableName(),['username'=>ADMIN_USER,'type'=>ADMIN_USER],['id'=>$user_id, 'sid'=>$sid])->execute();
     		}
+    		 
     	}
     }
     /*
@@ -290,7 +300,33 @@ class Users extends User
     	
     }
     
+    public static function removeUser($id = 0){
+    	$item = self::getItem($id);
+    	if(!empty($item)){
+	    	// Loai bo khoi bang to shop
+	    	Yii::$app->db->createCommand()->delete('user_to_shop',['user_id'=>$item['id'],'sid'=>__SID__])->execute();
+	    	// Loai bo khoi bang to group
+	    	Yii::$app->db->createCommand()->delete('user_to_group',['user_id'=>$item['id']])->execute();
+	    	// Loai bo phân quyền
+	    	Yii::$app->authManager->revokeAll ($item['id'] );
+	    	// 
+	    	return Yii::$app->db->createCommand()->update('users',['state'=>-5],['id'=>$item['id']])->execute();
+    	}
+    	return 0;
+    }
+    
     public static function getUserName($id){
     	return Yii::$app->db->createCommand("select concat(lname , ' ' ,fname) from users where id=$id")->queryScalar();
+    }
+    
+    public static function getAdminUser($sid = __SID__){
+    	$query = (new Query())->from (['a'=>self::tableName()])
+    	->innerJoin(['b'=>self::tableToShop()],'a.id=b.user_id')
+    	->where([
+    			'b.state'=>1,
+    			'a.sid'=>__SID__,
+    			'b.sid'=>__SID__,
+    	])->one();
+    	return $query;
     }
 }

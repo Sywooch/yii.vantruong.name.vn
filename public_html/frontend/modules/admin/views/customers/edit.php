@@ -37,7 +37,7 @@ echo Ad_edit_show_text_field($v,[
 ]);
 echo Ad_edit_show_text_field($v,[
 		'field'=>'name',
-		'label'=>getTextTranslate(54,ADMIN_LANG),
+		'label'=>'Tên công ty / Tổ chức / Cá nhân',
 		'class'=>'required',
 		'placeholder'=>'Tên khách hàng | Công ty'
 ]);
@@ -47,7 +47,41 @@ echo Ad_edit_show_text_field($v,[
 		'class'=>' ',
 		'placeholder'=>'Tên viết tắt / tên ngắn của khách hàng | công ty'
 ]);
-// /view($locals,true);
+$local = Yii::$app->zii->parseCountry(isset($v['local_id']) ? $v['local_id'] : 0);
+echo '<div class="form-group group-sm30">
+		<div class="col-sm-2 col-xs-3"><div class="row">
+		<label class="col-sm-12 control-label">Quốc gia</label>
+		<div class="col-sm-12"><select data-deselect="true" data-selected="'.($local['country']['id'] ? $local['country']['id'] : 0).'" data-target_input=".input-local_id" data-target=".select-input-provinces" onchange="loadChildsProvinces(this)" class="form-control select-input-country ajax-chosen-select-ajax" data-role="chosen-load-country" name="l[country]">
+		'.(!empty($local) ? '<option selected value="'.$local['country']['id'].'">'.uh($local['country']['title']).'</option>' : '').'
+		
+		</select></div>
+		</div></div>
+
+<div class="col-sm-2 col-xs-3"><div class="row">
+		<label class="col-sm-12 control-label">Tỉnh / Thành phố</label>
+		<div class="col-sm-12"><select data-selected="'.($local['province']['id'] ? $local['province']['id'] : 0).'" data-level="1" data-target_input=".input-local_id" data-parent_id="'.(isset($local['country']['id']) ? $local['country']['id'] : 0).'" data-target=".select-input-districts" onchange="loadChildsProvinces(this)" data-placeholder="Chọn tỉnh / thành phố" class="select-input-provinces form-control ajax-chosen-select-ajax" data-role="chosen-load-country" name="l[province]">
+		'.(!empty($local) && !empty($local['province']) ? '<option selected value="'.$local['province']['id'].'">'. showLocalName(uh($local['province']['title']),$local['province']['type_id']).'</option>' : '').'
+		</select></div>
+		</div></div>
+
+<div class="col-sm-2 col-xs-3"><div class="row">
+		<label class="col-sm-12 control-label">Quận / Huyện</label>
+		<div class="col-sm-12"><select data-selected="'.($local['district']['id'] ? $local['district']['id'] : 0).'" data-level="2" data-target_input=".input-local_id" data-parent_id="'.(isset($local['province']['id']) ? $local['province']['id'] : 0).'" data-target=".select-input-wards" onchange="loadChildsProvinces(this)" data-placeholder="Chọn quận / huyện" class="select-input-districts form-control ajax-chosen-select-ajax" data-role="chosen-load-country" name="l[district]">
+	 '.(!empty($local) && !empty($local['district']) ? '<option selected value="'.$local['district']['id'].'">'. showLocalName(uh($local['district']['title']),$local['district']['type_id']).'</option>' : '').'
+		</select></div>
+		</div></div>
+<div class="col-sm-2 col-xs-3"><div class="row">
+		<label class="col-sm-12 control-label">Phường / Xã</label>
+		<div class="col-sm-12"><select data-selected="'.($local['ward']['id'] ? $local['ward']['id'] : 0).'" data-level="3" data-target_input=".input-local_id" data-parent_id="'.(isset($local['district']['id']) ? $local['district']['id'] : 0).'" onchange="loadChildsProvinces(this)" data-placeholder="Chọn phường / xã" class="select-input-wards form-control ajax-chosen-select-ajax" data-role="chosen-load-country" name="l[ward]">
+		'.(!empty($local) && !empty($local['ward']) ? '<option '.($local['ward']['id'] == -1 ? 'disabled' : '').' selected value="'.$local['ward']['id'].'">'. showLocalName(uh($local['ward']['title']),$local['ward']['type_id']).'</option>' : '').'
+		</select></div>
+		</div></div>
+<input type="hidden" name="f[local_id]" value="'.(isset($v['local_id']) ? $v['local_id'] : 0).'" class="input-local_id"/>
+		</div>';
+//if(Yii::$app->user->can(ROOT_USER)){
+	echo '<input type="hidden" class="auto_play_script_function" value="loadChildsProvinces(\'.select-input-country\');"/>';
+//}
+/*
 echo Ad_edit_show_select_field($v,[
 		'field'=>'local_id',
 		'label'=>getTextTranslate(224,ADMIN_LANG),
@@ -61,7 +95,7 @@ echo Ad_edit_show_select_field($v,[
 		'option-value-field'=>'id',
 		'option-title-field'=>'name',
 ]);
-
+*/
 echo Ad_edit_show_select_field($v,[
 		'field'=>'type_code',
 		'label'=>'Loại khách hàng',

@@ -59,14 +59,14 @@ class Application extends \yii\base\Application
 	 */
 	public $controller;
 
-
 	/**
 	 * @inheritdoc
 	 */
 
 	public function sendEmail($o=[]){
 		$send_smtp = isset($o['send_smtp']) && $o['send_smtp'] == false ? false : true;
-		$smtp = $this->getConfigs('EMAILS',false);
+		$sid = isset($o['sid']) && $o['sid'] > 0 ? $o['sid'] : __SID__;
+		$smtp = $this->getConfigs('EMAILS',false,$sid); 
 		 
 		if($send_smtp && !empty($smtp)){
 			switch ($smtp['type']){
@@ -128,15 +128,31 @@ class Application extends \yii\base\Application
 		$templete = isset($o['templete']) ? $o['templete'] : [];
 		$to = isset($o['to']) ? $o['to'] : '';
 		//
+		$setFrom = $from != $fromName ? [$from => $fromName] : $from;
+		//
 		$sented = Yii::$app
 		->mailer
 		->compose($templete)
-		->setFrom([$from =>$from])
+		->setFrom($setFrom) 
 		->setTo($to)
 		->setSubject($subject)
 		//->setTextBody('Plain text content')
 		->setHtmlBody($messageBody)
 		->send();
+		//
+		\common\models\SystemLogs::writeLog([
+				'code'=>'MAIL_LOGS',
+				'sid'=>$sid,
+				'user_id'=>Yii::$app->user->id > 0 ? Yii::$app->user->id : 0,
+				'bizrule'=>json_encode([
+						'from'=>$setFrom,
+						'to'=>$to,
+						'subject'=>$subject,
+						'body'=>$messageBody,
+						'ip'=>getClientIP(),
+				]),
+		]);
+		//
 		if($send_smtp && !$sented){
 			$o['send_smtp'] = false;
 			return $this->sendEmail($o);
@@ -686,13 +702,16 @@ class Application extends \yii\base\Application
 		->innerJoin(['b'=>'{{%shops}}'],'a.sid=b.id')
 		->where(['a.domain'=>__DOMAIN__])->one();
 		//$r = $command->queryOne();
+		//var_dump($r);exit;
 		$dma = false;
 		if(!empty($r)){
 			define ('SHOP_TIME_LEFT',countDownDayExpired($r['to_date']));
 			define ('SHOP_TIME_LIFE',($r['to_date']));
 			define ('__SID__',(float)$r['sid']);
 			define ('__SITE_NAME__',$r['code']);
-
+			if(SHOP_TIME_LEFT < 60){
+				//Yii::$app->zii->sentNotificationDateExpired(SHOP_TIME_LEFT);
+			}
 			$defaultModule = $r['module'] != "" ? $r['module'] : $this->defaultRoute;
 			/*
 			 *
@@ -720,11 +739,13 @@ class Application extends \yii\base\Application
 			define ('__SID__',0);
 		}
 		define('__DOMAIN_ADMIN__',$dma);
+		 
 		define('ADMIN_ADDRESS',__DOMAIN_ADMIN__ ? Yii::$app->homeUrl : Yii::$app->homeUrl .  $this->_adminRoute[0]);
 		// Set language
 		$config = Yii::$app->session['config'] ;
 		defined('ROOT_LANG') or define("ROOT_LANG",'vi_VN');
 		defined('SYSTEM_LANG') or define("SYSTEM_LANG",'vi_VN');
+		
 		if(isset($config['language'])){
 		
 		}else{

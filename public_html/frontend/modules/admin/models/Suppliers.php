@@ -206,18 +206,25 @@ class Suppliers extends Customers
 		}
 		}
 		 
-		view(self::getDirectSeason(['season_id'=>7,'supplier_id'=>$supplier_id]));
+		//view(self::getDirectSeason(['season_id'=>7,'supplier_id'=>$supplier_id]));
 		
 		$directSeasons = [];
 		
 		if(!empty($r['incurred_seasons_prices'])){
 			foreach ($r['incurred_seasons_prices'] as $i){
-				//$a = self::getDirectSeason(['season_id'=>$i['id'],'supplier_id'=>$supplier_id]);
-				//view($a);
+				$sprice = self::getDirectSeason(['season_id'=>$i['id'],'supplier_id'=>$supplier_id]);
+				if(!empty($sprice)){
+					if(isset($sprice['default_direct']) && $sprice['default_direct'] == 1){
+						if(isset($r['seasons_price_type_0']) && !empty($r['seasons_price_type_0']))
+						$default_direct[] = $r['seasons_price_type_0'];
+					}else{
+						$default_direct[] = $sprice;
+					}
+				}
 				 
 			}
 		}
-		
+		$r['season_direct_prices'] = $directSeasons;
 		return $r;
 	}
 	
@@ -233,7 +240,7 @@ class Suppliers extends Customers
 		//view($price_incurred);
 		//
 		$season = Seasons::getUserSeason($season_id,$supplier_id);
-		view($season);
+		//view($season);
 		if($season['price_type'] == 0){
 			 
 		}
@@ -254,9 +261,10 @@ class Suppliers extends Customers
 			$price_incurred2 += $season['price_incurred'];
 			//if($last_season_id>0){
 				$unit_price = $season['unit_price'];
-				$seasonx = Seasons::getUserSeason(0,$supplier_id,[0]);
+				//$seasonx = Seasons::getUserSeason(0,$supplier_id,[0]);
 				$season['unit_price'] = $unit_price;
-			//}
+				$season['default_direct'] = 1;
+			//} 
 		}
 		$season['price_incurred1'] = $price_incurred1;
 		$season['last_season_id'] = $last_season_id;

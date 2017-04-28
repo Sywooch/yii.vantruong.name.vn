@@ -210,16 +210,18 @@ function load_number_format(){
 
 function load_chosen_select(){
 	var chosen_config = {
-			'.chosen-select'           : {search_contains:true,case_sensitive_search:true},
-		    '.chosen-select-deselect'  : {allow_single_deselect:true,search_contains:true,case_sensitive_search:true},
-		    '.chosen-select-no-single' : {disable_search_threshold:10,search_contains:true,case_sensitive_search:true},
-		    '.chosen-select-no-results': {no_results_text:'Oops, nothing found!',search_contains:true,case_sensitive_search:true},
-		    '.chosen-select-width'     : {width:"95%",search_contains:true,case_sensitive_search:true},
-		    '.chosen-select-no-search'     : {disable_search: true},
+			'.chosen-select'           : {search_contains:true,case_sensitive_search:true,allow_single_deselect:true,},
+		    '.chosen-select-deselect'  : {allow_single_deselect:true,search_contains:true,case_sensitive_search:true,allow_single_deselect:true,},
+		    '.chosen-select-no-single' : {disable_search_threshold:10,search_contains:true,case_sensitive_search:true,allow_single_deselect:true,},
+		    '.chosen-select-no-results': {no_results_text:'Oops, nothing found!',search_contains:true,case_sensitive_search:true,allow_single_deselect:true,},
+		    '.chosen-select-width'     : {width:"95%",search_contains:true,case_sensitive_search:true,allow_single_deselect:true,},
+		    '.chosen-select-no-search'     : {disable_search: true,allow_single_deselect:true,},
   }
   for (var selector in chosen_config) {
     if(jQuery(selector).length>0){
     	if(jQuery(selector).attr('data-loaded') == undefined){
+    		chosen_config[selector]['allow_single_deselect'] = jQuery(selector).attr('data-deselect') ? true : false;
+    		
     		jQuery(selector).chosen(chosen_config[selector]).attr('data-loaded',true);
     	}
     }
@@ -230,13 +232,15 @@ function load_chosen_select(){
 			$data['action'] = 'CHOSEN_AJAX';
 			$data['role'] = $data.role ? $data.role : jQuery(element).attr('role');
 			$data['dtype'] = $data.dtype ? $data.dtype : jQuery(element).attr('data-type');
-			
+			//console.log(chosen_config[selector]);
 			jQuery(element).ajaxChosen({
-	         		   dataType: 'json',
-	         		   type: 'POST',
-	         		   data:$data,
-	         		   url: $cfg.adminUrl + '/ajax/chosen_ajax',
-	         		  search_contains:true
+	         		 dataType: 'json',
+	         		 type: 'POST',
+	         		 data:$data,
+	         		 url: $cfg.adminUrl + '/ajax/chosen_ajax',
+	         		 search_contains:true,
+	         		 allow_single_deselect:true,
+	         		 
 	            },{
 	         		   loadingImg: $cfg.baseUrl+'/loading.gif'
 	            }).removeClass('ajax-chosen-select-ajax'); 
@@ -576,7 +580,9 @@ function reload_app($t){
   }
   for (var selector in chosen_config) {
     if(jQuery(selector).length>0){
-      jQuery(selector).chosen(chosen_config[selector]);
+    	chosen_config[selector]['allow_single_deselect'] = jQuery(selector).attr('data-deselect') ? true : false;
+    	console.log(chosen_config[selector]);
+    	jQuery(selector).chosen(chosen_config[selector]);
     }
   }
 		jQuery('select.ajax-chosen-select-ajax').each(function(index,element){
@@ -4609,7 +4615,7 @@ function loadTourProgramDetail($t){
 	      data: $data,
 	      beforeSend:function(){},
 	      success: function (data) {
-	    	  //console.log(data)
+	    	  console.log(data)
 	    	  var $d = JSON.parse(data);
 	    	  jQuery($d.target).html($d.html);
 	    	  //console.log($d.target)
@@ -5498,7 +5504,40 @@ function quickGetAutoVehicleAjax($t){
 	}
 }
 
-
+function changeLiveChatVendor($t){
+	var $this = jQuery($t);
+	var $target = jQuery('.livechat-ajax-result');
+	$html = '';
+	switch($this.val()){
+	case 'facebook':
+		$html += '<div class="form-group"><div class="col-sm-12">';
+		$html += '<input name="new[title]" class="form-control input-required-first input-sm required" placeholder="Tiêu đề" />';
+		$html += '</div></div>';
+		$html += '<div class="form-group"><div class="col-sm-12">';
+		$html += '<input name="new[fanpage]" class="form-control input-sm required" placeholder="Link fanpage" />';
+		$html += '</div></div>';
+		//$html += '<div class="form-group"><div class="col-sm-12">';
+		//$html += '<input name="new[title]" class="form-control input-required-first input-sm required" placeholder="Tiêu đề" />';
+		//$html += '</div></div>';
+		break;
+	default:
+		$html += '<div class="form-group"><div class="col-sm-12">';
+		$html += '<input name="new[title]" class="form-control input-required-first input-sm required" placeholder="Tiêu đề" />';
+		$html += '</div></div>';
+		$html += '<div class="form-group"><div class="col-sm-12">';
+		$html += '<textarea name="new[embed_code]" class="form-control input-seo required" id="inputlivechat" placeholder="Mã nhúng" ></textarea>';
+		$html += '</div></div>';
+		break;
+	}
+	$target.html($html);
+	$target.find('.input-required-first').val($this.val()).focus();
+	if($this.val() != ""){
+		jQuery('.input-button-required-checked').removeAttr('disabled')
+	}else{
+		jQuery('.input-button-required-checked').attr('disabled','')
+	}
+	return false;
+}
 
 
 
