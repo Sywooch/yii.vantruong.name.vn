@@ -210,66 +210,73 @@ class Suppliers extends Customers
 		
 		$directSeasons = [];
 		
-		if(!empty($r['incurred_seasons_prices'])){
-			foreach ($r['incurred_seasons_prices'] as $i){
-				$sprice = self::getDirectSeason(['season_id'=>$i['id'],'supplier_id'=>$supplier_id]);
-				if(!empty($sprice)){
-					if(isset($sprice['default_direct']) && $sprice['default_direct'] == 1){
-						if(isset($r['seasons_price_type_0']) && !empty($r['seasons_price_type_0']))
-						$default_direct[] = $r['seasons_price_type_0'];
-					}else{
-						$default_direct[] = $sprice;
-					}
-				}
-				 
+		if(!empty($r['seasons_price_type_1'])){
+			foreach ($r['seasons_price_type_1'] as $i){
+				foreach (self::getDirectSeason([
+						'season_id'=>$i['id'],
+						'supplier_id'=>$supplier_id,
+						'default_direct'=>isset($r['seasons_price_type_0']) ? $r['seasons_price_type_0'] : [],
+				]) as $x){
+					$directSeasons[] = $x;
+				}				 				 
 			}
 		}
-		$r['season_direct_prices'] = $directSeasons;
+		$r['season_direct_prices'] = $directSeasons; 
 		return $r;
 	}
 	
 	public static function getDirectSeason($o = []){
 		//
 		$season_id = isset($o['season_id']) ? $o['season_id'] : 0;
+		$default_direct = isset($o['default_direct']) ? $o['default_direct'] : [];
 		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
-		$price_incurred1 = isset($o['price_incurred1']) ? $o['price_incurred1'] : 0;
+		$price_incurred1 = isset($o['price_incurred1']) ? $o['price_incurred1'] : 1;
 		$price_incurred2 = isset($o['price_incurred2']) ? $o['price_incurred2'] : 0;
 		$last_season_id = isset($o['last_season_id']) ? $o['last_season_id'] : 0;
 		$unit_price = isset($o['unit_price']) ? $o['unit_price'] : 0;
 		//
-		//view($price_incurred);
+		 
 		//
-		$season = Seasons::getUserSeason($season_id,$supplier_id);
-		//view($season);
-		if($season['price_type'] == 0){
-			 
-		}
-		if($season['price_type'] == 1){
-			// tinh gia truc tiep
-			$season['last_season_id'] = $season['id'];
-			
-			$o['last_season_id'] = $last_season_id = $season['id'];
-			if($season['parent_id'] > 0){
-				$price_incurred1 += $season['price_incurred'];
-				$o['season_id'] = $season['parent_id'];
-				$o['price_incurred1'] = $price_incurred1;
+		$seasons = Seasons::getUserSeasons($season_id,$supplier_id);
+		//view($seasons);
+		if(!empty($seasons)){
+			foreach ($seasons as $k => $season){
+				if($season['price_type'] == 1){
+					// tinh gia truc tiep
+					$season['last_season_id'] = $season['id'];
+						
+					$o['last_season_id'] = $last_season_id = $season['id'];
+					if($season['parent_id'] > 0){
+						//view($season['price_incurred']);
+						$price_incurred1 *= 1 + ($season['price_incurred']/100);
+						//view($price_incurred1);
+						$o['season_id'] = $season['parent_id'];
+						$o['price_incurred1'] = $price_incurred1;
 				
-				return self::getDirectSeason($o);
+						return self::getDirectSeason($o);
+					}else{
+						if(!empty($default_direct)){
+							foreach ($default_direct as $c=>$d){
+								$d['price_incurred1'] = isset($season['price_incurred1']) ? $season['price_incurred1'] : 1;
+								$d['last_season_id'] = isset($season['last_season_id']) ? $season['last_season_id'] : 0;
+								$d['price_incurred2'] = isset($season['price_incurred2']) ? $season['price_incurred2'] : 0;
+								$default_direct[$c] = $d;
+							}
+						}
+						return $default_direct;
+					}
+				}
+				$season['price_incurred1'] = $price_incurred1;
+				$season['last_season_id'] = $last_season_id;
+				$season['price_incurred2'] = $price_incurred2;
+				$seasons[$k] = $season;
 			}
-		}elseif($season['price_type'] == 2){
-			// Tinh gia pha sinh
-			$price_incurred2 += $season['price_incurred'];
-			//if($last_season_id>0){
-				$unit_price = $season['unit_price'];
-				//$seasonx = Seasons::getUserSeason(0,$supplier_id,[0]);
-				$season['unit_price'] = $unit_price;
-				$season['default_direct'] = 1;
-			//} 
+		}else{
+			
 		}
-		$season['price_incurred1'] = $price_incurred1;
-		$season['last_season_id'] = $last_season_id;
-		$season['price_incurred2'] = $price_incurred2;
-		return $season;
+		 
+		//view($seasons);
+		return $seasons;
 	}
 	
 	/*

@@ -62,10 +62,20 @@ echo Ad_edit_show_check_field([
 ?>   
 </div></div> 
 <div role="tabpanel" class="tab-panel active" id="tab-general1">
-   <div class="fl100">
-        <div class="p-content f12e help-panel-<?php echo Yii::$app->controller->id;?>">
-            
-        </div>
+   <div class="col-sm-12 mgt30">
+        
+        <?php
+
+          echo ckeditor('detail-tab-'.randString(5),array(
+                'attr'=> array('class'=>'','name'=>'biz[summary]')    ,
+                'upload'=>true,
+                'toolbar' =>  'Full',
+                'value' =>isset($v['summary']) ? uh($v['summary'],2) : '',
+                'h'=>550,
+          ));
+
+          ?>
+        
     </div>
 </div>
 <div role="tabpanel" class="tab-panel" id="tab-help">

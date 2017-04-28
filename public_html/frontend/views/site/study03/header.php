@@ -57,8 +57,7 @@ echo Yii::$app->zii-> getMenuItem([
 <?php 
 $sliders = Yii::$app->zii->getAdvert([
 		'code'=>'ADV_SLIDER',
-		'category_id'=>Yii::$app->controller->action->id == 'index' ? -1 
-		: __CATEGORY_ID__]);
+		'category_id'=> __CATEGORY_ID__]);
 if(!empty($sliders) && (Yii::$app->controller->action->id == 'index' || __CATEGORY_ID__>0)){
 	echo '<div class="row mslider fullwidth"><div class="columns small-12 slider w100">';
 	foreach ($sliders as $k=>$v){

@@ -581,7 +581,7 @@ function reload_app($t){
   for (var selector in chosen_config) {
     if(jQuery(selector).length>0){
     	chosen_config[selector]['allow_single_deselect'] = jQuery(selector).attr('data-deselect') ? true : false;
-    	console.log(chosen_config[selector]);
+    	//console.log(chosen_config[selector]);
     	jQuery(selector).chosen(chosen_config[selector]);
     }
   }
@@ -952,6 +952,9 @@ if($this.find('.cke_editor_ckeditor_content').length>0)  CKupdate();
               	}
               	
               }
+              if($d.callback_after){
+	    		  eval($d.callback_after_function);
+	    	  }
           }
           //else
           //window.location = window.location;
@@ -3707,6 +3710,31 @@ function change_season_price_type($t){
 		// $target4.hide();
 		 break;
 	 }
+	 //
+	 var $data = getAttributes($this);
+	 $data['action'] = 'change_season_price_type';
+	 $data['value'] = $this.val();
+	 jQuery.ajax({
+	      type: 'post',
+	      datatype: 'json',
+		  url: $cfg.adminUrl  + '/ajax',						 		 
+	      data: $data,
+	      beforeSend:function(){
+	    	  
+	      },
+	      success: function (data) {
+	    	  //console.log(data)
+	    	  $d = JSON.parse(data);
+	    	   
+	      },
+	      complete: function(){
+	    	//reload_app('chosen');  reload_app('select2'); reload_app('number-format');
+	    	//reload_app('switch-btn');reload_app('datepicker');
+	      },
+	      error : function(err, req) {}
+	 });
+	 
+	 //
 	 reloadAutoPlayFunction();
  }
  function get_local_not_in_group($t){
@@ -4553,9 +4581,9 @@ function countTotalGuest(t){
 	$g2 = parseInt(jQuery('#input-tour-sokhach-te').val());
 	$g1 = $g1 > 0 ? $g1 : 0;$g2 = $g2 > 0 ? $g2 : 0;
 	$g3 = Math.ceil($g2 / 2);
-	console.log($g1)
-	console.log($g2)
-	console.log($g3)
+	//console.log($g1)
+	//console.log($g2)
+	//console.log($g3)
 	jQuery('#input-tour-sokhach').val($g1 + $g3);
 	changeTotalGuest(t); 
 }
@@ -4615,7 +4643,7 @@ function loadTourProgramDetail($t){
 	      data: $data,
 	      beforeSend:function(){},
 	      success: function (data) {
-	    	  console.log(data)
+//	    	  console.log(data)
 	    	  var $d = JSON.parse(data);
 	    	  jQuery($d.target).html($d.html);
 	    	  //console.log($d.target)
@@ -5215,7 +5243,7 @@ function quick_change_supplier_service_price($t){
 	var $data = getAttributes($this);
 	$data['action'] =  'quick_change_supplier_service_price';
 	$data['value'] = $this.val();
-	console.log($data)
+	//console.log($data)
 	if($this.val() != $this.attr('data-old').replace(/\.00/g,'')){
 	jQuery.ajax({
 	    type: 'post',
@@ -5226,7 +5254,7 @@ function quick_change_supplier_service_price($t){
 	    show_left_small_loading('show'); 
 	    },
 	    success: function (data) {	    	  
-	     console.log(data)
+	     //console.log(data)
 	    	 $this.attr('data-old',$this.val()); 
 	    },
 	    complete:function(){
@@ -5337,7 +5365,7 @@ function nextFocus($t){
 	}else{
 		var $next = $this.next('input');
 	}
-	console.log($next);
+	//console.log($next);
 	$next.focus();
 	return false;
 }

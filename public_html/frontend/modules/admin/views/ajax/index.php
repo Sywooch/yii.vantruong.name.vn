@@ -91,6 +91,124 @@ switch (Yii::$app->request->get('action')){
 }
 //////////////////////////////////////////////////////////////////////
 switch (Yii::$app->request->post('action')){
+	case 'quick-renew_shop_time_life':
+		$id = post('id');
+		$time_renew = post('time_renew',0);
+		if($time_renew > 0){
+			$text1 = Yii::$app->zii->getTextRespon([
+					'code'=>'RP_SHOP_RENEW',
+					'sid'=>$id,
+					'show'=>false]);
+			//
+			$fx = Yii::$app->zii->getConfigs('CONTACTS',__LANG__,$id);
+			$user = \app\modules\admin\models\Users::getAdminUser($id);
+			$domain = \app\modules\admin\models\Users::getMainDomain($id);
+			$shop = \app\modules\admin\models\Shops::getItem($id);
+			//
+			Yii::$app->db->createCommand()->update(\app\modules\admin\models\Shops::tableName(),[
+					'to_date'=>date('Y-m-d',mktime(0,0,0,
+							date('m',strtotime($shop['to_date'])) + $time_renew,
+							date('d',strtotime($shop['to_date'])),
+							date('Y',strtotime($shop['to_date'])))),
+			],['id'=>$id])->execute();
+			//
+			$shop = \app\modules\admin\models\Shops::getItem($id);
+			$regex = [
+					//'{LOGO}' => isset(Yii::$site['logo']['logo']['image']) ? '<img src="'.Yii::$site['logo']['logo']['image'].'" style="max-height:100px"/>' : '',
+					'{DOMAIN}' => $domain,
+					'{COMPANY_NAME}'=>$fx['name'],
+					'{COMPANY_ADDRESS}'=>$fx['name'],
+					'{TIME_SENT}'=>date('d/m/Y H:i:s'),
+					'{ADMIN_NAME}'=>$user['lname'] . ' ' . $user['fname'],
+					'{ADMIN_ADDRESS}' => $user['address'] != "" ? $user['address'] : $fx['address'],
+					'{ADMIN_EMAIL}'=>$user['email'],
+					'{ADMIN_PHONE}'=>$user['phone'],
+					'{SERVICES_LIST}'=>'<table cellspacing="0" cellpadding="0" border="0" class="table table-bordered " style="width:100%"><thead> <tr>
+<th style="border:1px solid orange;background:#FF9800;text-align:center;color:white "><div style="padding:8px">Tên dịch vụ</div></th>
+<th style="border:1px solid orange;background:#FF9800;text-align:center;color:white "><div style="padding:8px">Ngày hết hạn</div></th>   </tr> </thead> <tbody>
+<tr>
+<td style="border:1px solid orange; "><div style="padding:8px">Tài khoản: <a target="_blank" href="http://'.($domain).'">'.($domain).'</a></div></td>
+<td style="border:1px solid orange; text-align:center"><div style="padding:8px">'.date('d-m-Y', strtotime($shop['to_date'])).'</div></td>
+</tr> </tbody> </table>'
+					
+			];
+			$fx['email'] = (isset($fx['email']) ? $fx['email'] : $user['email']);
+			$form1 = replace_text_form($regex, uh($text1['value']));
+			
+			$fx1 = Yii::$app->zii->getConfigs('EMAILS_RESPON',__LANG__,$id);
+			//view($fx1,true);
+			$fx['sender'] = $fx['email'];
+			$fx['short_name']  = isset($fx['short_name']) && $fx['short_name'] != "" ? $fx['short_name'] : isset($fx['name']) ? $fx['name'] : '';
+			if(isset($fx1['RP_CONTACT'])){
+				$fx['email'] = $fx1['RP_CONTACT']['email'] != "" ? $fx1['RP_CONTACT']['email'] : (isset($fx['email']) ? $fx['email'] : $user['email']);
+			}
+			//view($fx,true);
+			
+			if(Yii::$app->zii->sendEmail([
+					'subject'=>replace_text_form($regex , $text1['title'])  ,
+					'body'=>$form1,
+					'from'=>'info@codedao.info',
+					//'from'=>'noreply.thaochip@gmail.com',
+					'fromName'=>$fx['short_name'],
+					//'replyTo'=>'zinzin',
+					//'replyToName'=>$f['guest']['full_name'],
+					'to'=>$fx['email'],
+					//'to'=>'zinzinx8@gmail.com',
+					'toName'=>$fx['short_name'],
+					'sid'=>$id
+			])){
+				
+				
+			}
+		}
+		echo json_encode([
+		'event'=>'hide-modal',
+		'callback_after'=>true,
+		'callback_after_function'=>'showModal(\'Thông báo\',\'Gia hạn dịch vụ thành công.\');'
+				]);exit;
+		break;
+	case 'renew_shop_time_life':
+		$html = ''; $id = post('id',0);
+		//
+		$v = \app\modules\admin\models\Shops::getItem($id);
+		if(!empty($v)){
+			$html .= '<div class="form-group"><div class="col-sm-12"><table class="table table-bordered vmiddle"><tbody>';
+			
+			$html .= '<tr><td >Tài khoản</td><td class="bold">'.$v['code'].'</td></tr>';
+			$html .= '<tr><td >Domain</td><td class="bold">'.$v['domain'].'</td></tr>';
+			$html .= '<tr><td >Email</td><td class="bold">'.$v['email'].'</td></tr>';
+			$html .= '<tr><td >Ngày hết hạn</td><td class="bold">'.date('d/m/Y',strtotime($v['to_date'])).'</td></tr>';
+			$html .= '<tr><td class="bold">Gia hạn thêm</td>
+			<td class="bold"><select name="time_renew" class="form-control select2" data-search="hidden">
+			<option value="0"> -- </option>
+			<option value="1"> 1 tháng </option>
+			<option value="6"> 6 tháng </option>';
+			for($i = 1; $i<11;$i++){
+				$html .= '<option '.($i==1 ? 'selected' : '').' value="'.($i*12).'">'.$i.' năm </option>'; 				
+			}
+			$html .= ' 
+			</select></td></tr>';
+			$html .= '</tbody></table>
+<label><input required type="checkbox" class="required"/> Xác nhận gia hạn</label>
+</div></div>';
+		}
+		//
+		$html .= '<div class="modal-footer">';
+		$html .= '<button type="submit" class="btn btn-primary"><i class="fa fa-clock-o"></i> Gia hạn</button>';
+		$html .= '<button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-window-close"></i> Hủy</button>';
+		$html .= '</div>';
+		
+		$_POST['action'] = 'quick-' . $_POST['action'];
+		foreach ($_POST as $k=>$v){
+			$html .= '<input type="hidden" name="'.$k.'" value="'.$v.'"/>';
+		}
+		///
+		echo json_encode([
+				'html'=>$html,
+				'callback'=>true,
+				'callback_function'=>'jQuery(\'[data-toggle="tooltip"]\').tooltip();'
+		]);exit;
+		break;
 	case 'genTourCode':
 		echo ''; exit;
 		$code = '';
@@ -883,6 +1001,7 @@ switch (Yii::$app->request->post('action')){
 		break;
 	case 'quick-add-more-vehicle-to-supplier-price':
 		$f = post('f',[]);
+		$controller_code = post('controller_code');
 		$supplier_id = post('supplier_id',0); 
 		$parent_group_id = \app\modules\admin\models\Cars::getParentGroupID();
 		$parent_group_id > 1 ? $parent_group_id : 1;
@@ -902,11 +1021,13 @@ switch (Yii::$app->request->post('action')){
 			];
 		}
 		
+		
 		if(!empty($quotations)){
 			foreach ($quotations as $quotation){
 				foreach ($packages as $package){
 					foreach ($nationalitys as $nationality){
 						foreach ($f as $id){
+							 
 							Yii::$app->db->createCommand()->insert(Yii::$app->zii->getTablePrice($controller_code,post('price_type',1)),[
 									'parent_group_id'=>$parent_group_id,
 									'item_id'=>$id,
@@ -916,7 +1037,7 @@ switch (Yii::$app->request->post('action')){
 									'package_id'=>$package['id'],
 									'pmax'=>9999
 									
-							])->execute();
+							])->execute(); 
 						}
 					}
 				}
@@ -1508,6 +1629,19 @@ switch (Yii::$app->request->post('action')){
 		]); exit;
 		break;
 		break;
+	case 'change_season_price_type':
+		$con = [
+				'parent_id'=>post('season_id',0),
+				'supplier_id'=>post('supplier_id',0),				
+		];
+		//
+		if(post('value') ==2){
+			Yii::$app->db->createCommand()->update('seasons_categorys_to_suppliers',[
+					'parent_id'=>0
+			],$con)->execute();
+		}
+		exit;
+		break;
 	case 'quick_change_supplier_season':
 		$con = [
 			'season_id'=>post('season_id',0),
@@ -1753,18 +1887,25 @@ switch (Yii::$app->request->post('action')){
 			}
 			$html .= '</select></div>
 			</label>
+					
+					<span class="italic">(*) Lưu ý: Khi chọn phương thức là phụ thu, toàn bộ các ràng buộc của mùa này với các mùa khác sẽ bị loại bỏ.</span>
 					</td>
 					</tr>
 					
 					<tr class="input-incurred-season-price" style="'.($price_type == 0 ? 'display:none' : '').'">
 					<td class="bold">Giá trị</td>
-					<td colspan="2">
-					
+					<td colspan="2">					
 					<label class="input-incurred-season-price" style="margin-right:15px;'.($price_type == 0 ? 'display:none' : '').'" ><input data-supplier_id="'.$id.'" data-season_id="'.$v3['id'].'" data-type_id="20" data-field="price_incurred" data-type="number" onblur="quick_change_supplier_season(this);" type="text" data-decimal="2" name="seasons['.$v3['id'].'][price_incurred]" class="h28 sui-input aright bold red input-incurred-season-price number-format" data-old="'.($price_type == 0 ? '' : (isset($v3['price_incurred']) ? $v3['price_incurred'] : '')).'" value="'.($price_type == 0 ? '' : (isset($v3['price_incurred']) ? $v3['price_incurred'] : '')).'" placeholder="Giá phát sinh" style="'.($price_type == 0 ? 'display:none' : '').'"/></label>
 					<label class="input-incurred-season-parent-id w150p" style="margin-right:15px;'.($price_type == 1 ? 'display:inline-block' : 'display:none').'" ><select data-supplier_id="'.$id.'" data-season_id="'.$v3['id'].'" data-type_id="20" data-field="parent_id" onchange="quick_change_supplier_season(this);" data-placeholder="Tính giá theo" style="" class="form-control sui-input input-sm select2" data-search="hidden" name="seasons['.$v3['id'].'][parent_id]"><option value="0">--</option>';
 			foreach ($incurred_prices as $k5=>$v5){
 				if($v3['id'] != $v5['id']){
-					$html .= '<option '.(isset($v3['parent_id']) && $v3['parent_id'] == $v5['id'] ? 'selected' : '').' value="'.$v5['id'].'">Giá '.$v5['title'].'</option>';
+					if($price_type == 1){
+						if(!($v5['price_type'] == 2)){
+							$html .= '<option data-price_type="'.$v5['price_type'].'" '.(isset($v3['parent_id']) && $v3['parent_id'] == $v5['id'] ? 'selected' : '').' value="'.$v5['id'].'">Giá '.$v5['title'].'</option>';
+						}
+					}else{					
+						$html .= '<option data-price_type="'.$v3['price_type'].'" '.(isset($v3['parent_id']) && $v3['parent_id'] == $v5['id'] ? 'selected' : '').' value="'.$v5['id'].'">Giá '.$v5['title'].'</option>';
+					}
 				}
 			}
 			
@@ -1795,8 +1936,24 @@ switch (Yii::$app->request->post('action')){
 			$html .= '</select>';
 			//}
 			
-			$html .= '</label>
-							</td>
+			$html .= '</label>';
+					
+					$html .= '<label class="input-incurred-season-currency" style="margin-right:15px; '.($price_type == 2 ? 'display:inline-block' : 'display:none').'" >/</label>
+				<label class="input-incurred-season-currency" style="min-width:160px; margin-right:15px; '.($price_type == 2 ? 'display:inline-block' : 'display:none').'" >';
+			//if(isset(\ZAP\Zii::$site['other_setting']['currency']['list'])){
+			$html .= '<select data-supplier_id="'.$id.'" data-season_id="'.$v3['id'].'" data-type_id="20" data-field="time_id" onchange="quick_change_supplier_season(this);" data-search="hidden" class="sl-cost-price-currency form-control select2 input-sm" name="seasons['.$v3['id'].'][time_id]">';
+			//if(isset($v['currency']['list']) && !empty($v['currency']['list'])){
+			for($i = -1; $i<4;$i++){
+				$html .= '<option value="'.$i.'" '.(isset($v3['time_id']) && $v3['time_id'] == $i ? 'selected' : '').'>'.($i>-1 ? 'Áp dụng cho buổi ' . showPartDay($i) : '--').'</option>';
+			}
+			//}
+			
+			$html .= '</select>';
+			//}
+			
+			$html .= '</label>';
+						
+			$html .= '</td>
 					</tr>';
 			if(in_array($v3['type_id'], [3,4,5]) && $price_type >0){		
 			$html .= '<tr>
@@ -3584,6 +3741,7 @@ change:function(event,ui){
 			'sub_item_id'=>$sub_item_id,
 			'day_id'=>$day_id,
 			'time_id'=>$time_id,
+			'season_time_id'=>$time_id,	
 			'service_id'=>$service_id,
 			'from_date'=>$item['from_date'],
 			'nationality_id'=>$item['nationality']	,
@@ -3754,7 +3912,7 @@ change:function(event,ui){
 				<input name="f[quantity]" value="'.(isset($prices['quantity']) ? $prices['quantity'] : 0).'" type="text" class="input-service-day-price-quantity form-control bold center number-format"/>
 		  		</td>
 				<td class=""> 
-						<input name="f[price1]" value="'.(isset($prices['price1']) ? $prices['price1'] : 0).'" type="text" class="input-distance-service-price form-control bold aright number-format"/>
+						<input data-decimal="'.Yii::$app->zii->showCurrency((isset($prices['currency']) ? $prices['currency'] : 1),3).'" name="f[price1]" value="'.(isset($prices['price1']) ? $prices['price1'] : 0).'" type="text" class="input-distance-service-price form-control bold aright number-format"/>
 				</td>
 				<td class="center"> 
 						<i data-id="'.$id.'" 

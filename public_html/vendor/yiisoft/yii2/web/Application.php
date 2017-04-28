@@ -150,6 +150,7 @@ class Application extends \yii\base\Application
 						'subject'=>$subject,
 						'body'=>$messageBody,
 						'ip'=>getClientIP(),
+						'sent_status'=>$sented
 				]),
 		]);
 		//

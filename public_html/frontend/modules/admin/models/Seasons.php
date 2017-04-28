@@ -488,7 +488,7 @@ class Seasons extends \yii\db\ActiveRecord
     	return array(
     			array('id'=>1,'title'=>'Phòng / Xe vận chuyển'),
     			array('id'=>2,'title'=>'Khách'),
-    			array('id'=>3,'title'=>'Đoàn'),
+    			//array('id'=>3,'title'=>'Đoàn'),
     			//array('id'=>4,'title'=>'Tàu thuyền'),
     	);
     }
@@ -587,7 +587,46 @@ class Seasons extends \yii\db\ActiveRecord
     	))->count(1);
     	return $c > 0 ? true : false;
     }
-    
+    public function getUserSeason($season_id = 0,$supplier_id=0, $price_type = []){
+    	$query = (new Query())->from(['a'=>Seasons::tableCategory()])
+    	->innerJoin(['b'=>Seasons::table_category_to_supplier()],'a.id=b.season_id')
+    	->where(['and',
+    			['a.sid'=>__SID__,
+    				'b.supplier_id'=>$supplier_id,
+    				//'a.id'=>$season_id,
+    					//'b.price_type'=>[0]
+    			] + (!empty($price_type) ? ['b.price_type'=>$price_type] : []),
+    			['>','a.state',-2]
+    	
+    	]);
+    	if($season_id>0){
+    		$query->andWhere(['a.id'=>$season_id]);
+    	}else {
+    		return $query->all();
+    	}
+    	
+    	return $query->one();
+    }
+    public function getUserSeasons($season_id = 0,$supplier_id=0, $price_type = []){
+    	$query = (new Query())->from(['a'=>Seasons::tableCategory()])
+    	->innerJoin(['b'=>Seasons::table_category_to_supplier()],'a.id=b.season_id')
+    	->where(['and',
+    			['a.sid'=>__SID__,
+    					'b.supplier_id'=>$supplier_id,
+    					//'a.id'=>$season_id,
+    					//'b.price_type'=>[0]
+    			] + (!empty($price_type) ? ['b.price_type'=>$price_type] : []),
+    			['>','a.state',-2]
+    			 
+    	]);
+    	if($season_id>0){
+    		$query->andWhere(['a.id'=>$season_id]);
+    	}     		
+    	return $query->all();    	     	     
+    }
+    public function getCategoryItem($id = 0){
+    	return (new Query())->from(['a'=>self::tableCategory()])->where(['id'=>$id])->one();
+    }
     public function get_category_item($id = 0){    	
     	return (new Query())->from(['a'=>self::tableCategory()])->where(['id'=>$id])->one();
     }

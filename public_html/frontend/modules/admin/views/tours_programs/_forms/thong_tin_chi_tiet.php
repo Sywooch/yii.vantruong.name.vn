@@ -1,6 +1,34 @@
 <?php 
- 
-//view($seasons);
+/*
+$r = Yii::$app->zii->getServiceDetailPrices([
+		'from_date'=>'2017-12-24',
+		//'quotation_id'=>$quotation['id'],
+		//'nationality_id'=>$nationality_group['id'],
+		'time_id'=>$v['id'],
+		'service_id'=>5,
+		'total_pax'=>28,
+		//'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
+		//'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
+		'package_id'=>0,
+		//'season_time_id'=>$season_time_id,
+		//'seasons'=>$seasons,
+		'loadDefault'=>true,
+		'updateDatabase'=>false,
+]);
+/*
+ * 
+ $a = loadTourProgramDetail([
+		'id'=>$v['id'],
+		'loadDefault'=>true,
+		'updateDatabase'=>true,
+]);
+
+view(\app\modules\admin\models\Suppliers::getSeasons([
+		'season_id'=>7,
+		'supplier_id'=>55,
+		'date'=>$v['from_date']
+		 
+]));
 /*
 view(Yii::$app->zii->getServiceDetailPrices([
 			'supplier_id'=>60,

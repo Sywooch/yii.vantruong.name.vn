@@ -2634,10 +2634,11 @@ function object2array($object) { return @json_decode(@json_encode($object),1); }
 
 function showPartDay($part = 0){
 	switch ($part){
+		case 0: $day = 'sáng'; break;
 		case 1: $day = 'trưa'; break;
 		case 2: $day = 'chiều'; break;
 		case 3: $day = 'tối'; break;
-		default: $day = 'sáng'; break;
+		default: $day = '--'; break;
 	}
 	return $day;
 }
@@ -3777,7 +3778,7 @@ function loadTourProgramDetail($o = []){
 						$price = Yii::$app->zii->getServicePrice($prices['price1'],[
 								'item_id'=>$id,
 								//'price'=>$prices['price1'],
-								'from'=>$prices['currency'],
+								'from'=>(isset($prices['currency']) ? $prices['currency'] : 1),
 								'to'=>$v['currency']
 						]);
 					}

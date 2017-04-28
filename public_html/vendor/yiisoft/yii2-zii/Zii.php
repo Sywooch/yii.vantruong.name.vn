@@ -1799,8 +1799,10 @@ class Zii extends yii\base\Object
 		$from_date = isset($o['from_date']) && check_date_string($o['from_date']) ? $o['from_date'] : date('Y-m-d');
 		$day = isset($o['day']) ? $o['day'] : -1;
 		$time = isset($o['time']) ? $o['time'] : -1;
+		
 		$day_id = isset($o['day_id']) ? $o['day_id'] : $day;
 		$time_id = isset($o['time_id']) ? $o['time_id'] : $time;
+		$season_time_id = isset($o['season_time_id']) ? $o['season_time_id'] : $time_id;
 		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
 		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
 		$service_id = isset($o['service_id']) ? $o['service_id'] : 0;
@@ -1911,6 +1913,8 @@ class Zii extends yii\base\Object
 							'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
 							'package_id'=>$package_id,
 							'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
+							'season_time_id'=>$season_time_id,
+							'seasons'=>$seasons,
 					]);
 					 
 					break;
@@ -1923,8 +1927,10 @@ class Zii extends yii\base\Object
 							'supplier_id'=>$supplier_id,
 							'total_pax'=>$total_pax,
 							'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
-							'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
+							//'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
 							'package_id'=>$package_id,
+							'season_time_id'=>$season_time_id,
+							'seasons'=>$seasons,
 					]);
 					 
 					break;
@@ -1939,7 +1945,9 @@ class Zii extends yii\base\Object
 							'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
 							'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
 							'package_id'=>$package_id, 
-							'item_id'=>$service_id
+							'item_id'=>$service_id,
+							'season_time_id'=>$season_time_id,
+							'seasons'=>$seasons,
 					]);
 					 
 					$r['quantity'] = 0;	
@@ -1961,7 +1969,9 @@ class Zii extends yii\base\Object
 							'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
 							'package_id'=>$package_id,
 							'sub_item_id'=>$sub_item_id,
-							'item_id'=>$sub_item_id
+							'item_id'=>$sub_item_id,
+							'season_time_id'=>$season_time_id,
+							'seasons'=>$seasons,
 					]);
 					//view($type_id);
 					//view($r,true); exit;
@@ -1990,7 +2000,7 @@ class Zii extends yii\base\Object
 					'day_id'=>$day_id,
 					'time_id'=>$time_id,
 					'type_id'=>$type_id,
-					'quantity'=>$r['quantity'],
+					'quantity'=>isset($r['quantity']) ? $r['quantity'] : 0,
 					'price1'=>isset($r['price1']) ? $r['price1'] : 0,
 					'currency'=>isset($r['currency']) ? $r['currency'] : 1,
 					'package_id'=>$package_id,
@@ -2007,7 +2017,7 @@ class Zii extends yii\base\Object
 						//'time_id'=>$time,
 						'state'=>1,
 						'supplier_id'=>$supplier_id,
-						'quantity'=>$r['quantity'],
+						'quantity'=>isset($r['quantity']) ? $r['quantity'] : 0,
 						'price1'=>isset($r['price1']) ? $r['price1'] : 0,
 						'currency'=>isset($r['currency']) ? $r['currency'] : 1
 				
@@ -2060,11 +2070,12 @@ class Zii extends yii\base\Object
 	}
 	
 	public function getDefaultHotelPrices($o = []){
-		    
+		$result = ['price1'=>0];    
 		$time_id = isset($o['time_id']) ? $o['time_id'] : -1;
+		$season_time_id = isset($o['season_time_id']) ? $o['season_time_id'] : -1;
 		$state = isset($o['state']) ? $o['state'] : 1;
 		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
-		
+		$seasons = isset($o['seasons']) ? $o['seasons'] : [];
 		$a = [
 				'quotation_id',
 				'package_id',
@@ -2078,6 +2089,15 @@ class Zii extends yii\base\Object
 		foreach ($a as $b){
 			$$b = isset($o[$b]) ? $o[$b] : 0;
 		}
+		if(empty($seasons['season_direct_prices'])){
+			$seasons['season_direct_prices'] = [[
+				'id'=>$season_id,
+				'price_incurred1'=>1,	
+			]];
+		}
+		
+		foreach ($seasons['season_direct_prices'] as $season){
+		
 		// lấy phòng default 
 		$query = (new Query())->from(['a'=>\app\modules\admin\models\Hotels::tablePrice()])
 		->innerJoin(['b'=>\app\modules\admin\models\RoomsCategorys::tableName()],'a.item_id=b.id')
@@ -2087,7 +2107,7 @@ class Zii extends yii\base\Object
 				'a.package_id'=>$package_id,
 				'a.supplier_id'=>$supplier_id,
 				'a.nationality_id'=>$nationality_id,
-				'a.season_id'=>$season_id,
+				'a.season_id'=>$season['id'],
 				//'a.group_id'=>$group_id,
 				//'a.weekend_id'=>$weekend_id,
 				//'a.time_id'=>$time_id,
@@ -2121,7 +2141,7 @@ class Zii extends yii\base\Object
 					'a.package_id'=>$package_id,
 					'a.supplier_id'=>$supplier_id,
 					'a.nationality_id'=>$nationality_id,
-					'a.season_id'=>$season_id,
+					'a.season_id'=>$season['id'],
 					'a.group_id'=>$group_id,
 					'a.weekend_id'=>$weekend_id,
 					'a.time_id'=>$time_id,
@@ -2132,25 +2152,62 @@ class Zii extends yii\base\Object
 			->select(['b.*','a.price1','a.currency'])
 			;
 			 
-			//view($query->createCommand()->getRawSql());
+			$season['price_incurred1'] = $season['price_incurred1'] > 0 ? $season['price_incurred1'] : 1;
 			$item = $query->one();
 			// view($item,true);
 			$item['sub_item_id'] = $item_id;
 			$item['quantity'] = $total_rooms;
-			return $item;
+			$item['price1'] = $item['price1'] * ($season['price_incurred1'] > 0 ? $season['price_incurred1'] : 1);
+			$item['price_incurred1'] = $season['price_incurred1'];
+			
+			if($item['price1']>$result['price1'])$result = $item;
+		}
+		}
+		// lấy giá phụ thu
+		if(isset($seasons['seasons_price_type_2'])){
+			foreach ($seasons['seasons_price_type_2'] as $season){
+				switch ($season['unit_price']){
+					case 1: // Phong
+						if(in_array($season['time_id'], [-1,$season_time_id])){
+							if($season['currency'] == $result['currency']){
+								$result['price1'] += $season['price_incurred'];
+							}else{
+						
+							}
+						}
+						break;
+						
+					case 2: // khach
+						//
+						$total1 = ($season['price_incurred'] * $total_pax) / $total_rooms;
+						//
+						if(in_array($season['time_id'], [-1,$season_time_id])){
+							if($season['currency'] == $result['currency']){
+								$result['price1'] += $total1;
+							}else{
+						
+							}
+						}
+						break;
+						
+				}
+				
+			}
 		}
 		
-		
+		return $result;
 	}
 	
 	
 	public function getDefaultServicePrices($o = []){
-	
+		$result = ['price1'=>0];
+		$season_time_id = isset($o['season_time_id']) ? $o['season_time_id'] : -1;
 		$time_id = isset($o['time_id']) ? $o['time_id'] : -1;
 		$state = isset($o['state']) ? $o['state'] : 1;
 		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
 		$controller_code = isset($o['controller_code']) ? $o['controller_code'] : '';
 		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
+		$seasons = isset($o['seasons']) ? $o['seasons'] : [];
 		$a = [
 				'quotation_id',
 				'package_id',
@@ -2164,6 +2221,15 @@ class Zii extends yii\base\Object
 		foreach ($a as $b){
 			$$b = isset($o[$b]) ? $o[$b] : 0;
 		}
+		
+		if(empty($seasons['season_direct_prices'])){
+			$seasons['season_direct_prices'] = [[
+					'id'=>$season_id,
+					'price_incurred1'=>1,
+			]];
+		}
+		
+		foreach ($seasons['season_direct_prices'] as $season){
 		// lấy item default
 		switch ($controller_code){
 			case TYPE_ID_REST:
@@ -2186,7 +2252,7 @@ class Zii extends yii\base\Object
 							
 				]);
 				if(!empty($c)){
-					$total_pax = $c[0]['quantity'];
+					$total_pax = $c[0]['quantity']; 
 				}
 				break;
 		}
@@ -2238,7 +2304,7 @@ class Zii extends yii\base\Object
 					'a.package_id'=>$package_id,
 					'a.supplier_id'=>$supplier_id,
 					'a.nationality_id'=>$nationality_id,
-					'a.season_id'=>$season_id,
+					'a.season_id'=>$season['id'],
 					'a.group_id'=>$group_id,
 					'a.weekend_id'=>$weekend_id,
 					'a.time_id'=>$time_id,
@@ -2250,13 +2316,53 @@ class Zii extends yii\base\Object
 			;
 			//view($query->createCommand()->getRawSql());
 				
+			//$item = $query->one();
+			//$item['quantity'] = $total_pax;
+           // $item['sub_item_id'] = $item_id;
+			//return $item;
 			$item = $query->one();
-			$item['quantity'] = $total_pax;
-            $item['sub_item_id'] = $item_id;
-			return $item;
-		}
-	
-	
+			// view($item,true);
+			$item['sub_item_id'] = $item_id;
+			$item['quantity'] = $total_rooms;
+			$item['price1'] = $item['price1'] * ($season['price_incurred1']);
+			$item['price_incurred1'] = $season['price_incurred1'];
+				
+			if($item['price1']>$result['price1'])$result = $item;
+			}
+			}
+			// lấy giá phụ thu
+			if(isset($seasons['seasons_price_type_2'])){
+				foreach ($seasons['seasons_price_type_2'] as $season){
+					switch ($season['unit_price']){
+						case 1: // Phong
+							if(in_array($season['time_id'], [-1,$season_time_id])){
+								if($season['currency'] == $result['currency']){
+									$result['price1'] += $season['price_incurred'];
+								}else{
+			
+								}
+							}
+							break;
+			
+						case 2: // khach
+							//
+							$total1 = ($season['price_incurred'] * $total_pax) / $total_rooms;
+							//
+							if(in_array($season['time_id'], [-1,$season_time_id])){
+								if($season['currency'] == $result['currency']){
+									$result['price1'] += $total1;
+								}else{
+			
+								}
+							}
+							break;
+			
+					}
+			
+				}
+			}
+			
+			return $result;
 	}
 	private function getPriceInfoFromDate($supplier_id, $date){
 		// Check quotation
