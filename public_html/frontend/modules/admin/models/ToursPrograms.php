@@ -235,7 +235,7 @@ class ToursPrograms extends \yii\db\ActiveRecord
     			$r[] = $item;
     		}
     	}
-    	///view($r); 
+    	
     	return $r;
     }
     /*

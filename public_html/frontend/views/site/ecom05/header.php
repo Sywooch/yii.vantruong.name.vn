@@ -29,27 +29,44 @@ $this->registerCssFile(__RSDIR__ . '/css/skin_1.css?ver=4.7.2');
   
  
 
-<div class="header-wrapper fixed-header clearfix"><!-- header wrapper -->
+<div class="header-wrapper clearfix <?php echo Yii::$app->controller->action->id == 'index' ? ' fixed-header' : '';?>"><!-- header wrapper -->
                                 
                     <header id="header" class="header-corporate header-10 ">
     
     <div class="header-main">
         <div class="container">
             <div class="header-left">
-                                <div class="logo">                    <a href="http://myphamaplus.com/" title="Mỹ phẩm A&amp;PLUS - Nhà phân phối độc quyền sản phẩm A&amp;PLUS tại Việt Nam. Dòng sản phẩm dưỡng da an toàn từ thiên nhiên" rel="home">
-                        <img class="img-responsive" src="//myphamaplus.com/wp-content/uploads/2015/09/logo-21.png" alt="Mỹ phẩm A&amp;PLUS" />                    </a>
+                                <div class="logo">                   
+<a href="<?php echo Yii::$app->homeUrl;?>" title="<?php echo get_site_value('seo/title');?>" rel="home">
+<?php 
+    	echo getImage([
+    			'src'=>Yii::$site['logo']['logo']['image'],
+    			'w'=>125,'rename'=>false,
+    			'img_attr'=>[
+				'class'=>'logo-main','alt'=>'Mỹ phẩm A&amp;PLUS'
+   	]
+]);
+?>                   </a>
                 </div>            </div>
 
             <div class="header-right">
                 <div class="header-right-top">
-                    <div class="header-contact"><i class="fa fa-phone"></i> <strong> 0902 667 038</strong><span class="gap">|   <a href="http://myphamaplus.com/blog/" class="">Khuyến mãi</a></span></div>    <div class="searchform-popup">
+                    <div class="header-contact">
+<?php 
+$b = Yii::$app->zii->getBox('top_contact');
+if(!empty($b)){
+	echo uh($b['text'],2);
+}
+?>                    
+</div>    
+                    
+                    <div class="searchform-popup">
         <a class="search-toggle"><i class="fa fa-search"></i></a>
         
-<form role="search" method="get" id="yith-ajaxsearchform" action="http://myphamaplus.com/" class="yith-ajaxsearchform-container searchform ">
+<form role="search" method="get" id="yith-ajaxsearchform" action="/search" class="yith-ajaxsearchform-container searchform ">
     <fieldset>
-        <span class="text"><input name="s" id="yith-s" type="text" value="" placeholder="Search&hellip;" /></span>
-                <span class="button-wrap"><button class="btn" id="yith-searchsubmit" title="Search" type="submit"><i class="fa fa-search"></i></button></span>
-        <input type="hidden" name="post_type" value="product" />
+        <span class="text"><input name="q" id="yith-s" type="text" value="<?php echo getParam('q');?>" placeholder="Tìm kiếm&hellip;" /></span>
+                <span class="button-wrap"><button class="btn" id="yith-searchsubmit" title="Search" type="submit"><i class="fa fa-search"></i></button></span>        
     </fieldset>
 </form>
   </div>
@@ -69,44 +86,69 @@ echo Yii::$app->zii-> getMenuItem([
 		//'firstItem'=>'<li class="li-child li-child-0 li-level-1 "><a href="./" class=""><i class="fa fa-home"></i>&nbsp;</a></li>',
 		//'ul2Attr'=>['class'=>'sub-menu'],
 		//'li2Class'=>'menu-item menu-item-type-taxonomy menu-item-object-category',
-		'li1Class'=>'menu-item menu-item-type-post_type menu-item-object-page menu-item-home current-menu-item page_item narrow',
-		'li1WithChildClass'=>'custom-menu menu-item-has-children  has-sub wide pos-center col-2',
-		'ul2Attr'=>['class'=>'sub-menu']
+		'li1Class'=>'menu-item menu-item-type-post_type menu-item-object-page menu-item-home current-menu-item page_item',
+		'li2Class'=>'menu-item menu-item-type-taxonomy menu-item-object-product_cat w50',
+		'li1WithChildClass'=>'custom-menu menu-item-has-children has-sub wide pos-center col-2',
+		'ul2Attr'=>['class'=>'sub-menu'],
+		'preUl2'=>'<div class="popup"><div class="inner">',
+		'a2Pre'=>'<i class="fa fa-dot-circle-o"></i>',
+		'afterUl2'=>'</div></div>',
+		//'afterUl1'=>' <li class="menu-item"><a href="/my-account"><i class="fa fa-user"></i>Đăng nhập</a></li><li class="menu-item"><a href="/my-account"><i class="fa fa-user-plus"></i>Đăng ký</a></li>',
 		]);?>                    
-                        <ul id="menu-home" class="main-menu mega-menu show-arrow">
-                        <li id="nav-menu-item-4032" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home current-menu-item page_item page-item-4028 current_page_item active narrow "><a href="http://myphamaplus.com/" class=" current ">Trang chủ</a></li>
-<li id="nav-menu-item-3914" class="custom-menu menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children  has-sub wide pos-center col-2"><a href="http://myphamaplus.com/shop" class="">Sản phẩm</a>
-<div class="popup"><div class="inner" style="background-image:url(//myphamaplus.com/wp-content/uploads/2016/08/Pink-Citrus-Powerpoint-Background-1000x750.jpg);;background-position:center bottom;;background-repeat:no-repeat;"><ul class="sub-menu">
-	<li id="nav-menu-item-4177" class="menu-item menu-item-type-taxonomy menu-item-object-product_cat " data-cols="1"><a href="http://myphamaplus.com/dm/cham-soc-lam-sach-da" class=""><i class="fa fa-dot-circle-o"></i>Chăm sóc làm sạch da</a></li>
-	<li id="nav-menu-item-4186" class="menu-item menu-item-type-taxonomy menu-item-object-product_cat " data-cols="1"><a href="http://myphamaplus.com/dm/duong-da-ngay-va-dem" class=""><i class="fa fa-dot-circle-o"></i>Dưỡng da ngày và đêm</a></li>
-	<li id="nav-menu-item-4183" class="menu-item menu-item-type-taxonomy menu-item-object-product_cat " data-cols="1"><a href="http://myphamaplus.com/dm/cham-soc-da-mun" class=""><i class="fa fa-dot-circle-o"></i>Chăm sóc da mụn</a></li>
-	<li id="nav-menu-item-4184" class="menu-item menu-item-type-taxonomy menu-item-object-product_cat " data-cols="1"><a href="http://myphamaplus.com/dm/cham-soc-da-sam-nam" class=""><i class="fa fa-dot-circle-o"></i>Chăm sóc da sạm nám</a></li>
-	<li id="nav-menu-item-4194" class="menu-item menu-item-type-taxonomy menu-item-object-product_cat " data-cols="1"><a href="http://myphamaplus.com/dm/cham-soc-da-lao-hoa" class=""><i class="fa fa-dot-circle-o"></i>Chăm sóc da lão hoá</a></li>
-	<li id="nav-menu-item-4198" class="menu-item menu-item-type-taxonomy menu-item-object-product_cat " data-cols="1"><a href="http://myphamaplus.com/dm/cung-cap-duong-chat" class=""><i class="fa fa-dot-circle-o"></i>Cung cấp dưỡng chất</a></li>
-	<li id="nav-menu-item-4200" class="menu-item menu-item-type-taxonomy menu-item-object-product_cat " data-cols="1"><a href="http://myphamaplus.com/dm/trang-diem-chong-nang" class=""><i class="fa fa-dot-circle-o"></i>Trang điểm &#8211; chống nắng</a></li>
-	<li id="nav-menu-item-4193" class="menu-item menu-item-type-taxonomy menu-item-object-product_cat " data-cols="1"><a href="http://myphamaplus.com/dm/bo-chuyen-nghiep" class=""><i class="fa fa-dot-circle-o"></i>Bộ chuyên nghiệp</a></li>
-</ul></div></div>
-</li>
-<li id="nav-menu-item-4561" class="menu-item menu-item-type-post_type menu-item-object-page  narrow "><a href="http://myphamaplus.com/giay-phep" class="">Giấy phép</a></li>
-<li id="nav-menu-item-4106" class="menu-item menu-item-type-custom menu-item-object-custom  narrow "><a href="/hoi-dap/" class="">Hỏi đáp</a></li>
-<li id="nav-menu-item-4117" class="custom-menu menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children  has-sub wide pos-center col-2"><a href="http://myphamaplus.com/blog" class="">Tin tức</a>
-<div class="popup"><div class="inner" style="background-image:url(//myphamaplus.com/wp-content/uploads/2016/08/pink-elegant-flowers-backgrounds-for-powerpoint.jpg);;background-position:center center;"><ul class="sub-menu">
-	<li id="nav-menu-item-4187" class="menu-item menu-item-type-taxonomy menu-item-object-category " data-cols="1"><a href="http://myphamaplus.com/category/tin-tuc/ho-tro-mo-tiem" class=""><i class="fa fa-newspaper-o"></i>HỖ TRỢ MỞ TIỆM</a></li>
-	<li id="nav-menu-item-4188" class="menu-item menu-item-type-taxonomy menu-item-object-category " data-cols="1"><a href="http://myphamaplus.com/category/tin-tuc/dao-tao-day-nghe" class=""><i class="fa fa-newspaper-o"></i>ĐÀO TẠO-DẠY NGHỀ</a></li>
-	<li id="nav-menu-item-4189" class="menu-item menu-item-type-taxonomy menu-item-object-category " data-cols="1"><a href="http://myphamaplus.com/category/tin-tuc/chuyen-muc-lam-dep" class=""><i class="fa fa-newspaper-o"></i>CHUYÊN MỤC LÀM ĐẸP</a></li>
-	<li id="nav-menu-item-4190" class="menu-item menu-item-type-taxonomy menu-item-object-category " data-cols="1"><a href="http://myphamaplus.com/category/tin-tuc/goc-a-plus" class=""><i class="fa fa-newspaper-o"></i>Góc A&#038;PLUS</a></li>
-</ul></div></div>
-</li>
-<li class="menu-item"><a href="http://myphamaplus.com/my-account"><i class="fa fa-user"></i>Đăng nhập</a></li><li class="menu-item"><a href="http://myphamaplus.com/my-account"><i class="fa fa-user-plus"></i>Đăng ký</a></li></ul>                    </div>
-                            <div id="mini-cart" class="dropdown mini-cart minicart-inline effect-fadein">
+</div>
+<?php 
+$cart = Yii::$app->zii->getCart();
+ 
+?>                            <div id="mini-cart" class="dropdown mini-cart minicart-inline effect-fadein">
             <div class="dropdown-toggle cart-head " data-toggle="dropdown" data-delay="50" data-close-others="false">
                 <i class="minicart-icon "></i>
-                                    <span class="cart-items"><span class="mobile-hide"><i class="fa fa-spinner fa-pulse"></i></span><span class="mobile-show"><i class="fa fa-spinner fa-pulse"></i></span></span>
+                                    <span class="cart-items"><span class="mobile-hide"><i class="cart-total-item"><?php echo $cart['totalItem'];?></i> sản phẩm</span><span class="mobile-show"><i class="cart-total-item"><?php echo $cart['totalItem'];?></i></span></span>
                             </div>
             <div class="dropdown-menu cart-popup widget_shopping_cart">
                 <div class="widget_shopping_cart_content">
-                    <div class="cart-loading"></div>
-                </div>
+
+<div class="scroll-wrapper cart_list product_list_widget scrollbar-inner" style="position: relative;"><ul class="cart_list product_list_widget scrollbar-inner  scroll-content" style="margin-bottom: 0px; margin-right: 0px;">
+
+    
+							<li class="mini_cart_item">
+                        <div class="product-image"><div class="inner">
+                                                    <a href="http://myphamaplus.com/sp/spsptinh-chat-hyaluronate-chong-oxy-hoa-da">
+                                <img width="90" height="90" src="//myphamaplus.com/wp-content/uploads/2016/05/A017-90x90.jpg" class="attachment-shop_thumbnail size-shop_thumbnail wp-post-image" alt="" srcset="//myphamaplus.com/wp-content/uploads/2016/05/A017-90x90.jpg 90w, //myphamaplus.com/wp-content/uploads/2016/05/A017-50x50.jpg 50w, //myphamaplus.com/wp-content/uploads/2016/05/A017-500x500.jpg 500w, //myphamaplus.com/wp-content/uploads/2016/05/A017-600x600.jpg 600w, //myphamaplus.com/wp-content/uploads/2016/05/A017-300x300.jpg 300w, //myphamaplus.com/wp-content/uploads/2016/05/A017-468x468.jpg 468w, //myphamaplus.com/wp-content/uploads/2016/05/A017-560x560.jpg 560w, //myphamaplus.com/wp-content/uploads/2016/05/A017-367x367.jpg 367w, //myphamaplus.com/wp-content/uploads/2016/05/A017-450x450.jpg 450w, //myphamaplus.com/wp-content/uploads/2016/05/A017-85x85.jpg 85w, //myphamaplus.com/wp-content/uploads/2016/05/A017.jpg 1000w" sizes="(max-width: 90px) 100vw, 90px">                            </a>
+                                                </div></div>
+                        <div class="product-details">
+                                                            <a href="http://myphamaplus.com/sp/spsptinh-chat-hyaluronate-chong-oxy-hoa-da">
+                                    Tinh chất Hyaluronate chống oxy hóa da&nbsp;                                </a>
+                                                        
+                            <span class="quantity">1 × <span class="woocommerce-Price-amount amount">1.200.000&nbsp;<span class="woocommerce-Price-currencySymbol">₫</span></span></span>                            <a href="http://myphamaplus.com/cart?remove_item=a732804c8566fc8f498947ea59a841f8&amp;_wpnonce=8f60f666c0" class="remove remove-product" title="Xóa sản phẩm này" data-cart_id="a732804c8566fc8f498947ea59a841f8" data-product_id="4281" data-product_sku="A017"></a>                        </div>
+                        <div class="ajax-loading"></div>
+					</li>
+										<li class="mini_cart_item">
+                        <div class="product-image"><div class="inner">
+                                                    <a href="http://myphamaplus.com/sp/sptinh-chat-collagen-tang-dan-hoi-da">
+                                <img width="90" height="90" src="//myphamaplus.com/wp-content/uploads/2016/05/A018-90x90.jpg" class="attachment-shop_thumbnail size-shop_thumbnail wp-post-image" alt="" srcset="//myphamaplus.com/wp-content/uploads/2016/05/A018-90x90.jpg 90w, //myphamaplus.com/wp-content/uploads/2016/05/A018-50x50.jpg 50w, //myphamaplus.com/wp-content/uploads/2016/05/A018-500x500.jpg 500w, //myphamaplus.com/wp-content/uploads/2016/05/A018-600x600.jpg 600w, //myphamaplus.com/wp-content/uploads/2016/05/A018-300x300.jpg 300w, //myphamaplus.com/wp-content/uploads/2016/05/A018-468x468.jpg 468w, //myphamaplus.com/wp-content/uploads/2016/05/A018-560x560.jpg 560w, //myphamaplus.com/wp-content/uploads/2016/05/A018-367x367.jpg 367w, //myphamaplus.com/wp-content/uploads/2016/05/A018-450x450.jpg 450w, //myphamaplus.com/wp-content/uploads/2016/05/A018-85x85.jpg 85w, //myphamaplus.com/wp-content/uploads/2016/05/A018.jpg 1000w" sizes="(max-width: 90px) 100vw, 90px">                            </a>
+                                                </div></div>
+                        <div class="product-details">
+                                                            <a href="http://myphamaplus.com/sp/sptinh-chat-collagen-tang-dan-hoi-da">
+                                    Tinh chất Collagen tăng đàn hồi da A&amp;PLUS&nbsp;                                </a>
+                                                        
+                            <span class="quantity">1 × <span class="woocommerce-Price-amount amount">1.200.000&nbsp;<span class="woocommerce-Price-currencySymbol">₫</span></span></span>                            <a href="http://myphamaplus.com/cart?remove_item=18a010d2a9813e91907ce88cd9143fdf&amp;_wpnonce=8f60f666c0" class="remove remove-product" title="Xóa sản phẩm này" data-cart_id="18a010d2a9813e91907ce88cd9143fdf" data-product_id="4277" data-product_sku="A018"></a>                        </div>
+                        <div class="ajax-loading"></div>
+					</li>
+					
+	
+</ul><div class="scroll-element scroll-x"><div class="scroll-element_outer">    <div class="scroll-element_size"></div>    <div class="scroll-element_track"></div>    <div class="scroll-bar" style="width: 100px;"></div></div></div><div class="scroll-element scroll-y"><div class="scroll-element_outer">    <div class="scroll-element_size"></div>    <div class="scroll-element_track"></div>    <div class="scroll-bar" style="height: 100px;"></div></div></div></div><!-- end product list -->
+
+
+	<p class="total"><strong>Tổng phụ:</strong> <span class="woocommerce-Price-amount amount">2.400.000&nbsp;<span class="woocommerce-Price-currencySymbol">₫</span></span></p>
+
+	
+	<p class="buttons">
+		<a href="http://myphamaplus.com/cart" class="button wc-forward">Xem giỏ hàng</a>
+		<a href="http://myphamaplus.com/checkout" class="button checkout wc-forward">Thanh toán</a>
+	</p>
+
+
+</div>
             </div>
          
         </div>
@@ -115,41 +157,28 @@ echo Yii::$app->zii-> getMenuItem([
         </div>
     </div>
 </header>
-                            </div><!-- end header wrapper -->
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                             
-<div class="banner-container">
-            <div id="banner-wrapper" class="">
-                
-<div id="rev_slider_2_1_wrapper" class="rev_slider_wrapper fullwidthbanner-container" style="margin:0px auto;background-color:#E9E9E9;padding:0px;margin-top:0px;margin-bottom:0px;max-height:500px;">
-<!-- START REVOLUTION SLIDER 4.6.93 fullwidth mode -->
-	<div id="rev_slider_2_1" class="rev_slider fullwidthabanner" style="display:none;max-height:500px;height:500px;">
-<ul>	<!-- SLIDE  -->
-	<li data-transition="random" data-slotamount="7" data-masterspeed="300"  data-saveperformance="off" >
-		<!-- MAIN IMAGE -->
-		<img src="http://myphamaplus.com/wp-content/uploads/2016/06/001.jpg"  alt="001"  data-bgposition="center top" data-bgfit="cover" data-bgrepeat="no-repeat">
-		<!-- LAYERS -->
-	</li>
-	<!-- SLIDE  -->
-	<li data-transition="random" data-slotamount="7" data-masterspeed="300"  data-saveperformance="off" >
-		<!-- MAIN IMAGE -->
-		<img src="http://myphamaplus.com/wp-content/uploads/2016/06/002.jpg"  alt="002"  data-bgposition="center top" data-bgfit="cover" data-bgrepeat="no-repeat">
-		<!-- LAYERS -->
-	</li>
-</ul>
-<div class="tp-bannertimer"></div>	</div>
-			
-
-			 
-
-
-			</div><!-- END REVOLUTION SLIDER -->            </div>
-        </div>                            
+</div><!-- end header wrapper -->                            
+<?php
+$l = Yii::$app->zii->getAdvert(['code'=>'ADV_SLIDER','category_id'=>__CATEGORY_ID__]);
+ 
+if(!empty($l)){ 
+	echo '<div class="banner-container"><div id="banner-wrapper" class=""><div id="rev_slider_2_1_wrapper" class="rev_slider_wrapper fullwidthbanner-container" style="margin:0px auto;background-color:#E9E9E9;padding:0px;margin-top:0px;margin-bottom:0px;max-height:500px;">';
+	echo '<div id="rev_slider_2_1" class="rev_slider fullwidthabanner" style="display:none;max-height:500px;height:500px;">';
+	echo '<ul>';
+	foreach ($l as $k=>$v){
+		echo '<li data-transition="random" data-slotamount="7" data-masterspeed="300"  data-saveperformance="off" >';
+		echo getImage([
+				'src'=>$v['image'],
+				'w'=>1600,
+				'attrs'=>[
+						'alt'=>uh($v['title']),
+						'data-bgposition'=>"center top",
+						'data-bgfit'=>"cover",
+						'data-bgrepeat'=>"no-repeat"
+		]
+		]);
+		echo '</li>';
+	}
+	echo '</ul><div class="tp-bannertimer"></div></div></div></div></div>  ';
+}
+?>                 
