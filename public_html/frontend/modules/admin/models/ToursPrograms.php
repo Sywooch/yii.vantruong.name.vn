@@ -94,7 +94,7 @@ class ToursPrograms extends \yii\db\ActiveRecord
     	$time = isset($o['time_id']) ? $o['time_id'] : -1;
     	//
     	
-    	$query = (new Query())->from(['a'=>'tours_programs_services_prices'])
+    	$query = (new Query())->from(['a'=>'tours_programs_services_days'])
     	->where(['item_id'=>$item_id,'day_id'=>$day]);
     	if ($time>-1){
     		$query->andWhere(['time_id'=>$day]);
@@ -105,7 +105,7 @@ class ToursPrograms extends \yii\db\ActiveRecord
     	return $r;
     }
     public static function getProgramServices($id = 0, $day = 0, $time = 0,$o = []){
-    	$query = (new Query())->from(['a'=>'tours_programs_services_prices'])    	
+    	$query = (new Query())->from(['a'=>'tours_programs_services_days'])    	
     	->where([
     			'a.item_id'=>$id,
     			'a.day_id'=>$day,
@@ -141,8 +141,8 @@ class ToursPrograms extends \yii\db\ActiveRecord
     					$item = TextInstructions::getItem($v['service_id']);
     					break;
     			}
-    			$item['supplier_id'] = $v['supplier_id'];
-    			$item['sub_item_id'] = $v['sub_item_id'];
+    			$item['supplier_id'] = Yii::$app->zii->getSupplierIDFromService($v['service_id'],$v['type_id']);
+    			//$item['sub_item_id'] = $v['sub_item_id'];
     			$item['type_id'] = $v['type_id'];
     			$item['package_id'] = $v['package_id'];
     			//view($v);

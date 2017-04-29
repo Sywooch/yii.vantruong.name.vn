@@ -105,20 +105,39 @@ class Suppliers extends Customers
 		// Danh sách cuối tuần, ngày thường
 		
 		$thu_trong_tuan = date('w',strtotime($date));
+		$ctt = $thu_trong_tuan == 0 ? 7 : $thu_trong_tuan;
 		//
 		$sub_query = (new Query())->from(['c'=>Seasons::tableWeekend()])
 				->innerJoin(['d'=>Seasons::tableToSuppliers()],'c.id=d.season_id')
 				->where([
 						'd.supplier_id'=>$supplier_id,
 						'd.type_id'=>[SEASON_TYPE_WEEKEND,SEASON_TYPE_WEEKDAY],
-				])
-				->andWhere("$thu_trong_tuan between c.from_date and c.to_date")
+				]);
+				if($thu_trong_tuan == 0){
+					$sub_query->andWhere("($thu_trong_tuan between c.from_date and c.to_date) or ($ctt between c.from_date and c.to_date)");
+				}else{
+					$sub_query->andWhere("$thu_trong_tuan between c.from_date and c.to_date");
+				}
 				
-				->select('d.parent_id');
+				
+				$sub_query->select('d.parent_id');
 		if($time_id > -1){
 			$t = configPartTime()[$time_id];
-			$sub_query->andWhere(['<=','c.from_time',$t['from_time']])
-			->andWhere(['>=','c.to_time',$t['to_time']]);
+			$sub_query
+			->andWhere("
+					1=(case when c.to_date = $ctt then
+					(case when
+					c.to_time >= '".$t['to_time']."'
+					and c.from_time <= '".$t['from_time']."'
+					then 1 else 0 end
+					)
+					 
+					else 1
+					end)
+			")
+			//->andWhere(['<=','c.from_time',$t['from_time']])
+			//->andWhere(['>=','c.to_time',$t['to_time']])
+			;
 			
 			
 		}
@@ -208,7 +227,7 @@ class Suppliers extends Customers
 		 
 		//view(self::getDirectSeason(['season_id'=>7,'supplier_id'=>$supplier_id]));
 		
-		$directSeasons = [];
+		$directSeasons = isset($r['seasons_price_type_0']) ? $r['seasons_price_type_0'] : [];
 		
 		if(!empty($r['seasons_price_type_1'])){
 			foreach ($r['seasons_price_type_1'] as $i){

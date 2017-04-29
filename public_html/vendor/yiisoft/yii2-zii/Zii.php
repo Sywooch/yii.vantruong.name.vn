@@ -1796,7 +1796,7 @@ class Zii extends yii\base\Object
 	
 	public function getServiceDetailPrices($o = []){
 		//\\//\\ *.* //\\//\\
-		$from_date = isset($o['from_date']) && check_date_string($o['from_date']) ? $o['from_date'] : date('Y-m-d');
+		$from_date = isset($o['from_date']) && check_date_string($o['from_date']) ? $o['from_date'] : false;
 		$day = isset($o['day']) ? $o['day'] : -1;
 		$time = isset($o['time']) ? $o['time'] : -1;
 		
@@ -1815,7 +1815,13 @@ class Zii extends yii\base\Object
 		$nationality_id = isset($o['nationality_id']) ? $o['nationality_id'] : $nationality;
 		$loadDefault = isset($o['loadDefault']) ? $o['loadDefault'] : false;
 		$updateDatabase = isset($o['updateDatabase']) ? $o['updateDatabase'] : true;
-		 //view($o);
+		if($from_date === false && $item_id>0){
+			$item = \app\modules\admin\models\ToursPrograms::getItem($item_id);
+			$from_date = date('Y-m-d', mktime(0,0,0,
+					date('m',strtotime($item['from_date'])),
+					date('d',strtotime($item['from_date']))+$day_id,
+					date('Y',strtotime($item['from_date']))));
+		}
 		//$updateDatabase = false;
 		$supplier_id = $this->getSupplierIDFromService($service_id,$type_id);
 		//$supplier_id = $supplier_id > 0 ? $supplier_id : $service_id;		
@@ -1824,7 +1830,8 @@ class Zii extends yii\base\Object
 				'supplier_id'=>$supplier_id,
 				'date'=>$from_date
 		]);
-		//view($quotation); 
+		//view($quotation);
+		//view($from_date);
 		//
 		$nationality_group = \app\modules\admin\models\Suppliers::getNationalityGroup([
 				'supplier_id'=>$supplier_id,
@@ -1885,7 +1892,7 @@ class Zii extends yii\base\Object
 				$loadDefault = true;
 			}
 		}
-		//view($loadDefault);
+		//view($type_id,true);
 		if($loadDefault){
 			// Lấy giá từ hệ thống		
 						
@@ -1927,12 +1934,12 @@ class Zii extends yii\base\Object
 							'supplier_id'=>$supplier_id,
 							'total_pax'=>$total_pax,
 							'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
-							//'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
+							'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
 							'package_id'=>$package_id,
 							'season_time_id'=>$season_time_id,
 							'seasons'=>$seasons,
 					]);
-					 
+					  
 					break;
 				case TYPE_ID_GUIDES:
 					$r = $this->getDefaultServicePrices([
@@ -1981,6 +1988,16 @@ class Zii extends yii\base\Object
 			// Cập nhật vào DB
 			 
 			if($updateDatabase && !empty($r)){
+				
+				Yii::$app->db->createCommand()->delete('tours_programs_services_prices',[
+						'item_id'=>$item_id,
+						'package_id'=>$package_id,
+						'service_id'=>$service_id,
+						'day_id'=>$day_id,
+						'time_id'=>$time_id,
+						'type_id'=>$type_id,
+				])->execute();
+			/*	
 			if((new Query())->from('tours_programs_services_prices')->where([
 					'item_id'=>$item_id,
 					'package_id'=>$package_id,
@@ -1991,7 +2008,7 @@ class Zii extends yii\base\Object
 					'type_id'=>$type_id,
 					//'item_id',
 						
-			])->count(1) == 0){
+			])->count(1) == 0){*/
 				Yii::$app->db->createCommand()->insert('tours_programs_services_prices',[
 					'item_id'=>$item_id,
 					'supplier_id'=>$supplier_id,
@@ -2006,6 +2023,7 @@ class Zii extends yii\base\Object
 					'package_id'=>$package_id,
 						 
 			])->execute();
+			/*
 			}else{
 				 
 				Yii::$app->db->createCommand()->update('tours_programs_services_prices',[
@@ -2036,7 +2054,7 @@ class Zii extends yii\base\Object
 				
 				])->execute();
 			}
-			//
+			/*/
 		 
 			
 			}
@@ -2152,7 +2170,7 @@ class Zii extends yii\base\Object
 			->select(['b.*','a.price1','a.currency'])
 			;
 			 
-			$season['price_incurred1'] = $season['price_incurred1'] > 0 ? $season['price_incurred1'] : 1;
+			$season['price_incurred1'] = isset($season['price_incurred1']) && $season['price_incurred1'] > 0 ? $season['price_incurred1'] : 1;
 			$item = $query->one();
 			// view($item,true);
 			$item['sub_item_id'] = $item_id;
@@ -2321,9 +2339,10 @@ class Zii extends yii\base\Object
            // $item['sub_item_id'] = $item_id;
 			//return $item;
 			$item = $query->one();
-			// view($item,true);
+			$item['price1'] = isset($item['price1']) ? $item['price1'] : 0;
+			$season['price_incurred1'] = isset($season['price_incurred1']) ? $season['price_incurred1'] : 1;
 			$item['sub_item_id'] = $item_id;
-			$item['quantity'] = $total_rooms;
+			$item['quantity'] = $total_pax;
 			$item['price1'] = $item['price1'] * ($season['price_incurred1']);
 			$item['price_incurred1'] = $season['price_incurred1'];
 				
@@ -2346,7 +2365,7 @@ class Zii extends yii\base\Object
 			
 						case 2: // khach
 							//
-							$total1 = ($season['price_incurred'] * $total_pax) / $total_rooms;
+							$total1 = ($season['price_incurred'] * $total_pax) / $total_pax;
 							//
 							if(in_array($season['time_id'], [-1,$season_time_id])){
 								if($season['currency'] == $result['currency']){

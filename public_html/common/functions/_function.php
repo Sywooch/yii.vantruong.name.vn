@@ -3726,6 +3726,7 @@ function showFirstTitle($title = '', $length = 1){
 function loadTourProgramDetail($o = []){
 	$html = '';
 	$loadDefault= isset($o['loadDefault']) ? $o['loadDefault'] : false; 
+	$updateDatabase= isset($o['updateDatabase']) && $o['updateDatabase']== false ? false : true; 
 	$id = isset($o['id']) ? $o['id'] : 0;
 	$day =isset($o['day']) ? $o['day'] : 0;
 	
@@ -3771,6 +3772,7 @@ function loadTourProgramDetail($o = []){
 							'from_date'=>$date,
 							'sub_item_id'=>(isset($sv['sub_item_id']) ? $sv['sub_item_id'] : 0),
 							'loadDefault'=>$loadDefault,
+							'updateDatabase'=>$updateDatabase
 					]);
 					
 					 

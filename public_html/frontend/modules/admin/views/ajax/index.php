@@ -1705,7 +1705,7 @@ switch (Yii::$app->request->post('action')){
 			'season_id'=>post('season_id'),
 			'supplier_id'=>post('supplier_id'),
 			'parent_id'=>post('parent_id'),
-			'type_id'=>10
+			'type_id'=>post('type_id')
 		])->execute();
 		break;
 	case 'change_location_append':
@@ -2027,7 +2027,7 @@ switch (Yii::$app->request->post('action')){
 						$html .= '<td class="center">'.$v4['to_time'].' '.read_date($v4['to_date']).'</td>';
 						$html .= '<td class="center">'.($v4['part_time']>-1 ? showPartDay($v4['part_time']) : '-').'</td>';
 						$html .= '<td class="center">'.$v4['title'].'<input type="hidden" value="'.$v4['id'].'" name="seasons['.$v3['id'].'][list_child]['.$v4['id'].'][id]"/></td>';
-						$html .= '<td class="center"><i data-season_id="'.$v4['id'].'" data-supplier_id="'.$id.'" data-parent_id="'.$v3['id'].'" title="Xóa" data-name="delete_price_distance_id" onclick="return removeSupplierSeason(this);" data-target=".tr-distance-id-'.$v4['id'].'" class="pointer glyphicon glyphicon-trash"></i></td>';
+						$html .= '<td class="center"><i data-type_id="'.$v3['type_id'].'" data-season_id="'.$v4['id'].'" data-supplier_id="'.$id.'" data-parent_id="'.$v3['id'].'" title="Xóa" data-name="delete_price_distance_id" onclick="return removeSupplierSeason(this);" data-target=".tr-distance-id-'.$v4['id'].'" class="pointer glyphicon glyphicon-trash"></i></td>';
 						$html .= '</tr>';
 					}
 						
@@ -2042,7 +2042,7 @@ switch (Yii::$app->request->post('action')){
 						$html .= '<td class="center">'.date("d/m/Y",strtotime($v4['to_date'])).'</td>';
 						$html .= '<td class="center">-</td>';
 						$html .= '<td><a>'.$v4['title'].'</a><input type="hidden" value="'.$v4['id'].'" name="seasons['.$v3['id'].'][list_child]['.$v4['id'].'][id]"/></td>';
-						$html .= '<td class="center"><i data-season_id="'.$v4['id'].'" data-supplier_id="'.$id.'" data-parent_id="'.$v3['id'].'" title="Xóa" data-name="delete_price_distance_id" onclick="return removeSupplierSeason(this);" data-target=".tr-distance-id-'.$v4['id'].'" class="pointer glyphicon glyphicon-trash"></i></td>';
+						$html .= '<td class="center"><i data-type_id="'.$v3['type_id'].'" data-season_id="'.$v4['id'].'" data-supplier_id="'.$id.'" data-parent_id="'.$v3['id'].'" title="Xóa" data-name="delete_price_distance_id" onclick="return removeSupplierSeason(this);" data-target=".tr-distance-id-'.$v4['id'].'" class="pointer glyphicon glyphicon-trash"></i></td>';
 						$html .= '</tr>';
 					}
 		
@@ -2661,6 +2661,15 @@ switch (Yii::$app->request->post('action')){
 				$type_id = $selected_type_id[$k];
 				if(!in_array($id, $selected_id)){
 					
+					if((new yii\db\Query)->from('tours_programs_to_suppliers')->where([
+							//'position'=>$k,
+							//'type_id'=>$type_id,
+							'supplier_id'=>$id,
+							'item_id'=>$item_id,
+					])->count(1) == 0){
+						
+					
+					
 					Yii::$app->db->createCommand()->insert('tours_programs_to_suppliers',[
 							'position'=>$k,
 							'type_id'=>$type_id,
@@ -2691,6 +2700,14 @@ switch (Yii::$app->request->post('action')){
 						}else{
 							
 						}
+					}
+					}else{
+						Yii::$app->db->createCommand()->update('tours_programs_to_suppliers',[
+								'position'=>$k
+						],[
+								'supplier_id'=>$id,
+								'item_id'=>$item_id,
+						])->execute();
 					}
 				}else{
 					Yii::$app->db->createCommand()->update('tours_programs_to_suppliers',[
@@ -2731,6 +2748,15 @@ switch (Yii::$app->request->post('action')){
 					'time_id'=>$time,
 					'type_id'=>$removed_type_id[$k],
 					'package_id'=>$removed_package_id[$k],	
+						'service_id'=>$id
+				])->execute();
+				Yii::$app->db->createCommand()->delete('tours_programs_services_days',[
+						'item_id'=>$item_id,
+						'day_id'=>$day,
+						'time_id'=>$time,
+						'type_id'=>$removed_type_id[$k],
+						'package_id'=>$removed_package_id[$k],
+						'service_id'=>$id
 				])->execute();
 			}
 		}
@@ -2761,6 +2787,7 @@ switch (Yii::$app->request->post('action')){
 				}
 			}
 			$m = '';
+			
 			foreach ($selected_value as $k => $id){
 				$type_id = $selected_type_id[$k];
 				if($id == 0){
@@ -2825,6 +2852,42 @@ switch (Yii::$app->request->post('action')){
 					
 				}
 				}
+				
+				if($id>0){
+					if((new \yii\db\Query())->from('tours_programs_services_days')->where([
+						'item_id'=>$item_id,'service_id'=>$id,
+						'day_id'=>$day,
+						'time_id'=>$time,
+						'type_id'=>$type_id,
+						'package_id'=>$selected_package_id[$k],
+						])->count(1) == 0){
+						
+						Yii::$app->db->createCommand()->insert('tours_programs_services_days',
+								[
+								'service_id'=>$id,
+								'item_id'=>$item_id,
+								'day_id'=>$day,
+								'time_id'=>$time,
+								'type_id'=>$type_id,
+								'package_id'=>(isset($selected_package_id[$k]) ? $selected_package_id[$k] : 0 ),
+								'position'=>$k,		
+								])->execute();
+								 
+					}else{
+						Yii::$app->db->createCommand()->update('tours_programs_services_days',
+								[										 
+										'position'=>$k,
+								],[
+										'service_id'=>$id,
+										'item_id'=>$item_id,
+										'day_id'=>$day,
+										'time_id'=>$time,
+										'type_id'=>$type_id,
+										'package_id'=>(isset($selected_package_id[$k]) ? $selected_package_id[$k] : 0 ),
+										 
+								])->execute();
+					}
+				}
 			}
 		}
 		//
@@ -2835,7 +2898,7 @@ switch (Yii::$app->request->post('action')){
 				'event'=>'hide-modal',
 				'callback'=>true,
 				//'m'=>$new,
-				'callback_function'=>'console.log(data);reloadAutoPlayFunction();'
+				'callback_function'=>'reloadAutoPlayFunction();'
 		]);
 		exit;
 		break;
@@ -3743,8 +3806,11 @@ change:function(event,ui){
 			'time_id'=>$time_id,
 			'season_time_id'=>$time_id,	
 			'service_id'=>$service_id,
-			'from_date'=>$item['from_date'],
-			'nationality_id'=>$item['nationality']	,
+			'from_date'=>date('Y-m-d', mktime(0,0,0,
+					date('m',strtotime($item['from_date'])),
+					date('d',strtotime($item['from_date']))+$day_id,
+					date('Y',strtotime($item['from_date'])))),
+			'nationality_id'=>$item['nationality'],
 			'total_pax'=>$item['guest'],	
 			'loadDefault'=>true	,
 			'updateDatabase'=>false,	
