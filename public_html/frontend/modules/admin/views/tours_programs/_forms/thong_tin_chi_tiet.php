@@ -46,7 +46,7 @@ $r = Yii::$app->zii->getDefaultServicePrices([
 		'controller_code'=>TYPE_ID_REST,
 		'quotation_id'=>2,'nationality_id'=>16
 ]);
-*/ //view($r);
+ 
  
  $a = loadTourProgramDetail([
 		'id'=>$v['id'],

@@ -3945,7 +3945,7 @@ change:function(event,ui){
 		]);
 		
 		$sub_item = Yii::$app->zii->getSupplierServiceDetail(isset($prices['sub_item_id']) ? $prices['sub_item_id'] : 0,$type_id);
-		
+		$service = \app\modules\admin\models\ToursPrograms::getProgramService($service_id,$type_id);
 	
 		$html = '';
 		
@@ -3962,14 +3962,20 @@ change:function(event,ui){
 		//if(!empty($services)){
 		//	foreach ($services as $kv=>$sv){
 				$html .= '<tr class="">
-			
-				<td class="">
-	 '.  ( isset($prices['supplier']['title']) ? $prices['supplier']['title'] : '').'
-				</td>
-				<td class="center">
-	 		<input name="f[sub_item_id]" value="'.(isset($prices['sub_item_id']) ? $prices['sub_item_id'] : 0).'" type="hidden" class="input-service-day-price-sub-item-id form-control bold center number-format"/>
-		 		   '. (isset($sub_item['title']) ? $sub_item['title'] : '') .  (!empty($package) ? '<i class="underline green">&nbsp;['.uh($package['title']).']</i>&nbsp;' : '').'
-				</td>
+			<td>'.(!empty($service) ? uh($service['title']) : '').'</td> 
+				<td class="center " colspan="">';
+					switch ($type_id){
+						case TYPE_ID_SCEN:
+							if(!isset($prices['supplier']['title'])){
+								$html .= (isset($sub_item['title']) ? $sub_item['title'] :  (!empty($package) ? '<i class="underline green">'.uh($package['title']).'</i>&nbsp;' : ''));
+							}
+							break;
+						default:
+							$html .= (isset($sub_item['title']) ? $sub_item['title'] : '' ) .  (!empty($package) ? '<i class="underline green">&nbsp;['.uh($package['title']).']</i>&nbsp;' : '');
+							break;
+					}
+					$html .= '</td>
+				 
 				<td class="center">
 		 		   '.getServiceType(isset($prices['type_id']) ? $prices['type_id'] : 0).'
 				</td><td class="center">'.getServiceUnitPrice(isset($prices['type_id']) ? $prices['type_id'] : 0).'</td>

@@ -152,6 +152,33 @@ class ToursPrograms extends \yii\db\ActiveRecord
     	return $r;
     }
     
+    
+    public static function getProgramService($service_id = 0, $type_id = 0,$o = []){
+    	$item = [];
+    	 switch ($type_id){
+    		case TYPE_ID_HOTEL: case TYPE_ID_REST: case TYPE_ID_SHIP_HOTEL:
+    			$item = Customers::getItem($service_id);
+    			break;
+    		case TYPE_CODE_DISTANCE:
+    			$item = Distances::getItem($service_id);
+    			break;
+    		case TYPE_ID_SCEN:
+    			$item = Tickets::getItem($service_id);
+    			break;
+    		case TYPE_ID_GUIDES:
+    			$item = Guides::getGuide($service_id);
+    			break;
+    		case TYPE_ID_SHIP:
+    			$item = Distances::getItem($service_id);
+    			break;
+    		case TYPE_ID_TEXT:
+    			$item = TextInstructions::getItem($service_id);
+    			break;
+    	 }
+    			 
+    	return $item;
+    }
+    
     public static function getListSuppliers($o = []){
     	$query = (new Query())->from(['a'=>'tours_programs_to_suppliers'])
     	->where(['item_id'=>$id,'supplier_id'=>$supplier_id]);
