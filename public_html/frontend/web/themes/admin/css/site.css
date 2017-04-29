@@ -72,7 +72,7 @@ ul.main-menu ul{display:none}
   font:bold 1.2em/28px Arial;
   border: 1px solid #dddddd;
   background-color: white;
-  margin: 5px 0;
+  margin:0 0 5px 0;
 
 }
  
@@ -1719,7 +1719,7 @@ button.close span{font-size: 16px}
 	position: absolute;right: 40px;
 }  
 .notification_nav{
-	position: absolute;right: 0px;
+	position: absolute;right: 0px; top:0
 }
 .profile_nav.navbar-nav>li>a.user-profile {
 	position: relative;  
@@ -2427,4 +2427,17 @@ div.tagsinput span.tag, div.tagsinput input{padding-top:0; padding-bottom:0}
  .bgreen{background-color: green}
  .tooltip{z-index: 9999999}
  .dtags{padding: 5px 8px; margin: 0 2.5px; color: #fff} 
+ .label.inline-block{display: inline-block;}
+ .bgr-input-odd-event-1 td, 
+ .table > tbody > tr.bgr-input-odd-event-1,
+ .table-bordered > tbody > tr.bgr-input-odd-event-1 > td
+{background: #f9f9f9;}
+.bgr-input-odd-event-0 td, 
+.table > tbody > tr.bgr-input-odd-event-0,
+.table-bordered > tbody > tr.bgr-input-odd-event-0 > td
+{background: #fff;} 
+.block-example.bg-success{
+	background: #dff0d8
+}
+.block-example .block-title.btn{color: #fff} 
  

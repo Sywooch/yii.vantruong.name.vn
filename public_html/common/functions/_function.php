@@ -3743,7 +3743,7 @@ function loadTourProgramDetail($o = []){
 			//$date = date('Y-m-d',strtotime($v['from_date']) + ($i * 86400) );
 			$date =  date('Y-m-d', mktime(0, 0, 0, date("m",strtotime($v['from_date']))  , date("d",strtotime($v['from_date']))+$i, date("Y",strtotime($v['from_date']))));
 		$colspan2  += 9;
-		$html .= '<tr><td rowspan="'.$colspan2.'" class="center"><span class="label label-danger f12p">'.(check_date_string($v['from_date']) ? readDate($date,['spc'=>' - ']) : 'Ngày '.($i+1)).'</span></td></tr>';
+		$html .= '<tr class="bgr-input-odd-event-'.($i%2).'"><td rowspan="'.$colspan2.'" class="center"><div class="label inline-block label-danger f12p"><span>'.(check_date_string($v['from_date']) ? readDate($date,['spc'=>' <br> ']) : 'Ngày '.($i+1)).'</span></div></td></tr>';
 		for($j=0;$j<4;$j++){
 			$services = \app\modules\admin\models\ToursPrograms::getProgramServices($id,$i,$j);
 	
@@ -3754,7 +3754,7 @@ function loadTourProgramDetail($o = []){
 				case 3: $class='btn-warning';break;
 				default: $class='btn-primary';break;
 			}
-			$html .= '<tr><td rowspan="'.$rowspan1.'" class="center"><button data-class="w90" data-action="add-tours-services" data-title="Chọn thêm dịch vụ / Hành trình" data-id="'.$id.'" data-day="'.$i.'" data-time="'.$j.'" onclick="open_ajax_modal(this);" title="Chọn thêm / xóa dịch vụ" class="w50p btn '.$class.' btn-label btn-sm first-letter-upper" type="button">'.(showPartDay($j)).'</button></td></tr>'; 
+			$html .= '<tr class="bgr-input-odd-event-'.($i%2).'"><td rowspan="'.$rowspan1.'" class="center"><button data-class="w90" data-action="add-tours-services" data-title="Chọn thêm dịch vụ / Hành trình" data-id="'.$id.'" data-day="'.$i.'" data-time="'.$j.'" onclick="open_ajax_modal(this);" title="Chọn thêm / xóa dịch vụ" class="w50p btn '.$class.' btn-label btn-sm first-letter-upper" type="button">'.(showPartDay($j)).'</button></td></tr>'; 
 				
 			if(!empty($services)){
 				foreach ($services as $kv=>$sv){
@@ -3791,7 +3791,7 @@ function loadTourProgramDetail($o = []){
 					}
 					
 					$package = \app\modules\admin\models\PackagePrices::getItem($sv['package_id']);
-					$html .= '<tr><td colspan="4"><p><a href="#" '.(!in_array($sv['type_id'], [TYPE_ID_TEXT])).' onclick="open_ajax_modal(this);return false;" data-action="qedit-service-detail-day" data-title="Chỉnh sửa dịch vụ" data-class="w80"
+					$html .= '<tr class="bgr-input-odd-event-'.($i%2).'"><td colspan="4"><p><a href="#" '.(!in_array($sv['type_id'], [TYPE_ID_TEXT])).' onclick="open_ajax_modal(this);return false;" data-action="qedit-service-detail-day" data-title="Chỉnh sửa dịch vụ" data-class="w80"
 									data-service_id="'.$sv['id'].'" 
 									data-id="'.$v['id'].'"
 									data-type_id="'.$sv['type_id'].'"	
@@ -3827,8 +3827,8 @@ function loadTourProgramDetail($o = []){
 			}
 				
 				
-			$html .= '<tr><td colspan="12" class="pr vtop">
-							<p class=" aright bgef">   
+			$html .= '<tr class="bgr-input-odd-event-'.($i%2).'"><td colspan="12" class="pr vtop">
+							<p class=" aright ">   
 							<button data-toggle="tooltip" data-placement="left" data-class="w90" data-action="add-tours-services" data-title="Chọn thêm dịch vụ / Hành trình" data-id="'.$id.'" data-day="'.$i.'" data-time="'.$j.'" onclick="open_ajax_modal(this);" title="Chọn thêm / xóa dịch vụ" class="btn btn-primary btn-sm" type="button"><i class="glyphicon glyphicon glyphicon-pencil"></i> Thêm/ xóa dịch vụ</button></p>
 							</td>';
 				
@@ -4128,7 +4128,7 @@ function loadTourProgramDistances($id = 0,$o=[]){
 	//
 	
 	//
-	$html = '<table class="table table-bordered table-striped table-sm vmiddle"> 
+	$html = '<table class="table table-bordered mgb0 table-sm vmiddle"> 
  
 <colgroup>
 <col style="width:8.333333%">
@@ -4274,7 +4274,7 @@ function loadTourProgramDistances($id = 0,$o=[]){
 	
 	
 		$html .= '<tr><td colspan="12" class="pr vtop">
-						<p class=" aright bgef">
+						<p class=" aright">
 							<button data-place_id="'.$v['place_id'].'" data-class="w90" data-action="add-tours-distance-services" data-title="Chọn thêm dịch vụ / Hành trình - <b class=red>'.$v['name'].'</b>" data-id="'.$id.'" data-supplier_id="'.$v['id'].'" data-time="'.$j.'" onclick="open_ajax_modal(this);" data-toggle="tooltip" data-placement="left" title="Chọn thêm / xóa dịch vụ cho '.$v['name'].'" class="btn btn-primary input-sm" type="button"><i class="glyphicon glyphicon glyphicon-pencil"></i> Thêm/ xóa chặng di chuyển</button></p>
 						</td></tr>';
 			
@@ -4339,7 +4339,79 @@ function countDownDayExpired($time){
 	return ceil(($time - time())/86400);	
 }
 
+function getTourProgramSegments($item_id=0, $o = []){
+	//
+	$item_id = is_numeric($item_id) ? $item_id : (isset($o['item_id']) ? $o['item_id'] : 0);	
+	//
+	$segments = \app\modules\admin\models\ProgramSegments::getAll($item_id);
+	$html = '<div class="col-sm-12 bang-thong-tin-chung"><div class="row">';
+	$html .= '<div class="" style="margin-top: 10px;margin-bottom:5px;"><p class="upper bold grid-sui-pheader aleft ">Chặng tour</p></div>';
+	if(!empty($segments)){
+		foreach ($segments as $km=>$segment){
+			$html .= '<div class="block-example '.($km%2==1 ? 'bg-success' : '').'"><span class="f12e block-title btn btn-warning">'.uh($segment['title']).'</span>';
+			$html .= '<div class="form-group mgb0">';
+			$html .= loadTourProgramDistances($item_id);
+			/*
+			$html .= '<div class="ajax-load-time-detail-transportxx"><table class="table table-bordered table-sm vmiddle mgb0"> 
+ 
+<colgroup>
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+<col style="width:8.333333%">
+</colgroup>
+<thead>
 
+<tr class="col-middle">
+ <th class="bold center">Nhà xe</th>
+ <th class="bold center" colspan="2">Loại xe</th>
+ <th class="bold center">Số lượng<p class="center font-normal italic">(1)</p></th>
+ <th colspan="5"> 
+ <p class="bold center">Chặng di chuyển</p>
+</th>
+<th class="bold center">Km<p class="center font-normal italic">(2)</p></th>
+<th class="bold center">Đơn giá (VND)<p class="center font-normal italic">(3)</p></th>
+<th class="bold center">Thành tiền <p class="center font-normal italic">(1) x (2) x (3)</p></th> 
+ 
+</tr>
+</thead> <tbody class="ajax-load-distance-detail" data-count="0"><tr><td rowspan="3" class="center"><button class="btn btn-sm btn-label btn-primary" type="button" data-item_id="3" data-nationality="212" data-action="quick-edit-supplier-services" data-supplier_id="11" data-class="w90" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>Nhà xe Hanoi</b>">Nhà xe Hanoi</button><input type="hidden" value="11" class="selected_value_6 selected_value_6_0_0" name="selected_value[]"></td></tr><tr><td class="center" rowspan="2" colspan="2"><a data-item_id="3" data-nationality="212" data-action="quick-edit-supplier-services" data-supplier_id="11" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>Nhà xe Hanoi</b>"><span class="label label-danger f12p">High Class 45 chỗ</span></a></td><td class="center" rowspan="2" colspan="1"><a data-item_id="3" data-nationality="212" data-action="quick-edit-supplier-services" data-supplier_id="11" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>Nhà xe Hanoi</b>"><span class="badge">3</span></a></td></tr><tr><td colspan="5"><p><a data-item_id="3" data-vehicle_id="7" data-supplier_id="11" data-service_id="5" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">  City tour 1,5 ngày
+									<input value="5" type="hidden" class="selected_value_153 selected_value_153_-1_-1" name="selected_value[]">
+									<input value="153" type="hidden" class="selected_value_153" name="selected_type_id[]">
+											</a></p></td><td class="center" colspan="1"><a data-item_id="3" data-vehicle_id="7" data-supplier_id="11" data-service_id="5" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">225</a></td><td class="center"><span data-decimal="0" class="number-format " title="" data-loaded="true">9,500</span></td><td class="center"><span data-decimal="0" class="bold underline number-format " data-loaded="true">6,412,500</span></td></tr><tr><td colspan="12" class="pr vtop">
+						<p class=" aright  ">
+							<button data-place_id="56" data-class="w90" data-action="add-tours-distance-services" data-title="Chọn thêm dịch vụ / Hành trình - <b class=red>Nhà xe Hanoi</b>" data-id="3" data-supplier_id="11" data-time="-1" onclick="open_ajax_modal(this);" data-toggle="tooltip" data-placement="left" title="" class="btn btn-primary input-sm" type="button" data-original-title="Chọn thêm / xóa dịch vụ cho Nhà xe Hanoi"><i class="glyphicon glyphicon glyphicon-pencil"></i> Thêm/ xóa chặng di chuyển</button></p>
+						</td></tr><tr><td colspan="12" class="pr vtop">
+						<p class=" aright ">
+							<button data-item_id="'.$item_id.'" data-guest="110" data-class="w90" data-action="add-more-program-segment" data-title="Thêm chặng tour" data-id="3" onclick="open_ajax_modal(this);" title="Thêm chặng tour" class="btn btn-success input-sm" type="button"><i class="glyphicon glyphicon glyphicon-plus"></i> Thêm chặng tour</button></p>
+						</td></tr></tbody> </table></div>';
+						*/
+			
+			$html .= '</div>';
+			$html .= '</div>';
+		}
+	}
+	
+	$html .= '</div>';
+	
+	$html .= '<div class="row">
+<div class="" style="margin-top: 10px">
+ 
+
+ 
+     
+</div></div>';
+	
+	$html .= '</div>';
+	return $html;
+}
 
 
 
