@@ -4348,7 +4348,7 @@ function getTourProgramSegments($item_id=0, $o = []){
 	$html .= '<div class="" style="margin-top: 10px;margin-bottom:5px;"><p class="upper bold grid-sui-pheader aleft ">Chặng tour</p></div>';
 	if(!empty($segments)){
 		foreach ($segments as $km=>$segment){
-			$html .= '<div class="block-example '.($km%2==1 ? 'bg-success' : '').'"><span class="f12e block-title btn btn-warning">'.uh($segment['title']).'</span>';
+			$html .= '<div class="block-example '.($km%2==1 ? 'bg-success' : '').'"><span class="f12e block-title btn btn-success">Chặng: '.uh($segment['title']).'</span>';
 			$html .= '<div class="form-group mgb0">';
 			$html .= loadTourProgramDistances($item_id);
 			/*

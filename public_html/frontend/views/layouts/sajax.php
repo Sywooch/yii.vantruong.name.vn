@@ -6,85 +6,10 @@ use yii\base\View;
 AppAsset::register($this);
 switch (getParam('action')){
 	case 'execute_cronjobs':
-		//
-		if(SHOP_TIME_LEFT<60){
-			Yii::$app->zii->setNotificationDateExpired(SHOP_TIME_LEFT);
-		}
-		//view(\app\modules\admin\models\Users::getMainDomain());
-		//
-		///view(\common\models\Cronjobs::getTodayTask());
-		foreach (\common\models\Cronjobs::getTodayTask() as $k=>$v){
-			$state = 1;
-			//if(!Yii::$app->user->can(ROOT_USER)) break;
-			switch ($v['type_code']) {
-				case SHOP_EXPIRED: // Tài khoản hết hạn
-					$text1 = Yii::$app->zii->getTextRespon([
-					'code'=>'RP_SHOP_EXPRIED', 
-					'sid'=>$v['sid'],
-					'show'=>false]);
-					//
-					$fx = Yii::$app->zii->getConfigs('CONTACTS',__LANG__,$v['sid']);
-				 	$user = \app\modules\admin\models\Users::getAdminUser($v['sid']);
-				 	$domain = \app\modules\admin\models\Users::getMainDomain($v['sid']);
-				 	$shop = \app\modules\admin\models\Shops::getItem($v['sid']);
-					//
-					$regex = [
-							//'{LOGO}' => isset(Yii::$site['logo']['logo']['image']) ? '<img src="'.Yii::$site['logo']['logo']['image'].'" style="max-height:100px"/>' : '',
-							'{DOMAIN}' => $domain,
-							'{COMPANY_NAME}'=>$fx['name'],
-							'{COMPANY_ADDRESS}'=>$fx['name'],
-							'{TIME_SENT}'=>date('d/m/Y H:i:s'),
-							'{ADMIN_NAME}'=>$user['lname'] . ' ' . $user['fname'],
-							'{ADMIN_ADDRESS}' => $user['address'] != "" ? $user['address'] : $fx['address'],
-							'{ADMIN_EMAIL}'=>$user['email'],
-							'{ADMIN_PHONE}'=>$user['phone'],
-							'{SERVICES_LIST}'=>'<table cellspacing="0" cellpadding="0" border="0" class="table table-bordered " style="width:100%"><thead> <tr> 
-<th style="border:1px solid orange;background:#FF9800;text-align:center;color:white "><div style="padding:8px">Tên dịch vụ</div></th> 
-<th style="border:1px solid orange;background:#FF9800;text-align:center;color:white "><div style="padding:8px">Ngày hết hạn</div></th>   </tr> </thead> <tbody> 
-<tr>  
-<td style="border:1px solid orange; "><div style="padding:8px">Tài khoản: <a target="_blank" href="http://'.($domain).'">'.($domain).'</a></div></td> 
-<td style="border:1px solid orange; text-align:center"><div style="padding:8px">'.date('d-m-Y', strtotime($shop['to_date'])).'</div></td> 
-</tr> </tbody> </table>'
-					
-					];
-					 
-					$form1 = replace_text_form($regex, uh($text1['value']));
-					 
-					$fx1 = Yii::$app->zii->getConfigs('EMAILS_RESPON',__LANG__,$v['sid']);
-					//view($fx1,true);
-					$fx['sender'] = $fx['email'];
-					$fx['short_name']  = isset($fx['short_name']) && $fx['short_name'] != "" ? $fx['short_name'] : (isset($fx['name']) ? $fx['name'] : '');
-					$fx['email'] = isset($fx['email']) ? $fx['email'] : false;
-					if(isset($fx1['RP_CONTACT'])){
-						$fx['email'] = $fx1['RP_CONTACT']['email'] != "" ? $fx1['RP_CONTACT']['email'] : (isset($fx['email']) ? $fx['email'] : false);
-					}
-					//view($fx,true);
-					 
-					if($fx['email'] !== false && Yii::$app->zii->sendEmail([
-							'subject'=>replace_text_form($regex , $text1['title'])  ,
-							'body'=>$form1,
-							'from'=>'info@codedao.info',
-							//'from'=>'noreply.thaochip@gmail.com',
-							'fromName'=>$fx['short_name'],
-							//'replyTo'=>'zinzin',
-							//'replyToName'=>$f['guest']['full_name'],
-							'to'=>$fx['email'],
-							//'to'=>'zinzinx8@gmail.com',
-							'toName'=>$fx['short_name'],
-							'sid'=>$v['sid']
-					])){
-						 
-						 
-					}
-					 
-					break;
-			}
-			if($state !== -1) {
-				Yii::$app->db->createCommand()->update(\common\models\Cronjobs::tableName(),
-						['state'=>$state],
-						['type_code'=>$v['type_code'],'item_id'=>$v['item_id'],'sid'=>$v['sid']])->execute();
-			}
-		}
+		// Thong bao het han
+		\common\models\Cronjobs::setExpiredShopsNotification();
+		\common\models\Cronjobs::executeAllTodayJobs();
+		\common\models\Cronjobs::clearJobExecuted();
 		//
 		exit;
 		break;
@@ -470,7 +395,7 @@ switch (post('action')){
 				'link'=>ADMIN_ADDRESS . \app\modules\admin\models\AdminMenu::get_menu_link('orders') .DS.'edit?id=' .($orderID),
 				//'uid'=>Yii::$app->user->id
 		];
-		app\models\Notifications::insertNotification($notis);
+		\app\models\Notifications::insertNotification($notis);
 		//echo json_encode(array('modal'=>true,'modal_content'=>$msg,'event'=>'reload','delay'=>3000));
 		Yii::$app->zii->unsetCart();
 		echo json_encode(array(

@@ -324,9 +324,20 @@ class Users extends User
     	->innerJoin(['b'=>self::tableToShop()],'a.id=b.user_id')
     	->where([
     			'b.state'=>1,
-    			'a.sid'=>__SID__,
-    			'b.sid'=>__SID__,
+    			'a.sid'=>$sid,
+    			'b.sid'=>$sid,
     	])->one();
+    	return $query;
+    }
+    
+    public static function getMainDomain($sid = __SID__){
+    	$query = (new Query())->from (['a'=>'domain_pointer'])
+    	 
+    	->where([
+    			'a.state'=>1,
+    			'a.sid'=>$sid,
+    			'a.is_default'=>1,
+    	])->select('domain')->scalar();
     	return $query;
     }
 }

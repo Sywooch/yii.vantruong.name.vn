@@ -67,7 +67,7 @@ class Application extends \yii\base\Application
 		$send_smtp = isset($o['send_smtp']) && $o['send_smtp'] == false ? false : true;
 		$sid = isset($o['sid']) && $o['sid'] > 0 ? $o['sid'] : __SID__;
 		$smtp = $this->getConfigs('EMAILS',false,$sid); 
-		 
+		$write_log = isset($o['write_log']) && $o['write_log'] == false ? false : true;
 		if($send_smtp && !empty($smtp)){
 			switch ($smtp['type']){
 				case 2:
@@ -140,19 +140,21 @@ class Application extends \yii\base\Application
 		->setHtmlBody($messageBody)
 		->send();
 		//
-		\common\models\SystemLogs::writeLog([
-				'code'=>'MAIL_LOGS',
-				'sid'=>$sid,
-				'user_id'=>Yii::$app->user->id > 0 ? Yii::$app->user->id : 0,
-				'bizrule'=>json_encode([
-						'from'=>$setFrom,
-						'to'=>$to,
-						'subject'=>$subject,
-						'body'=>$messageBody,
-						'ip'=>getClientIP(),
-						'sent_status'=>$sented
-				]),
-		]);
+		if($write_log){
+			\common\models\SystemLogs::writeLog([
+					'code'=>'MAIL_LOGS',
+					'sid'=>$sid,
+					'user_id'=>Yii::$app->user->id > 0 ? Yii::$app->user->id : 0,
+					'bizrule'=>json_encode([
+							'from'=>$setFrom,
+							'to'=>$to,
+							'subject'=>$subject,
+							'body'=>$messageBody,
+							'ip'=>getClientIP(),
+							'sent_status'=>$sented
+					]),
+			]);
+		}
 		//
 		if($send_smtp && !$sented){
 			$o['send_smtp'] = false;
@@ -379,7 +381,12 @@ class Application extends \yii\base\Application
 							Yii::$site['seo']['keyword'] = isset($r['seo']['keyword']) && $r['seo']['keyword'] != "" ? $r['seo']['keyword'] : 
 							(isset(Yii::$site['seo']['keyword']) ? Yii::$site['seo']['keyword'] : '');
 							Yii::$site['seo']['og_image'] = isset($r['icon']) ? $r['icon'] : '';
-							
+							//
+							 
+							if($r['route'] == 'manual'){
+								$r['route'] = $r['link_target']; 
+							}
+							//
 							if(isset($r['parent_id']) && $r['parent_id'] == 0){
 								$root = $r;
 							}else{
@@ -393,7 +400,7 @@ class Application extends \yii\base\Application
 							break;
 					}
 					
-					 
+					  
 					//__ROOT_CATEGORY_URL__
 					
 					 
@@ -426,6 +433,7 @@ class Application extends \yii\base\Application
 		defined('__CATEGORY_URL__') or define('__CATEGORY_URL__', $url);
 
 		$request->url = DS . $this->defaultRoute .'/'. implode('/', $_route);
+		//var_dump($_route); exit;
 		define('__CATEGORY_ID__', isset($r['id']) ? $r['id'] : (in_array($request->url,['/site','/site/','/site/index']) ? 0 : -1));
 		//var_dump($_route);
 		//var_dump(in_array($_route,['','index'])); exit;
@@ -710,9 +718,7 @@ class Application extends \yii\base\Application
 			define ('SHOP_TIME_LIFE',($r['to_date']));
 			define ('__SID__',(float)$r['sid']);
 			define ('__SITE_NAME__',$r['code']);
-			if(SHOP_TIME_LEFT < 60){
-				//Yii::$app->zii->sentNotificationDateExpired(SHOP_TIME_LEFT);
-			}
+			 
 			$defaultModule = $r['module'] != "" ? $r['module'] : $this->defaultRoute;
 			/*
 			 *
