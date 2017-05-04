@@ -2191,9 +2191,11 @@ function db($sql=false){
 	return $sql === false ? Yii::$app->db->createCommand() : Yii::$app->db->createCommand($sql);
 }
 function Ad_list_show_check($v=[],$o=[]){
+	$identity_field = isset($o['identity_field']) ? $o['identity_field'] : 'id';
+	$identity_value = isset($o['identity_value']) ? $o['identity_value'] : $v[$identity_field];
 	$disabled = isset($o['disabled']) ? $o['disabled'] : false;
 	//$disabled = $disabled === false ? false : Yii::$app->user->can([ROOT_USER,ADMIN_USER,Yii::$app->controller->id . '-' . (defined('CONTROLLER_CODE') && CONTROLLER_CODE != "" ? CONTROLLER_CODE . '-' : '') .'delete','site-'.$id.'-delete','form-'.getParam('type').'-delete']);
-	$html = '<td class="center"><input '.($disabled ? 'disabled' : '').' type="checkbox" class="checked_item" name="check_item[]" value="'.$v['id'].'" /></td>';
+	$html = '<td class="center"><input '.($disabled ? 'disabled' : '').' type="checkbox" class="checked_item" name="check_item[]" value="'.$identity_value.'" /></td>';
 	return $html;
 }
 function Ad_list_show_icon($v = []){
@@ -2278,8 +2280,8 @@ function Ad_list_show_option_field($v=[],$o=[]){
 	$edit = (isset($o['edit']) && $o['edit'] == false) || (isset($o['btn']['edit']) && $o['btn']['edit'] == false) ? false : true;
 	$del = (isset($o['del']) && $o['del'] == false) || (isset($o['btn']['del']) && $o['btn']['del'] == false) ? false : true;
 	$tab_click = isset($o['tab_click']) ? $o['tab_click'] : '';
-	
-	$html = '<td class="center pr">'.afShowListButton($v['id'],
+	$identity_field = isset($o['identity_field']) ? $o['identity_field'] : $v['id'];
+	$html = '<td class="center pr">'.afShowListButton($identity_field,
         array(
         		'edit'=>$edit,
         		'del'=>$del,
@@ -4125,6 +4127,7 @@ function loadTourProgramDistances($id = 0,$o=[]){
 	$loadDefault = isset($o['loadDefault']) && cbool($o['loadDefault']) == 1 ? true : false;
 	$updateDatabase = isset($o['updateDatabase']) && cbool($o['updateDatabase']) == 1 ? true : false;
 	$item = \app\modules\admin\models\ToursPrograms::getItem($id);
+	$segment = isset($o['segment']) ? $o['segment'] : [];
 	//
 	
 	//
@@ -4148,7 +4151,7 @@ function loadTourProgramDistances($id = 0,$o=[]){
 
 <tr class="col-middle">
  <th class="bold center">Nhà xe</th>
- <th class="bold center" colspan="2">Loại xe</th>
+ <th class="bold center " colspan="2" style="width:16.66666%">Loại xe</th>
  <th class="bold center">Số lượng<p class="center font-normal italic">(1)</p></th>
  <th colspan="5" > 
  <p class="bold center">Chặng di chuyển</p>
@@ -4161,7 +4164,7 @@ function loadTourProgramDistances($id = 0,$o=[]){
 </thead> <tbody class="ajax-load-distance-detail" data-count="0">';	 
 	
 	$j=$i=-1;
-	foreach (Yii::$app->zii->getTourProgramSuppliers($id) as $k=>$v){
+	foreach (Yii::$app->zii->getTourProgramSuppliers($id,['segment_id'=>(isset($segment['id']) ? $segment['id'] : 0)]) as $k=>$v){
 		//\\//\\ *.* //\\//\\
 		$supplier_id = $v['id'];
 		$from_date = $item['from_date'];
@@ -4197,29 +4200,32 @@ function loadTourProgramDistances($id = 0,$o=[]){
 				'nationality_id'=>$item['nationality'],
 				'supplier_id'=>$v['id'],
 				'item_id'=>$id,
+				'segment_id'=>$segment['id'],
 				'default'=>true,
 				'loadDefault'=>$loadDefault,
 				'updateDatabase'=>$updateDatabase
 				////'auto'=>true,
 				//'update'=>true,
 		]);
-		$services = \app\modules\admin\models\ToursPrograms::getProgramDistanceServices($id,$v['id']);
+		$services = \app\modules\admin\models\ToursPrograms::getProgramDistanceServices($id,$v['id'],[
+				'segment_id'=>$segment['id']
+		]);
 		$colspan1 = count($services)+1;
 		$colspan2 = (($colspan1) * count($selected_car)) + 1;
 			
 			
 			
-		$html .= '<tr><td rowspan="'.$colspan2.'" class="center"><button class="btn btn-sm btn-label btn-primary" type="button" data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>">'.($v['name']).'</button>';
+		$html .= '<tr><td rowspan="'.$colspan2.'" class="center"><button data-segment_id="'.$segment['id'].'" class="btn btn-sm btn-label btn-primary" type="button" data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>">'.($v['name']).'</button>';
 			
-		$html .= '<input type="hidden" value="'.$v['id'].'" class="selected_value_'.TYPE_ID_VECL.' selected_value_'.TYPE_ID_VECL.'_0_0" name="selected_value[]"/>';
+		$html .= '<input type="hidden" value="'.$v['id'].'" class="selected_value_'.TYPE_ID_VECL.' selected_value_'.TYPE_ID_VECL.'_0_0 selected_value_'.TYPE_ID_VECL.'_0_0_'.$segment['id'].'" name="selected_value[]"/>';
 			
 		$html .= '</td></tr>';
 		//for($j=0;$j<4;$j++){
 		foreach ($selected_car as $k3=>$car){
 			
 			 
-			$html .= '<tr><td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="2"><a data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="label label-danger f12p">'.$car['title'].'</span></a></td>';
-			$html .= '<td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="1"><a data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="badge">'.(isset($car['quantity']) ? $car['quantity'] : 0).'</span></a></td>';
+			$html .= '<tr><td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="2"><a data-segment_id="'.$segment['id'].'" data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="label label-danger f12p">'.$car['title'].'</span></a></td>';
+			$html .= '<td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="1"><a data-segment_id="'.$segment['id'].'" data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="badge">'.(isset($car['quantity']) ? $car['quantity'] : 0).'</span></a></td>';
 	
 			$html .= '</tr>';
 			if(!empty($services)){
@@ -4240,7 +4246,8 @@ function loadTourProgramDistances($id = 0,$o=[]){
 							//'package_id'=>0,
 							'group_id'=>isset($groups['id']) ? $groups['id'] : 0, 
 							'loadDefault'=>$loadDefault,
-							'updateDatabase'=>$updateDatabase
+							'updateDatabase'=>$updateDatabase,
+							'segment_id'=>$segment['id'],
 					]);
 					//view($prices);
 					if(!empty($prices) && isset($prices['price1'])){
@@ -4252,11 +4259,11 @@ function loadTourProgramDistances($id = 0,$o=[]){
 						]);
 					}
 					//
-					$html .= '<tr><td colspan="5"><p><a data-item_id="'.$id.'" data-vehicle_id="'.$car['id'].'" data-supplier_id="'.$v['id'].'" data-service_id="'.$sv['id'].'" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">  ' .(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
-									<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$i.'_'.$j.'" name="selected_value[]"/>
+					$html .= '<tr><td colspan="5"><p><a data-segment_id="'.$segment['id'].'" data-item_id="'.$id.'" data-vehicle_id="'.$car['id'].'" data-supplier_id="'.$v['id'].'" data-service_id="'.$sv['id'].'" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">  ' .(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
+									<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$i.'_'.$j.' selected_value_'.$sv['type_id'].'_'.$i.'_'.$j.'_'.$segment['id'].'" name="selected_value[]"/>
 									<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>
 											</a></p></td>';
-					$html .= '<td class="center" colspan="1">'.($prices['price_type'] == 1 ? '<a data-item_id="'.$id.'" data-vehicle_id="'.$car['id'].'" data-supplier_id="'.$v['id'].'" data-service_id="'.$sv['id'].'" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">'.(is_numeric($prices['quantity']) ? number_format($prices['quantity']) : '') .'</a>' : '-').'</td>';
+					$html .= '<td class="center" colspan="1">'.($prices['price_type'] == 1 ? '<a data-segment_id="'.$segment['id'].'" data-item_id="'.$id.'" data-vehicle_id="'.$car['id'].'" data-supplier_id="'.$v['id'].'" data-service_id="'.$sv['id'].'" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">'.(is_numeric($prices['quantity']) ? number_format($prices['quantity']) : '') .'</a>' : '-').'</td>';
 					$html .= '<td class="center" ><span data-decimal="'.(isset($price['decimal']) ? $price['decimal'] : 0).'" class="number-format '.(isset($price['changed']) && $price['changed'] ? 'red underline' : '').'" title="'.(isset($price['changed']) && $price['changed'] ? $price['old_price'] : '').'">'.(isset($price['price']) ? $price['price'] : '-').'</span></td>';
 					$html .= '<td class="center" ><span data-decimal="'.(isset($price['decimal']) ? $price['decimal'] : 0).'" class="bold underline number-format " >'.(isset($price['price']) ? $price['price'] * $prices['quantity'] * $car['quantity'] : '-').'</span></td>';
 					$html .= '</tr>';
@@ -4275,13 +4282,13 @@ function loadTourProgramDistances($id = 0,$o=[]){
 	
 		$html .= '<tr><td colspan="12" class="pr vtop">
 						<p class=" aright">
-							<button data-place_id="'.$v['place_id'].'" data-class="w90" data-action="add-tours-distance-services" data-title="Chọn thêm dịch vụ / Hành trình - <b class=red>'.$v['name'].'</b>" data-id="'.$id.'" data-supplier_id="'.$v['id'].'" data-time="'.$j.'" onclick="open_ajax_modal(this);" data-toggle="tooltip" data-placement="left" title="Chọn thêm / xóa dịch vụ cho '.$v['name'].'" class="btn btn-primary input-sm" type="button"><i class="glyphicon glyphicon glyphicon-pencil"></i> Thêm/ xóa chặng di chuyển</button></p>
+							<button data-segment_id="'.$segment['id'].'" data-place_id="'.$v['place_id'].'" data-class="w90" data-action="add-tours-distance-services" data-title="Chọn thêm dịch vụ / Hành trình - <b class=red>'.$v['name'].'</b>" data-id="'.$id.'" data-supplier_id="'.$v['id'].'" data-time="'.$j.'" onclick="open_ajax_modal(this);" data-toggle="tooltip" data-placement="left" title="Chọn thêm / xóa dịch vụ cho '.$v['name'].'" class="btn btn-primary input-sm" type="button"><i class="glyphicon glyphicon glyphicon-pencil"></i> Thêm/ xóa chặng di chuyển</button></p>
 						</td></tr>';
 			
 	}
 	$html .= '<tr><td colspan="12" class="pr vtop">
 						<p class=" aright ">
-							<button data-nationality="'.$item['nationality'].'" data-guest="'.$item['guest'].'" data-class="w90" data-action="add-more-distance-supplier" data-title="Chọn thêm nhà xe" data-id="'.$id.'" onclick="open_ajax_modal(this);" title="Chọn thêm nhà xe" class="btn btn-success input-sm" type="button"><i class="glyphicon glyphicon glyphicon-plus"></i> Chọn thêm nhà xe</button></p>
+							<button data-segment_id="'.(isset($segment['id']) ? $segment['id'] : 0).'" data-toggle="tooltip" data-placement="left" data-nationality="'.$item['nationality'].'" data-guest="'.$item['guest'].'" data-class="w90" data-action="add-more-distance-supplier" data-title="Chọn thêm nhà xe" data-id="'.$id.'" onclick="open_ajax_modal(this);" title="Chọn thêm nhà xe'.(!empty($segment) ? ' cho chặng '. uh($segment['title']) : '').'" class="btn btn-success input-sm" type="button"><i class="glyphicon glyphicon glyphicon-plus"></i> Chọn thêm nhà xe</button></p>
 						</td></tr>';
 	$html .= '</tbody> </table>';
 	return $html;
@@ -4350,55 +4357,15 @@ function getTourProgramSegments($item_id=0, $o = []){
 		foreach ($segments as $km=>$segment){
 			$html .= '<div class="block-example '.($km%2==1 ? 'bg-success' : '').'"><span class="f12e block-title btn btn-success">Chặng: '.uh($segment['title']).'</span>';
 			$html .= '<div class="form-group mgb0">';
-			$html .= loadTourProgramDistances($item_id);
-			/*
-			$html .= '<div class="ajax-load-time-detail-transportxx"><table class="table table-bordered table-sm vmiddle mgb0"> 
- 
-<colgroup>
-<col style="width:8.333333%">
-<col style="width:8.333333%">
-<col style="width:8.333333%">
-<col style="width:8.333333%">
-<col style="width:8.333333%">
-<col style="width:8.333333%">
-<col style="width:8.333333%">
-<col style="width:8.333333%">
-<col style="width:8.333333%">
-<col style="width:8.333333%">
-<col style="width:8.333333%">
-<col style="width:8.333333%">
-</colgroup>
-<thead>
-
-<tr class="col-middle">
- <th class="bold center">Nhà xe</th>
- <th class="bold center" colspan="2">Loại xe</th>
- <th class="bold center">Số lượng<p class="center font-normal italic">(1)</p></th>
- <th colspan="5"> 
- <p class="bold center">Chặng di chuyển</p>
-</th>
-<th class="bold center">Km<p class="center font-normal italic">(2)</p></th>
-<th class="bold center">Đơn giá (VND)<p class="center font-normal italic">(3)</p></th>
-<th class="bold center">Thành tiền <p class="center font-normal italic">(1) x (2) x (3)</p></th> 
- 
-</tr>
-</thead> <tbody class="ajax-load-distance-detail" data-count="0"><tr><td rowspan="3" class="center"><button class="btn btn-sm btn-label btn-primary" type="button" data-item_id="3" data-nationality="212" data-action="quick-edit-supplier-services" data-supplier_id="11" data-class="w90" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>Nhà xe Hanoi</b>">Nhà xe Hanoi</button><input type="hidden" value="11" class="selected_value_6 selected_value_6_0_0" name="selected_value[]"></td></tr><tr><td class="center" rowspan="2" colspan="2"><a data-item_id="3" data-nationality="212" data-action="quick-edit-supplier-services" data-supplier_id="11" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>Nhà xe Hanoi</b>"><span class="label label-danger f12p">High Class 45 chỗ</span></a></td><td class="center" rowspan="2" colspan="1"><a data-item_id="3" data-nationality="212" data-action="quick-edit-supplier-services" data-supplier_id="11" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>Nhà xe Hanoi</b>"><span class="badge">3</span></a></td></tr><tr><td colspan="5"><p><a data-item_id="3" data-vehicle_id="7" data-supplier_id="11" data-service_id="5" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">  City tour 1,5 ngày
-									<input value="5" type="hidden" class="selected_value_153 selected_value_153_-1_-1" name="selected_value[]">
-									<input value="153" type="hidden" class="selected_value_153" name="selected_type_id[]">
-											</a></p></td><td class="center" colspan="1"><a data-item_id="3" data-vehicle_id="7" data-supplier_id="11" data-service_id="5" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">225</a></td><td class="center"><span data-decimal="0" class="number-format " title="" data-loaded="true">9,500</span></td><td class="center"><span data-decimal="0" class="bold underline number-format " data-loaded="true">6,412,500</span></td></tr><tr><td colspan="12" class="pr vtop">
-						<p class=" aright  ">
-							<button data-place_id="56" data-class="w90" data-action="add-tours-distance-services" data-title="Chọn thêm dịch vụ / Hành trình - <b class=red>Nhà xe Hanoi</b>" data-id="3" data-supplier_id="11" data-time="-1" onclick="open_ajax_modal(this);" data-toggle="tooltip" data-placement="left" title="" class="btn btn-primary input-sm" type="button" data-original-title="Chọn thêm / xóa dịch vụ cho Nhà xe Hanoi"><i class="glyphicon glyphicon glyphicon-pencil"></i> Thêm/ xóa chặng di chuyển</button></p>
-						</td></tr><tr><td colspan="12" class="pr vtop">
-						<p class=" aright ">
-							<button data-item_id="'.$item_id.'" data-guest="110" data-class="w90" data-action="add-more-program-segment" data-title="Thêm chặng tour" data-id="3" onclick="open_ajax_modal(this);" title="Thêm chặng tour" class="btn btn-success input-sm" type="button"><i class="glyphicon glyphicon glyphicon-plus"></i> Thêm chặng tour</button></p>
-						</td></tr></tbody> </table></div>';
-						*/
+			$html .= loadTourProgramDistances($item_id,['segment'=>$segment]);
+			 
 			
 			$html .= '</div>';
 			$html .= '</div>';
 		}
 	}
-	
+	$html .= '<p class=" aright " style="padding:0 5px 15px 5px;border-bottom:1px solid #ddd">
+<button data-toggle="tooltip" data-index="'.count($segments).'" data-placement="left" data-action="add-more-tour-segment" data-title="Thêm chặng tour" data-id="'.$item_id.'" data-item_id="'.$item_id.'" onclick="open_ajax_modal(this);" title="" class="btn btn-warning btn-lg" type="button" data-original-title="Thêm chặng tour"><i class="glyphicon glyphicon glyphicon-plus"></i> Thêm chặng tour</button></p>';
 	$html .= '</div>';
 	
 	$html .= '<div class="row">
@@ -4408,6 +4375,7 @@ function getTourProgramSegments($item_id=0, $o = []){
  
      
 </div></div>';
+
 	
 	$html .= '</div>';
 	return $html;

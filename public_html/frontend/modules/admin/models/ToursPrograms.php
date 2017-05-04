@@ -190,12 +190,12 @@ class ToursPrograms extends \yii\db\ActiveRecord
     public static function getListVehicleBySupplier($o = []){
     	$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
     	$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
-    	
+    	$segment_id = isset($o['segment_id']) ? $o['segment_id'] : 0;
     	$query = (new Query())
     	->select('a.*','b.*')
     	->from(['a'=>'tours_programs_to_suppliers'])
     	->innerJoin(['b'=>'vehicles_categorys'],'b.id=a.vehicle_id')
-    	->where(['a.item_id'=>$item_id,'a.supplier_id'=>$supplier_id,'b.type'=>1]);
+    	->where(['a.item_id'=>$item_id,'a.supplier_id'=>$supplier_id,'b.type'=>1,'a.segment_id'=>$segment_id]);
     	if(isset($o['not_in'])){
     		//$query->andWhere(['not'])
     	}
@@ -207,8 +207,13 @@ class ToursPrograms extends \yii\db\ActiveRecord
     
     
     public static function getProgramDistanceServices($id = 0, $supplier_id = 0 ,$o = []){
+    	$segment_id = isset($o['segment_id']) ? $o['segment_id'] : 0;
     	$query = (new Query())->from(['a'=>'tours_programs_services_distances'])
-    	->where(['item_id'=>$id,'supplier_id'=>$supplier_id]);
+    	->where([
+    			'item_id'=>$id,
+    			'supplier_id'=>$supplier_id,
+    			'segment_id'=>$segment_id
+    	]);
     	 
     	 
     	$l = $query->orderBy(['position'=>SORT_ASC])->all();

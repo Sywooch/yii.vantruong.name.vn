@@ -332,8 +332,7 @@ class Cronjobs extends \yii\db\ActiveRecord
     						'title'=>'Thông báo gia hạn dịch vụ '.$domain,
     						'sid'=>$v['sid'],
     						'note'=>'Ngày hết hạn: '.date('d-m-Y', strtotime($shop['to_date'])),
-    						//'link'=>ADMIN_ADDRESS . \app\modules\admin\models\AdminMenu::get_menu_link('orders') .DS.'edit?id=' .($orderID),
-    						//'uid'=>Yii::$app->user->id
+    						 
     				];
     				\app\models\Notifications::insertNotification($notis);
     				//

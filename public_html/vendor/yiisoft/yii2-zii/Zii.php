@@ -33,14 +33,32 @@ class Zii extends yii\base\Object
 	public function removeTransportSupplierTourProgram($o = []){
 		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
 		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
+		$segment_id = isset($o['segment_id']) ? $o['segment_id'] : 0;
 		//1. Xóa bảng danh sách xe - ct
-		Yii::$app->db->createCommand()->delete('tours_programs_to_suppliers',['supplier_id'=>$supplier_id,'item_id'=>$item_id])->execute();
+		Yii::$app->db->createCommand()->delete('tours_programs_to_suppliers',[
+				'supplier_id'=>$supplier_id,
+				'item_id'=>$item_id,
+				'segment_id'=>$segment_id
+		])->execute();
 		//2. Xóa bảng phương tiện - ct
-		Yii::$app->db->createCommand()->delete('tours_programs_suppliers_vehicles',['supplier_id'=>$supplier_id,'item_id'=>$item_id])->execute();
+		Yii::$app->db->createCommand()->delete('tours_programs_suppliers_vehicles',[
+				'supplier_id'=>$supplier_id,
+				'item_id'=>$item_id,
+				'segment_id'=>$segment_id
+		])->execute();
 		//3. Xóa bảng chặng - ct
-		Yii::$app->db->createCommand()->delete('tours_programs_services_distances',['supplier_id'=>$supplier_id,'item_id'=>$item_id])->execute();
+		Yii::$app->db->createCommand()->delete('tours_programs_services_distances',[
+				'supplier_id'=>$supplier_id,
+				'item_id'=>$item_id,
+				'segment_id'=>$segment_id
+		])->execute();
 		//4. Xóa bảng giá - ct
-		Yii::$app->db->createCommand()->delete('tours_programs_suppliers_prices',['supplier_id'=>$supplier_id,'item_id'=>$item_id])->execute();
+		Yii::$app->db->createCommand()->delete('tours_programs_suppliers_prices',[
+				'supplier_id'=>$supplier_id,
+				'item_id'=>$item_id,
+				'segment_id'=>$segment_id
+				
+		])->execute();
 	}
 	
 	public function getUserLanguages(){
@@ -49,6 +67,7 @@ class Zii extends yii\base\Object
 	public function calcDistancePrice($o=[]){
 		//
 		$price = $t = 0;
+		$segment_id = isset($o['segment_id']) ? $o['segment_id'] : 0;
 		//
 		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0; 
 		$package_id = isset($o['package_id']) ? $o['package_id'] : 0;
@@ -88,7 +107,8 @@ class Zii extends yii\base\Object
 				'a.vehicle_id'=>$vehicle_id,
 				'a.item_id'=>$item_id,
 				'a.service_id'=>$distance_id,
-				'b.type'=>$pax_type	
+				'b.type'=>$pax_type,
+				'a.segment_id'=>$segment_id,	
 			]);
 			$item = $query->one();
 			//$item['o']= $query->createCommand()->getRawSql();
@@ -137,6 +157,7 @@ class Zii extends yii\base\Object
 					'a.package_id'=>$package_id,
 					'a.item_id'=>$vehicle_id,
 					'a.supplier_id'=>$supplier_id,
+					
 			])
 			->innerJoin(['b'=>'vehicles_categorys'],'b.id=a.item_id')
 			->andWhere(['>','a.pmax',$distance_item['distance']-1])
@@ -164,12 +185,14 @@ class Zii extends yii\base\Object
 					'item_id'=>$item_id,
 					'vehicle_id'=>$vehicle_id,
 					'service_id'=>$distance_id,
+					'segment_id'=>$segment_id,
 			])->count(1) == 0){
 				if((new Query())->from('tours_programs_suppliers_prices')->where([
 						'supplier_id'=>$supplier_id,
 						'item_id'=>$item_id,
 						'vehicle_id'=>0,
 						'service_id'=>$distance_id,
+						'segment_id'=>$segment_id,
 				])->count(1) == 0){
 					Yii::$app->db->createCommand()->insert('tours_programs_suppliers_prices',[
 							'supplier_id'=>$supplier_id,
@@ -178,6 +201,7 @@ class Zii extends yii\base\Object
 							'service_id'=>$distance_id,
 							'price1'=>$price,
 							'price_type'=>$price_type,
+							'segment_id'=>$segment_id,
 							'quantity'=>$distance_item['distance']
 					])->execute();
 				}else {
@@ -189,6 +213,7 @@ class Zii extends yii\base\Object
 					],['supplier_id'=>$supplier_id,
 							'vehicle_id'=>0,
 							'item_id'=>$item_id,
+							'segment_id'=>$segment_id,
 							'service_id'=>$distance_id,])->execute();
 				}
 				
@@ -201,6 +226,7 @@ class Zii extends yii\base\Object
 				],['supplier_id'=>$supplier_id,
 						'vehicle_id'=>$vehicle_id,
 						'item_id'=>$item_id,
+						'segment_id'=>$segment_id,
 						'service_id'=>$distance_id,])->execute();
 			}
 		}
@@ -249,7 +275,13 @@ class Zii extends yii\base\Object
 		return $html;
 	}
 	
-	public function getTourProgramSuppliers($id, $type_id = TYPE_ID_VECL){
+	public function getTourProgramSuppliers($id, $o = TYPE_ID_VECL){
+		if(is_array($o)){
+			$type_id = isset($o['type_id']) ? $o['type_id'] : TYPE_ID_VECL;
+			$segment_id = isset($o['segment_id']) ? $o['segment_id'] : 0;
+		}else{
+			$type_id = $o;
+		}
 		$query = new Query();
 		$query->select(['a.*',
 		'place_id'=>(new Query())->select('place_id')->from('customers_to_places')->where('customer_id=a.id')->limit(1)		
@@ -258,6 +290,9 @@ class Zii extends yii\base\Object
 		->where(['b.item_id'=>$id,'b.type_id'=>$type_id])->groupBy(['a.id'])
 		//->andWhere(['b.item_id'=>$id])
 		;
+		if(isset($segment_id) && $segment_id>0){
+			$query->andWhere(['segment_id'=>$segment_id]);
+		}
 		return $query->orderBy(['b.position'=>SORT_ASC, 'a.name'=>SORT_ASC])->all();
 	}
 	
@@ -269,6 +304,7 @@ class Zii extends yii\base\Object
 		$default = isset($o['default']) ? $o['default'] : false;
 		$loadDefault = isset($o['loadDefault']) ? $o['loadDefault'] : false;
 		$updateDatabase = isset($o['updateDatabase']) ? $o['updateDatabase'] : false;
+		$segment_id = isset($o['segment_id']) ? $o['segment_id'] : 0;
 		if($loadDefault){
 			$r = $this->getVehicleAuto([
 				'total_pax'=>$total_pax, 
@@ -281,7 +317,8 @@ class Zii extends yii\base\Object
 				// Clear
 				Yii::$app->db->createCommand()->delete('tours_programs_suppliers_vehicles',[
 						'supplier_id'=>$supplier_id,
-						'item_id'=>$item_id
+						'item_id'=>$item_id,
+						'segment_id'=>$segment_id
 				])->execute();
 				// Insert 
 				if(!empty($r)){
@@ -290,6 +327,7 @@ class Zii extends yii\base\Object
 								'supplier_id'=>$supplier_id,
 								'item_id'=>$item_id,
 								'vehicle_id'=>$v['id'],
+								'segment_id'=>$segment_id,
 								'quantity'=>$v['quantity'] 
 						])->execute();
 					}
@@ -308,6 +346,7 @@ class Zii extends yii\base\Object
 					'b.is_active'=>1,
 					'c.supplier_id'=>$supplier_id,
 					'c.item_id'=>$item_id,
+					'c.segment_id'=>$segment_id
 			])		 
 			->select(['a.*','c.quantity','maker_title'=>(new Query())->select('title')->from('vehicles_makers')->where('id=a.maker_id')])
 			->orderBy(['a.pmax'=>SORT_DESC]);

@@ -91,6 +91,29 @@ switch (Yii::$app->request->get('action')){
 }
 //////////////////////////////////////////////////////////////////////
 switch (Yii::$app->request->post('action')){
+	case 'add-more-tour-segment':
+		$html = '';
+		$item_id = post('item_id',0);
+		//
+		$html .= '<div class="form-group"><div class="col-sm-12"><label >Tên chặng <i class="red font-normal">(*)</i></label><input type="text" name="f[title]" class="form-control required" required placeholder="Nhập tên chặng tour"></div></div>';
+		$html .= '<div class="form-group"><div class="col-sm-12"><label >Số ngày <i class="red font-normal">(*)</i></label><input type="number" min="1" max="99" name="f[number_of_day]" class="form-control number-format required" required placeholder="Nhập số ngày tour của chặng này"></div></div>';
+		
+		//
+		$html .= '<div class="modal-footer">';
+		$html .= '<button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Lưu lại</button>';
+		$html .= '<button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-window-close"></i> Hủy</button>';
+		$html .= '</div>';		
+		$_POST['action'] = 'quick-' . $_POST['action'];
+		foreach ($_POST as $k=>$v){
+			$html .= '<input type="hidden" name="'.$k.'" value="'.$v.'"/>';
+		}
+		//
+		echo json_encode([
+				'html'=>$html,
+				'callback'=>true,
+				'callback_function'=>'reloadAutoPlayFunction();'
+		]); exit;
+		break;
 	case 'quick-renew_shop_time_life':
 		$id = post('id');
 		$time_renew = post('time_renew',0);
@@ -2630,6 +2653,7 @@ switch (Yii::$app->request->post('action')){
 		
 	case 'quick-add-more-distance-supplier':
 		$item_id = post('id',0);
+		$segment_id = post('segment_id',0);
 		$day = post('day');
 		$time = post('time');
 		$nationality = post('nationality');
@@ -2641,14 +2665,15 @@ switch (Yii::$app->request->post('action')){
 		$l1 = (new \yii\db\Query())->from('tours_programs_to_suppliers')->where( 
 				['and',
 						['not in','supplier_id',$selected_value],
-						['item_id'=>$item_id]
+						['item_id'=>$item_id,'segment_id'=>$segment_id]
 						
 				])->all();
 		if(!empty($l1)){
 			foreach ($l1 as $k1=>$v1){
 				Yii::$app->zii->removeTransportSupplierTourProgram([
 						'supplier_id'=>$v1['supplier_id'],
-						'item_id'=>$item_id
+						'item_id'=>$item_id,
+						'segment_id'=>$segment_id,
 				]); 
 			}
 		}
@@ -2666,6 +2691,7 @@ switch (Yii::$app->request->post('action')){
 							//'type_id'=>$type_id,
 							'supplier_id'=>$id,
 							'item_id'=>$item_id,
+							'segment_id'=>$segment_id,
 					])->count(1) == 0){
 						
 					
@@ -2675,6 +2701,7 @@ switch (Yii::$app->request->post('action')){
 							'type_id'=>$type_id,
 							'supplier_id'=>$id,
 							'item_id'=>$item_id,
+							'segment_id'=>$segment_id,
 					])->execute();
 					// Lấy xe tự động
 					$c = (Yii::$app->zii->getVehicleAuto([
@@ -2690,12 +2717,13 @@ switch (Yii::$app->request->post('action')){
 							'vehicle_id'=>$c['id'],						 
 							'supplier_id'=>$id,
 							'item_id'=>$item_id,
+								'segment_id'=>$segment_id,
 						])->count(1) == 0){
 						Yii::$app->db->createCommand()->insert('tours_programs_suppliers_vehicles',[
 							'vehicle_id'=>$c['id'],
 							'quantity'=>$c['quantity'],
 							'supplier_id'=>$id,
-							'item_id'=>$item_id,  
+							'item_id'=>$item_id,  'segment_id'=>$segment_id,
 						])->execute();
 						}else{
 							
@@ -2707,6 +2735,7 @@ switch (Yii::$app->request->post('action')){
 						],[
 								'supplier_id'=>$id,
 								'item_id'=>$item_id,
+								'segment_id'=>$segment_id,
 						])->execute();
 					}
 				}else{
@@ -2715,6 +2744,7 @@ switch (Yii::$app->request->post('action')){
 					],[
 							'supplier_id'=>$id,							 
 							'item_id'=>$item_id,
+							'segment_id'=>$segment_id,
 					])->execute();
 				}
 			}
@@ -2906,7 +2936,7 @@ switch (Yii::$app->request->post('action')){
 		$item_id = post('id');
 		$supplier_id = post('supplier_id',0);
 		$time = post('time');
-				
+		$segment_id = post('segment_id',0);
 		
 		$selected_value = post('selected_value',[]);
 		//view($selected_value);
@@ -2914,6 +2944,7 @@ switch (Yii::$app->request->post('action')){
 				'item_id'=>$item_id,
 				'supplier_id'=>$supplier_id,
 				//'time'=>$time,
+				'segment_id'=>$segment_id
 				],[
 						'not in','service_id',$selected_value
 				]])->execute();
@@ -2927,6 +2958,7 @@ switch (Yii::$app->request->post('action')){
 						'supplier_id'=>$supplier_id,
 						'service_id'=>$id,
 						'type_id'=>$type_id,
+						'segment_id'=>$segment_id
 				])->count(1) == 0){
 				//	foreach ($v as $id){
 						Yii::$app->db->createCommand()->insert('tours_programs_services_distances',[
@@ -2935,6 +2967,7 @@ switch (Yii::$app->request->post('action')){
 								'service_id'=>$id,
 								'supplier_id'=>$supplier_id,
 								//'time'=>$time,
+								'segment_id'=>$segment_id,
 								'position'=>$k
 						])->execute();	
 					//}
@@ -2943,6 +2976,7 @@ switch (Yii::$app->request->post('action')){
 							'item_id'=>$item_id,
 							'type_id'=>$type_id,
 							'service_id'=>$id,
+							'segment_id'=>$segment_id,
 							'supplier_id'=>$supplier_id,
 							//'time'=>$time,
 							
@@ -2961,7 +2995,8 @@ switch (Yii::$app->request->post('action')){
 		$id = post('id',0);
 		$day = post('day',0);
 		$supplier_id = post('supplier_id',0);
-		$time = post('time',0);		
+		$time = post('time',0);
+		$segment_id = post('segment_id',0);
 		$html = '';
 		
 		$html .= '<p class="help-block">Bạn đang chọn dịch vụ vận chuyển</p>
@@ -2974,9 +3009,11 @@ switch (Yii::$app->request->post('action')){
 				<td class="hide">
 				<ul class="style-none ul-style-l01">';
 		foreach (showListChooseService() as $k=>$v){
-			$html .= $v['id'] == TYPE_CODE_DISTANCE ? '<li class="'.($v['id'] == TYPE_CODE_DISTANCE ? 'li-service-first-child' : '').'"><a data-day="'.$day.'" data-time="'.$time.'" data-id="'.$v['id'].'" onclick="return change_selected_tour_service_group(this);" href="#">'.$v['title'].'</a></li>' : '';
+			$html .= $v['id'] == TYPE_CODE_DISTANCE ? '<li class="'.($v['id'] == TYPE_CODE_DISTANCE ? 'li-service-first-child' : '').'"><a data-segment_id="'.$segment_id.'" data-day="'.$day.'" data-time="'.$time.'" data-id="'.$v['id'].'" onclick="return change_selected_tour_service_group(this);" href="#">'.$v['title'].'</a></li>' : '';
 		}
-		$services = \app\modules\admin\models\ToursPrograms::getProgramDistanceServices($id,$supplier_id);
+		$services = \app\modules\admin\models\ToursPrograms::getProgramDistanceServices($id,$supplier_id,[
+				'segment_id'=>$segment_id
+		]);
 		
 		$html .= '</ul>
 				
@@ -3002,7 +3039,7 @@ switch (Yii::$app->request->post('action')){
 				<td class="">
 <div class="div-quick-search-service">
 						<div class="fl w50">
-						<select data-placeholder="Chọn địa danh" onchange="quick_search_tour_service(\'.input-quick-search-service\');" data-action="load_dia_danh" data-role="load_dia_danh" class="form-control input-sm ajax-chosen-select-ajax input-quick-search-local">';
+						<select data-segment_id="'.$segment_id.'" data-placeholder="Chọn địa danh" onchange="quick_search_tour_service(\'.input-quick-search-service\');" data-action="load_dia_danh" data-role="load_dia_danh" class="form-control input-sm ajax-chosen-select-ajax input-quick-search-local">';
 				if(!empty($place)){
 					$html .= '<option value="'.$place['id'].'" selected>'.$place['name'].'</option>'; 
 				}
@@ -3191,6 +3228,7 @@ change:function(event,ui){
 		$id = post('id',0);
 		$day = post('day',0);
 		$time = post('time',0);		
+		$segment_id = post('segment_id',0);
 		$html = '';
 		
 		$html .= '
@@ -3204,7 +3242,7 @@ change:function(event,ui){
 				<td class="">
 				
 				<ul id="sortable1" class="connectedSortable style-none">';
-		$services = Yii::$app->zii->getTourProgramSuppliers($id);
+		$services = Yii::$app->zii->getTourProgramSuppliers($id,['segment_id'=>$segment_id]); 
 		if(!empty($services)){
 			foreach ($services as $kv=>$sv){
 				$html .= '<li data-type_id="'.$sv['type_id'].'" data-id="'.$sv['id'].'" class="ui-state-default">'.(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
@@ -3218,18 +3256,18 @@ change:function(event,ui){
 		if(post('place_id') > 0){
 			$place = \app\modules\admin\models\DeparturePlaces::getItem(post('place_id'));
 		}
-				$html .= '</ul>
-				</td>
-				<td class="">
+		$html .= '</ul>
+		</td>
+		<td class="">
 <div class="div-quick-search-service">
-						<div title="Chọn địa danh" class="fl w50">
-						<select data-placeholder="Chọn địa danh" onchange="quick_search_tour_service(\'.input-quick-search-service\');" data-action="load_dia_danh" data-role="load_dia_danh" class="form-control input-sm ajax-chosen-select-ajax input-quick-search-local">';
-				if(!empty($place)){
-					$html .= '<option value="'.$place['id'].'" selected>'.$place['name'].'</option>'; 
-				}
-				$html .= '</select>
-						</div><div class="fl w50">
-						<input data-time="'.$time.'" data-day="'.$day.'" data-type_id="'.TYPE_ID_VECL.'" type="text" onkeyup="quick_search_tour_service(this);" onkeypress="return disabledFnKey(this);" placeholder="Tìm kiếm nhanh" class="form-control input-quick-search-service"/></div></div>				
+		<div title="Chọn địa danh" class="fl w50">
+		<select data-placeholder="Chọn địa danh" data-segment_id="'.$segment_id.'" onchange="quick_search_tour_service(\'.input-quick-search-service\');" data-action="load_dia_danh" data-role="load_dia_danh" class="form-control input-sm ajax-chosen-select-ajax input-quick-search-local">';
+		if(!empty($place)){
+			$html .= '<option value="'.$place['id'].'" selected>'.$place['name'].'</option>'; 
+		}
+		$html .= '</select>
+		</div><div class="fl w50">
+		<input data-segment_id="'.$segment_id.'" data-time="'.$time.'" data-day="'.$day.'" data-type_id="'.TYPE_ID_VECL.'" type="text" onkeyup="quick_search_tour_service(this);" onkeypress="return disabledFnKey(this);" placeholder="Tìm kiếm nhanh" class="form-control input-quick-search-service"/></div></div>				
 <div class="fl100"><div class="available_services div-slim-scroll" data-height="auto">				
  
 <ul id="sortable2" class="connectedSortable style-none">
@@ -3292,15 +3330,18 @@ change:function(event,ui){
 		$selected_quantity = post('selected_quantity');
 		$supplier_id = post('supplier_id');
 		$item_id = post('item_id');
+		$segment_id = post('segment_id',0);
 		//
 		$l1 = (new Query())->from('tours_programs_suppliers_vehicles')->where(['and',[
 				'supplier_id'=>$supplier_id,
-				'item_id'=>$item_id
+				'item_id'=>$item_id,
+				'segment_id'=>$segment_id
 				
 		],['not in','vehicle_id',$selected_value]])->all();
 		Yii::$app->db->createCommand()->delete('tours_programs_suppliers_vehicles',['and',[
 				'supplier_id'=>$supplier_id,
-				'item_id'=>$item_id
+				'item_id'=>$item_id,
+				'segment_id'=>$segment_id
 		
 		],['not in','vehicle_id',$selected_value]])->execute();
 		
@@ -3309,6 +3350,7 @@ change:function(event,ui){
 				Yii::$app->db->createCommand()->delete('tours_programs_suppliers_prices',[
 						'supplier_id'=>$supplier_id,
 						'item_id'=>$item_id,
+						'segment_id'=>$segment_id,
 						'vehicle_id'=>$v1['vehicle_id']
 				
 				])->execute();
@@ -3321,11 +3363,16 @@ change:function(event,ui){
 				if(!$selected_quantity[$k]>0){
 					$selected_quantity[$k] = 0;
 				}
-				if((new Query())->from('tours_programs_suppliers_vehicles')->where(['supplier_id'=>$supplier_id,'item_id'=>$item_id,'vehicle_id'=>$v])->count(1) == 0){
+				if((new Query())->from('tours_programs_suppliers_vehicles')->where([
+						'supplier_id'=>$supplier_id,
+						'item_id'=>$item_id,
+						'segment_id'=>$segment_id,
+						'vehicle_id'=>$v])->count(1) == 0){
 					Yii::$app->db->createCommand()->insert('tours_programs_suppliers_vehicles',[
 							'supplier_id'=>$supplier_id,
 							'item_id'=>$item_id,
 							'vehicle_id'=>$v,
+							'segment_id'=>$segment_id,
 							'quantity'=>$selected_quantity[$k],
 					])->execute();
 				}else{
@@ -3334,7 +3381,8 @@ change:function(event,ui){
 							//'type_id'=>TYPE_ID_VECL
 					],['supplier_id'=>$supplier_id,
 							'item_id'=>$item_id,
-							'vehicle_id'=>$v])->execute();
+							'segment_id'=>$segment_id,
+							'vehicle_id'=>$v])->execute(); 
 				}
 			}
 		}
@@ -3376,7 +3424,7 @@ change:function(event,ui){
 		echo json_encode(['html'=>$html,'remove_item'=>implode(',', $sl)]+$_POST);exit;
 		break;
 	case 'quick-edit-supplier-services':
-		 
+		$segment_id = post('segment_id',0);
 		$item_id = post('item_id',0);
 		$day = post('day',0);
 		$time = post('time',0);
@@ -3387,7 +3435,7 @@ change:function(event,ui){
 				//'nationality'=>post('nationality',0),
 				'supplier_id'=>$supplier_id,
 				'item_id'=>$item_id,
-				
+				'segment_id'=>$segment_id,
 				'default'=>false,
 				
 				////'auto'=>true,
@@ -3838,7 +3886,7 @@ change:function(event,ui){
 				'vehicle_id',
 				'service_id',
 				'distance_id',
-				'item_id',
+				'item_id','segment_id'
 				
 		];
 		foreach ($a as $b){
@@ -3850,6 +3898,7 @@ change:function(event,ui){
 				'service_id'=>$service_id,
 				'distance_id'=>$service_id,
 				'item_id'=>$item_id,
+				'segment_id'=>$segment_id,
 				'updateDatabase'=>false,
 				'loadDefault'=>false,
 				
@@ -4031,85 +4080,7 @@ change:function(event,ui){
 			'html'=>loadTourProgramDistances(post('id',0))
 		]+$_POST);exit; 
 		
-		$html = ''; 
 		 
-		$model = load_model('tours_programs');
-		$id = post('id',0);
-		$supplier_id = post('supplier_id',0); 
-		$item = \app\modules\admin\models\ToursPrograms::getItem($id);		
-		$j=-1;$i=-1;
-		foreach (Yii::$app->zii->getTourProgramSuppliers($id) as $k=>$v){
-			 
-			$selected_car = Yii::$app->zii->chooseVehicleAuto([
-					'totalPax'=>post('total_pax',0),
-					'nationality'=>post('nationality',0),
-					'supplier_id'=>$v['id'], 
-					'item_id'=>$id,
-					////'auto'=>true,
-					//'update'=>true,
-			]);
-			$services = \app\modules\admin\models\ToursPrograms::getProgramDistanceServices($id,$v['id']);
-			$colspan1 = count($services)+1;
-			$colspan2 = (($colspan1) * count($selected_car)) + 1;
-			
-			
-			
-			$html .= '<tr><td rowspan="'.$colspan2.'" class="center"><button class="btn btn-sm btn-label btn-primary" type="button" data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>">'.($v['name']).'</button>';
-			
-			$html .= '<input type="hidden" value="'.$v['id'].'" class="selected_value_'.TYPE_ID_VECL.' selected_value_'.TYPE_ID_VECL.'_0_0" name="selected_value[]"/>';
-			
-			$html .= '</td></tr>';
-			//for($j=0;$j<4;$j++){
-			foreach ($selected_car as $k3=>$car){
-				$html .= '<tr><td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="2"><a data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="label label-danger f12p">'.$car['title'].'</span></a></td>';
-				$html .= '<td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="1"><a data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="badge">'.$car['quantity'].'</span></a></td>';
-				
-				$html .= '</tr>';
-				if(!empty($services)){
-					foreach ($services as $kv=>$sv){
-						//
-						$distance = isset($sv['distance']) && $sv['distance'] > 0 ? $sv['distance'] : -1;
-						$prices = Yii::$app->zii->calcDistancePrice([
-								'supplier_id'=>$v['id'],
-								'vehicle_id'=>$car['id'],
-								'distance_id'=>$sv['id'],
-								'item_id'=>$id,
-						]);
-						// 
-						$html .= '<tr><td colspan="5"><p><a data-item_id="'.$id.'" data-vehicle_id="'.$car['id'].'" data-supplier_id="'.$v['id'].'" data-service_id="'.$sv['id'].'" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">  ' .(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
-									<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$i.'_'.$j.'" name="selected_value[]"/>
-									<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>
-											</a></p></td>';
-						$html .= '<td class="center" colspan="1">'.($prices['price_type'] == 1 ? '<a data-item_id="'.$id.'" data-vehicle_id="'.$car['id'].'" data-supplier_id="'.$v['id'].'" data-service_id="'.$sv['id'].'" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">'. number_format($prices['distance']['distance']) .'</a>' : '-').'</td>';
-						$html .= '<td class="center" colspan="1"><a data-item_id="'.$id.'" data-vehicle_id="'.$car['id'].'" data-supplier_id="'.$v['id'].'" data-service_id="'.$sv['id'].'" data-class="w80" data-action="qedit-service-detail" data-title="Chỉnh sửa dịch vụ" href="#" onclick="open_ajax_modal(this);return false;">'.number_format($prices['price']).'</a></td>';
-						$html .= '<td class="center" colspan="1"><b class="underline">'.number_format($prices['total_price']).'</b></td>';
-						$html .= '</tr>';
-					}
-				}
-			}
-				
-				 
-			//}
-					
-				//	$html .= '<td class="center" colspan="1">'.$selected_car['quantity'].'</td>';
-				//	$html .= '<td class="center" colspan="1">'.$selected_car['quantity'].'</td>';
-				//	$html .= '<td class="center" colspan="1">'.$selected_car['quantity'].'</td>';
-				
- 
-				
-				$html .= '<tr><td colspan="12" class="pr vtop">
-						<p class=" aright bgef"> 
-							<button data-place_id="'.$v['place_id'].'" data-class="w90" data-action="add-tours-distance-services" data-title="Chọn thêm dịch vụ / Hành trình - <b class=red>'.$v['name'].'</b>" data-id="'.$id.'" data-supplier_id="'.$v['id'].'" data-time="'.$j.'" onclick="open_ajax_modal(this);" data-toggle="tooltip" data-placement="left" title="Chọn thêm / xóa dịch vụ cho '.$v['name'].'" class="btn btn-primary input-sm" type="button"><i class="glyphicon glyphicon glyphicon-pencil"></i> Thêm/ xóa chặng di chuyển</button></p>
-						</td></tr>';
-		 
-		}
-		$html .= '<tr><td colspan="12" class="pr vtop">
-						<p class=" aright "> 
-							<button data-nationality="'.post('nationality').'" data-guest="'.post('guest').'" data-class="w90" data-action="add-more-distance-supplier" data-title="Chọn thêm nhà xe" data-id="'.$id.'" onclick="open_ajax_modal(this);" title="Chọn thêm nhà xe" class="btn btn-warning input-sm" type="button"><i class="glyphicon glyphicon glyphicon-plus"></i> Chọn thêm nhà xe</button></p>
-						</td></tr>';
-		echo json_encode([
-		'html'=>$html,
-		]+$_POST);exit; 
 		break;	
 	case 'loadTourProgramDetail':
 		$html = ''; 
