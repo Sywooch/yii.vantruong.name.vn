@@ -91,18 +91,42 @@ switch (Yii::$app->request->get('action')){
 }
 //////////////////////////////////////////////////////////////////////
 switch (Yii::$app->request->post('action')){
+	case 'quick-add-more-tour-segment':
+		$item_id = post('item_id',0);
+		$segment_id = post('segment_id',0);
+		$f = post('f',[]);
+		
+		//
+		if($segment_id>0){
+			Yii::$app->db->createCommand()->update('tours_programs_segments',$f,['id'=>$segment_id,'sid'=>__SID__])->execute();
+		}else {
+			$f['sid'] = __SID__;
+			Yii::$app->db->createCommand()->insert('tours_programs_segments',$f)->execute();
+		}
+		//
+		echo json_encode([
+				//'html'=>$html,
+				'event'=>'hide-modal',
+				'callback'=>true,
+				'callback_function'=>'reloadAutoPlayFunction();'
+		]); exit;
+		break;
 	case 'add-more-tour-segment':
 		$html = '';
 		$item_id = post('item_id',0);
+		$segment_id = post('segment_id',0);
+		$segment = \app\modules\admin\models\ProgramSegments::getItem($segment_id);
 		//
-		$html .= '<div class="form-group"><div class="col-sm-12"><label >Tên chặng <i class="red font-normal">(*)</i></label><input type="text" name="f[title]" class="form-control required" required placeholder="Nhập tên chặng tour"></div></div>';
-		$html .= '<div class="form-group"><div class="col-sm-12"><label >Số ngày <i class="red font-normal">(*)</i></label><input type="number" min="1" max="99" name="f[number_of_day]" class="form-control number-format required" required placeholder="Nhập số ngày tour của chặng này"></div></div>';
+		$html .= '<div class="form-group"><div class="col-sm-12"><label >Tên chặng <i class="red font-normal">(*)</i></label><input type="text" name="f[title]" class="form-control required" required placeholder="Nhập tên chặng tour" value="'.(isset($segment['title']) ? uh($segment['title']) : '').'"></div></div>';
+		$html .= '<div class="form-group"><div class="col-sm-12"><label >Số ngày <i class="red font-normal">(*)</i></label><input type="number" min="1" max="99" name="f[number_of_day]" class="form-control number-format required" required placeholder="Nhập số ngày tour của chặng này" value="'.(isset($segment['number_of_day']) ? ($segment['number_of_day']) : '').'"></div></div>';
 		
 		//
 		$html .= '<div class="modal-footer">';
 		$html .= '<button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Lưu lại</button>';
+		$html .= $segment_id > 0 ? '<button data-action="open-confirm-dialog" data-title="Xác nhận xóa chặng tour !" data-class="modal-sm" data-confirm-action="quick_delete_program_segment" onclick="return open_ajax_modal(this);" data data-id="'.$segment_id.'" data-item_id="'.$item_id.'" type="button" class="btn btn-warning"><i class="fa fa-trash "></i> Xóa chặng</button>' : '';
 		$html .= '<button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-window-close"></i> Hủy</button>';
-		$html .= '</div>';		
+		$html .= '</div><input type="hidden" name="f[position]" value="'.(isset($segment['position']) ? $segment['position'] : post('index')).'"/>
+				<input type="hidden" name="f[item_id]" value="'.$item_id.'"/>';		
 		$_POST['action'] = 'quick-' . $_POST['action'];
 		foreach ($_POST as $k=>$v){
 			$html .= '<input type="hidden" name="'.$k.'" value="'.$v.'"/>';
@@ -1494,6 +1518,29 @@ switch (Yii::$app->request->post('action')){
 	case 'quick-open-confirm-dialog':
 		$callback = false; $callback_function = ''; $event = 'hide-modal'; $modal = '.mymodal';
 		switch (post('confirm-action')){
+			case 'unSuspendUser':
+				$id = post('id',0); $type_id = post('type_id',1);
+				\common\models\Suspended::unSuspended($id,$type_id);
+				$callback = true;
+				$callback_function = 'window.location=window.location;';
+				break;
+			case 'addSuspendUser':
+				$id = post('id',0); $type_id = post('type_id',1);
+				\common\models\Suspended::addSuspended($id,$type_id);
+				$callback = true;
+				$callback_function = 'window.location=window.location;';
+				break;
+			case 'quick_delete_program_segment':
+				$id = post('id',0);
+				$item_id = post('item_id',0);
+				Yii::$app->db->createCommand()->delete(\app\modules\admin\models\ProgramSegments::tableName(),[
+						'id'=>$id,
+						'item_id'=>$item_id,'sid'=>__SID__
+				])->execute();
+				$callback = true;
+				$callback_function = 'reloadAutoPlayFunction();';
+				 
+				break;
 			case 'quick-remove-supplier-seasons':
 				$callback = true;
 				$supplier_id = post('supplier_id');
@@ -3103,6 +3150,126 @@ change:function(event,ui){
 		]+$_POST);
 		exit;
 		break;
+	case 'add-more-tours-program-guides':
+		$id = post('id',0);
+		$day = post('day',0);
+		$time = post('time',0);		
+		$html = '';
+		
+		$html .= ' 
+				<table class="table table-bordered vmiddle"><thead><tr>
+			 
+				<th class="center bold col-ws-6">Danh sách đã chọn</th>
+				<th class="center bold col-ws-6">Danh sách có thể chọn</th>
+				</tr></thead><tbody>';
+		$html .= '<tr class="vtop">
+				<td class="hide">
+				<ul class="style-none ul-style-l01">';
+		//foreach (showListChooseService() as $k=>$v){
+			$html .= '<li class="li-service-first-child"><a data-day="0" data-time="-1" data-id="'.TYPE_ID_GUIDES.'" onclick="return change_selected_tour_service_group(this);" href="#"></a></li>';
+		//}
+		$services = \app\modules\admin\models\ToursPrograms::getProgramServices($id,$day,$time);
+		$html .= '</ul>
+				
+				</td>
+				<td class="">
+				
+				<ul id="sortable1" class="connectedSortable style-none">';
+		if(!empty($services)){
+			foreach ($services as $kv=>$sv){
+				$package = \app\modules\admin\models\PackagePrices::getItem($sv['package_id']);
+				$html .= '<li data-package_id="'.$sv['package_id'].'" data-type_id="'.$sv['type_id'].'" data-id="'.$sv['id'].'" class="ui-state-default">'.(!empty($package) ? '<i class="underline green">['.uh($package['title']).']</i>&nbsp;' : '').(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
+						<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$day.'_'.$time.'" name="selected_value[]"/>
+						<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>
+						<input value="'.$sv['package_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_package_id[]"/>
+						</li>';
+			}
+		}
+		$place = [];
+		if(post('place_id') > 0){
+			$place = \app\modules\admin\models\DeparturePlaces::getItem(post('place_id'));
+		}
+				$html .= '</ul>
+				</td>
+				<td class="">
+<div class="div-quick-search-service">
+						<div class="fl w50">
+						<select data-placeholder="Chọn địa danh" onchange="quick_search_tour_service(\'.input-quick-search-service\');" data-action="load_dia_danh" data-role="load_dia_danh" class="form-control input-sm ajax-chosen-select-ajax input-quick-search-local">';
+				if(!empty($place)){
+					$html .= '<option value="'.$place['id'].'" selected>'.$place['name'].'</option>'; 
+				}
+				$html .= '</select>
+						</div><div class="fl w50">
+						<input data-time="'.$time.'" data-day="'.$day.'" data-type_id="'.TYPE_ID_HOTEL.'" type="text" onkeyup="quick_search_tour_service(this);" onkeypress="return disabledFnKey(this);" placeholder="Tìm kiếm nhanh" class="form-control input-quick-search-service"/></div></div>				
+<div class="fl100"><div class="available_services div-slim-scroll" data-height="auto">				
+ 
+<ul id="sortable2" class="connectedSortable style-none">
+   
+</ul></div></div>
+				
+				</td>
+				</tr>';
+		
+		
+		$html .= '</tbody></table>';
+		
+		$html .= '<div class="modal-footer">';
+		$html .= '<button type="submit" class="btn btn-primary"><i class="glyphicon glyphicon-floppy-save"></i> Lưu lại</button>';
+		$html .= '<button type="button" class="btn btn-danger" data-dismiss="modal"><i class="glyphicon glyphicon-remove"></i> Đóng</button>';
+		$html .= '</div>';
+		$_POST['action'] = 'quick-' . $_POST['action'];
+		foreach ($_POST as $k=>$v){
+			$html .= '<input type="hidden" name="'.$k.'" value="'.$v.'"/>';
+		}
+		///
+		//$r['event'] = $_POST['action'];
+		echo json_encode([
+				'html'=>$html,
+				'event'=>$_POST['action'],
+				'callback'=>true,
+				'callback_function'=>'loadScrollDiv();loadSelectTagsinput1();jQuery(\'.li-service-first-child a\').click();jQuery("#sortable2").sortable({connectWith: ".connectedSortable",
+receive:function(event,ui){
+				$type_id = ui.item.attr(\'data-type_id\');
+				$id = ui.item.attr(\'data-id\');
+				$package_id = ui.item.attr(\'data-package_id\');
+				(ui.item).addClass(\'ui-state-highlight\')
+				.removeClass(\'ui-state-default\')
+				.find(\'input\').remove();
+				(ui.item).addClass(\'ui-state-highlight\')
+				.append(\'<input value="\'+$package_id+\'" type="hidden" class="removed_value_\'+$type_id+\'" name="removed_package_id[]"/>\')
+				.append(\'<input value="\'+$id+\'" type="hidden" class="removed_value_\'+$type_id+\'" name="removed_item_id[]"/>\')
+				.append(\'<input value="\'+$type_id+\'" type="hidden" class="removed_value_\'+$type_id+\'" name="removed_type_id[]"/>\')
+				
+},
+				
+}).disableSelection();
+jQuery("#sortable1").sortable({connectWith: ".connectedSortable",
+receive:function(event,ui){
+				$type_id = ui.item.attr(\'data-type_id\');
+				$id = ui.item.attr(\'data-id\');
+				$package_id = ui.item.attr(\'data-package_id\');
+				ui.item.removeClass(\'ui-state-highlight\').addClass(\'ui-state-default\')
+				.append(\'<input value="\'+$package_id+\'" type="hidden" class="selected_value_\'+$type_id+\'" name="selected_package_id[]"/><input value="\'+$id+\'" type="hidden" class="selected_value_\'+$type_id+\' selected_value_\'+$type_id+\'_'.$day.'_'.$time.' " name="selected_value[]"/><input value="\'+$type_id+\'" type="hidden" class="selected_value_\'+$type_id+\'" name="selected_type_id[]"/>\');
+				ui.item.find(\'.removed_value_\'+$type_id).remove();
+},
+change:function(event,ui){
+				//console.log(ui.item.index())
+				//(ui.item).removeClass(\'ui-state-highlight\').addClass(\'ui-state-default\')
+},
+	start: function(event, ui) {
+     
+        console.log("Start position: " + ui.item.index());
+    },
+				stop: function(event, ui) {
+     
+        console.log("New position: " + ui.item.index());
+    }
+}).disableSelection();'
+				//'alert'=>$state ? '' : 'Mã tour không hợp lệ hoặc đã được sử dụng.',
+		]+$_POST);
+		exit;
+		break;	
+		
 	case 'add-tours-services':
 		$id = post('id',0);
 		$day = post('day',0);
@@ -4077,11 +4244,16 @@ change:function(event,ui){
 	case 'loadTourProgramDistances':
 		
 		echo json_encode([
-			'html'=>loadTourProgramDistances(post('id',0))
+			'html'=>getTourProgramSegments(post('id',0))
 		]+$_POST);exit; 
 		
 		 
 		break;	
+	case 'loadTourProgramGuides':
+		echo json_encode([
+				'html'=>loadTourProgramGuides(post('id',0))
+		]+$_POST);exit;
+		break;
 	case 'loadTourProgramDetail':
 		$html = ''; 
 		//$model = load_model('tours_programs');

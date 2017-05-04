@@ -4123,7 +4123,7 @@ function getClientIP(){
 
 
 function loadTourProgramDistances($id = 0,$o=[]){
-
+	$item_id = $id; $places_id = [];
 	$loadDefault = isset($o['loadDefault']) && cbool($o['loadDefault']) == 1 ? true : false;
 	$updateDatabase = isset($o['updateDatabase']) && cbool($o['updateDatabase']) == 1 ? true : false;
 	$item = \app\modules\admin\models\ToursPrograms::getItem($id);
@@ -4168,7 +4168,7 @@ function loadTourProgramDistances($id = 0,$o=[]){
 		//\\//\\ *.* //\\//\\
 		$supplier_id = $v['id'];
 		$from_date = $item['from_date'];
-		
+		$places_id[] = $v['place_id'];
 		$quotation = \app\modules\admin\models\Suppliers::getQuotation([
 				'supplier_id'=>$supplier_id,
 				'date'=>$from_date
@@ -4288,8 +4288,26 @@ function loadTourProgramDistances($id = 0,$o=[]){
 	}
 	$html .= '<tr><td colspan="12" class="pr vtop">
 						<p class=" aright ">
-							<button data-segment_id="'.(isset($segment['id']) ? $segment['id'] : 0).'" data-toggle="tooltip" data-placement="left" data-nationality="'.$item['nationality'].'" data-guest="'.$item['guest'].'" data-class="w90" data-action="add-more-distance-supplier" data-title="Chọn thêm nhà xe" data-id="'.$id.'" onclick="open_ajax_modal(this);" title="Chọn thêm nhà xe'.(!empty($segment) ? ' cho chặng '. uh($segment['title']) : '').'" class="btn btn-success input-sm" type="button"><i class="glyphicon glyphicon glyphicon-plus"></i> Chọn thêm nhà xe</button></p>
+			
+							<button data-segment_id="'.(isset($segment['id']) ? $segment['id'] : 0).'" data-toggle="tooltip" data-placement="left" data-nationality="'.$item['nationality'].'" data-guest="'.$item['guest'].'" data-class="w90" data-action="add-more-distance-supplier" data-title="Chọn thêm nhà xe" data-id="'.$id.'" onclick="open_ajax_modal(this);" title="Chọn thêm nhà xe'.(!empty($segment) ? ' cho chặng '. uh($segment['title']) : '').'" class="btn btn-success input-sm" type="button"><i class="fa fa-bus"></i> Chọn thêm nhà xe</button>
+									</p>
 						</td></tr>';
+	$html .= '</tbody> </table>';
+	
+	//
+	$html .= '<p class="upper bold grid-sui-pheader aleft ">Hướng dẫn viên</p>
+					<table class="table table-bordered mgb0 table-sm vmiddle">
+					<thead><tr><th colspan="12"></th></tr></thead><tbody>';
+	$html .= '<tr><td colspan="3" class="col-ws-3">HDV tại HN - HDV Tiếng Anh</td>
+					<td class="col-ws-1 center"><span class="badge">'.(isset($car['quantity']) ? $car['quantity'] : 0).'</span></td>
+			<td colspan="5">HDV Suốt tuyến</td>
+					<td class="col-ws-1 center" title="Số ngày">'.$segment['number_of_day'].'</td>
+					<td class="col-ws-1 center">0</td>
+					<td class="col-ws-1 center">0</td>
+					</tr>';
+	$html .= '<tr><td colspan="12" class="pr vtop">';
+	$html .= '<p class="aright"><button data-place_id="'.implode(',', $places_id).'" data-segment_id="'.(isset($segment['id']) ? $segment['id'] : 0).'" data-toggle="tooltip" data-placement="left" data-nationality="'.$item['nationality'].'" data-guest="'.$item['guest'].'" data-class="w90" data-action="add-more-tours-program-guides" data-title="Chọn hướng dẫn viên" data-item_id="'.$item_id.'" onclick="open_ajax_modal(this);" title="Chọn hướng dẫn viên'.(!empty($segment) ? ' cho chặng '. uh($segment['title']) : '').'" class="btn btn-warning input-sm" type="button"><i class="fa fa-universal-access"></i> Chọn hướng dẫn viên</button></p>';
+	$html .= '</td></tr>';
 	$html .= '</tbody> </table>';
 	return $html;
 }
@@ -4351,21 +4369,24 @@ function getTourProgramSegments($item_id=0, $o = []){
 	$item_id = is_numeric($item_id) ? $item_id : (isset($o['item_id']) ? $o['item_id'] : 0);	
 	//
 	$segments = \app\modules\admin\models\ProgramSegments::getAll($item_id);
+	$item = \app\modules\admin\models\ToursPrograms::getItem($item_id);
 	$html = '<div class="col-sm-12 bang-thong-tin-chung"><div class="row">';
 	$html .= '<div class="" style="margin-top: 10px;margin-bottom:5px;"><p class="upper bold grid-sui-pheader aleft ">Chặng tour</p></div>';
 	if(!empty($segments)){
 		foreach ($segments as $km=>$segment){
-			$html .= '<div class="block-example '.($km%2==1 ? 'bg-success' : '').'"><span class="f12e block-title btn btn-success">Chặng: '.uh($segment['title']).'</span>';
+			$html .= '<div class="block-example '.($km%2==1 ? 'bg-success' : '').'">
+			<span data-toggle="tooltip" data-placement="right" data-action="add-more-tour-segment" data-title="Chỉnh sửa chặng tour" data-segment_id="'.$segment['id'].'" data-id="'.$item_id.'" data-item_id="'.$item_id.'" onclick="open_ajax_modal(this);" title="Click để chỉnh sửa chặng: '.uh($segment['title']).'" class="f12e block-title btn btn-success">Chặng: '.uh($segment['title']).' <i>('.$segment['number_of_day'].' ngày)</i></span>';
 			$html .= '<div class="form-group mgb0">';
 			$html .= loadTourProgramDistances($item_id,['segment'=>$segment]);
-			 
+			
+			
 			
 			$html .= '</div>';
 			$html .= '</div>';
 		}
 	}
 	$html .= '<p class=" aright " style="padding:0 5px 15px 5px;border-bottom:1px solid #ddd">
-<button data-toggle="tooltip" data-index="'.count($segments).'" data-placement="left" data-action="add-more-tour-segment" data-title="Thêm chặng tour" data-id="'.$item_id.'" data-item_id="'.$item_id.'" onclick="open_ajax_modal(this);" title="" class="btn btn-warning btn-lg" type="button" data-original-title="Thêm chặng tour"><i class="glyphicon glyphicon glyphicon-plus"></i> Thêm chặng tour</button></p>';
+<button data-toggle="tooltip" data-index="'.count($segments).'" data-placement="top" data-action="add-more-tour-segment" data-title="Thêm chặng tour" data-id="'.$item_id.'" data-item_id="'.$item_id.'" onclick="open_ajax_modal(this);" title="Thêm chặng tour" class="btn btn-warning btn-lg active" type="button" data-original-title="Thêm chặng tour"><i class="glyphicon glyphicon glyphicon-plus"></i> Thêm chặng tour</button></p>';
 	$html .= '</div>';
 	
 	$html .= '<div class="row">

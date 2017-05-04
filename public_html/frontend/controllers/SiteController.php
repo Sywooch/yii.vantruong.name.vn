@@ -297,10 +297,10 @@ class SiteController extends Controller
     	}
     	
     }
-    public function actionIndexa()
+    public function actionSuspended()
     {
     	 
-    		return $this->render('index');
+    		return $this->render('suspended');
     }
     public function actionIndex()
     {     	
@@ -340,7 +340,10 @@ class SiteController extends Controller
     
     public function actionMembers()
     {
-    	return $this->render(__TEMP_NAME__ .DS . Yii::$app->controller->action->id);
+    	$model = new SignupForm();
+    	return $this->render(__TEMP_NAME__ .DS . Yii::$app->controller->action->id,[
+    			'model'=>$model
+    	]);
     }
     public function actionCustomers()
     {

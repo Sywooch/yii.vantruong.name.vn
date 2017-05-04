@@ -311,7 +311,7 @@ class Application extends \yii\base\Application
 //		Yii::$site = $this->getConfigs();
 		$check_database = false;
 		$this->check_ssl();
-		if(strlen($url)>0){
+		if(strlen($url)>0 && !__IS_SUSPENDED__){
 			if(__IS_ADMIN__){
 				$r = (new \yii\db\Query())->select(['id','route','child_code','lft','rgt','bizrule','title','url','is_permission'])
 				->from('{{%admin_menu}}')->where(['url'=>$url,'lang'=>ADMIN_LANG])->one();
@@ -424,6 +424,9 @@ class Application extends \yii\base\Application
 
 				define('__CATEGORY_URL__', isset($r['url']) ? $r['url'] : '');
 			}
+		}elseif(__IS_SUSPENDED__){
+			$this->defaultRoute = 'site';
+			$_route = ['suspended']; 
 		}
 		
 		defined('__IS_DETAIL__') or define('__IS_DETAIL__', false);
@@ -746,7 +749,7 @@ class Application extends \yii\base\Application
 			define ('__SID__',0);
 		}
 		define('__DOMAIN_ADMIN__',$dma);
-		 
+		define('__IS_SUSPENDED__',\common\models\Suspended::checkSuspended());
 		define('ADMIN_ADDRESS',__DOMAIN_ADMIN__ ? Yii::$app->homeUrl : Yii::$app->homeUrl .  $this->_adminRoute[0]);
 		// Set language
 		$config = Yii::$app->session['config'] ;

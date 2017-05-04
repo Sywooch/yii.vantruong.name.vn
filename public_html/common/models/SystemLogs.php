@@ -49,6 +49,9 @@ class SystemLogs extends \yii\db\ActiveRecord
     	 
     	return $item;
     }
+    public static function writeLog($o = []){
+    	return Yii::$app->db->createCommand()->insert(self::tableName(),$o)->execute();
+    }
     /*
      * 
      */
