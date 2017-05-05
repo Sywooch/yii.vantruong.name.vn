@@ -1,5 +1,7 @@
 <?php 
-
+loadTourProgramDistances(1,[
+		'segment'=>\app\modules\admin\models\ProgramSegments::getItem(2)
+]);
 ?>
 <div class="table-responsive ">
 <div class="fl100 edit-form">

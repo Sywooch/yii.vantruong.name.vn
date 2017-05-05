@@ -302,4 +302,26 @@ class ToursPrograms extends \yii\db\ActiveRecord
     	];
     	
     }
+    
+    public static function getProgramGuides($o = []){
+    	$a = ['item_id','segment_id','supplier_id'];
+    	foreach ($a as $b){
+    		$$b = isset($o[$b]) ? $o[$b] : 0;
+    	}
+    	$query = (new Query())
+    	->select(['a.*','b.*','supplier_name'=>(new Query())->select('name')->from('customers')->where(['id'=>(new Query())
+    			->select('supplier_id')->from('guides_to_suppliers')->where('guide_id=b.id')
+    	])->limit(1)])
+    	->from(['a'=>'tours_programs_guides'])
+    	->innerJoin(['b'=>'guides'],'a.guide_id=b.id')
+    	->where([
+    			'a.item_id'=>$item_id,
+    			'a.segment_id'=>$segment_id,
+    	]);
+    	if($supplier_id>0){
+    		$query->andWhere(['a.supplier_id'=>$supplier_id]);
+    	}
+    	
+    	return $query->orderBy(['a.position'=>SORT_ASC,'b.title'=>SORT_ASC])->all();
+    }
 }

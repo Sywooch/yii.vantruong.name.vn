@@ -3150,13 +3150,82 @@ change:function(event,ui){
 		]+$_POST);
 		exit;
 		break;
+	case 'quick-add-more-tours-program-guides':
+		$guide_type = post('guide_type',1);
+		$item_id = post('item_id',0);
+		$segment_id = post('segment_id',0);
+		$selected_value = post('selected_value',[]);
+		// Xóa dl dư
+		Yii::$app->db->createCommand()->delete('tours_programs_guides',['and',
+				['item_id'=>$item_id,'segment_id'=>$segment_id],
+				['not in','guide_id',$selected_value]
+		])->execute();
+		
+		Yii::$app->db->createCommand()->delete('tours_programs_guides_prices',['and',
+				['item_id'=>$item_id,'segment_id'=>$segment_id], 
+				['not in','service_id',$selected_value] 
+		])->execute();
+		//
+		$supplier_id = 0;
+		if(!empty($selected_value)){
+			foreach ($selected_value as $position => $guide_id){
+				 
+				
+				$supplier_id = Yii::$app->zii->getSupplierIDFromService($guide_id,TYPE_ID_GUIDES);
+				 
+				if((new Query())->from('tours_programs_guides')->where([
+						'item_id'=>$item_id,
+						'segment_id'=>$segment_id,
+						'supplier_id'=>$supplier_id,
+						'guide_id'=>$guide_id
+				])->count(1) == 0){
+				 
+					Yii::$app->db->createCommand()->insert('tours_programs_guides',[
+						'item_id'=>$item_id,
+						'segment_id'=>$segment_id,
+						'supplier_id'=>$supplier_id,
+						'guide_id'=>$guide_id,
+						'position'=>$position,	 
+						'type_id'=>$guide_type	
+					])->execute();
+					 
+				}else{
+				 
+					Yii::$app->db->createCommand()->update('tours_programs_guides',[
+						'position'=>$position,	
+						'type_id'=>$guide_type
+					],[
+							'item_id'=>$item_id,
+							'segment_id'=>$segment_id,
+							'supplier_id'=>$supplier_id,
+							'guide_id'=>$guide_id,
+							
+					])->execute();
+				}
+				 
+			}
+		}
+		echo json_encode([
+				'event'=>'hide-modal', 
+				'callback'=>true,
+				'post'=>'',
+				'callback_function'=>'console.log(data);reloadAutoPlayFunction();'
+		]); exit;
+		break;
 	case 'add-more-tours-program-guides':
 		$id = post('id',0);
 		$day = post('day',0);
 		$time = post('time',0);		
+		$item_id = post('item_id',$id);
+		$segment_id = post('segment_id',0);
 		$html = '';
 		
-		$html .= ' 
+		$html .= '<div>
+				<label data-toggle="tooltip" title="HDV suốt tuyến chỉ được chọn 1 lần duy nhất ở chặng đầu tiên của tour." class="mgr15">
+				<input type="radio" name="guide_type" value="1" checked/> HDV Suốt tuyến</label>
+				<label data-toggle="tooltip" title="HDV từng chặng sẽ chọn ở từng chặng riêng biệt." >
+				<input type="radio" name="guide_type" value="2"/> HDV Từng chặng</label>
+				</div> 
 				<table class="table table-bordered vmiddle"><thead><tr>
 			 
 				<th class="center bold col-ws-6">Danh sách đã chọn</th>
@@ -3168,7 +3237,10 @@ change:function(event,ui){
 		//foreach (showListChooseService() as $k=>$v){
 			$html .= '<li class="li-service-first-child"><a data-day="0" data-time="-1" data-id="'.TYPE_ID_GUIDES.'" onclick="return change_selected_tour_service_group(this);" href="#"></a></li>';
 		//}
-		$services = \app\modules\admin\models\ToursPrograms::getProgramServices($id,$day,$time);
+		$services = \app\modules\admin\models\ToursPrograms::getProgramGuides([
+				'item_id'=>$item_id,
+				'segment_id'=>$segment_id,
+		]);
 		$html .= '</ul>
 				
 				</td>
@@ -3178,8 +3250,8 @@ change:function(event,ui){
 		if(!empty($services)){
 			foreach ($services as $kv=>$sv){
 				$package = \app\modules\admin\models\PackagePrices::getItem($sv['package_id']);
-				$html .= '<li data-package_id="'.$sv['package_id'].'" data-type_id="'.$sv['type_id'].'" data-id="'.$sv['id'].'" class="ui-state-default">'.(!empty($package) ? '<i class="underline green">['.uh($package['title']).']</i>&nbsp;' : '').(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green">['.uh($sv['supplier_name']).']</i>' : '').'
-						<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$day.'_'.$time.'" name="selected_value[]"/>
+				$html .= '<li data-package_id="'.$sv['package_id'].'" data-type_id="'.$sv['type_id'].'" data-id="'.$sv['id'].'" class="ui-state-default">'.(!empty($package) ? '<i class="underline green">['.uh($package['title']).']</i>&nbsp;' : '').(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green"> ['.uh($sv['supplier_name']).']</i>' : '').'
+						<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$segment_id.'_'.$time.'" name="selected_value[]"/>
 						<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>
 						<input value="'.$sv['package_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_package_id[]"/>
 						</li>';
@@ -3192,15 +3264,28 @@ change:function(event,ui){
 				$html .= '</ul>
 				</td>
 				<td class="">
-<div class="div-quick-search-service">
-						<div class="fl w50">
+<div class="div-quick-search-service"> 
+						<div class=" col-sm-4"><div class="row">
 						<select data-placeholder="Chọn địa danh" onchange="quick_search_tour_service(\'.input-quick-search-service\');" data-action="load_dia_danh" data-role="load_dia_danh" class="form-control input-sm ajax-chosen-select-ajax input-quick-search-local">';
 				if(!empty($place)){
 					$html .= '<option value="'.$place['id'].'" selected>'.$place['name'].'</option>'; 
 				}
 				$html .= '</select>
-						</div><div class="fl w50">
-						<input data-time="'.$time.'" data-day="'.$day.'" data-type_id="'.TYPE_ID_HOTEL.'" type="text" onkeyup="quick_search_tour_service(this);" onkeypress="return disabledFnKey(this);" placeholder="Tìm kiếm nhanh" class="form-control input-quick-search-service"/></div></div>				
+						</div></div>
+						
+						<div class=" col-sm-4"><div class="row">
+						<select data-placeholder="Chọn ngôn ngữ" data-search="hidden" onchange="quick_search_tour_service(\'.input-quick-search-service\');" class="form-control chosen-select"><option></option>'; 
+				foreach (\app\modules\admin\models\AdLanguage::getList() as $lang){
+					$html .= '<option value="'.$lang['code'].'">'.$lang['title'].'</option>';  
+				}
+				$html .= '</select>
+						</div></div>
+						
+						<div class=" col-sm-4"><div class="row">
+						<input data-time="'.$time.'" data-day="'.$segment_id.'" data-type_id="'.TYPE_ID_GUIDES.'" type="text" onkeyup="quick_search_tour_service(this);" onkeypress="return disabledFnKey(this);" placeholder="Tìm kiếm nhanh" class="form-control input-quick-search-service"/>
+								</div></div>
+								
+								</div>				
 <div class="fl100"><div class="available_services div-slim-scroll" data-height="auto">				
  
 <ul id="sortable2" class="connectedSortable style-none">
@@ -3227,7 +3312,7 @@ change:function(event,ui){
 				'html'=>$html,
 				'event'=>$_POST['action'],
 				'callback'=>true,
-				'callback_function'=>'loadScrollDiv();loadSelectTagsinput1();jQuery(\'.li-service-first-child a\').click();jQuery("#sortable2").sortable({connectWith: ".connectedSortable",
+				'callback_function'=>'loadScrollDiv();loadSelectTagsinput1();reloadTooltip();jQuery(\'.li-service-first-child a\').click();jQuery("#sortable2").sortable({connectWith: ".connectedSortable",
 receive:function(event,ui){
 				$type_id = ui.item.attr(\'data-type_id\');
 				$id = ui.item.attr(\'data-id\');
@@ -3274,6 +3359,9 @@ change:function(event,ui){
 		$id = post('id',0);
 		$day = post('day',0);
 		$time = post('time',0);		
+		$item_id = post('item_id',$id);
+		$segment_id = post('segment_id',0);
+		
 		$html = '';
 		
 		$html .= '<p class="help-block">Bạn đang chọn dịch vụ cho ngày thứ <b class="red">'.(post('day',0)+1).'</b> - buổi <b class="green underline">'.showPartDay(post('time',0)).'</b></p>
@@ -3557,8 +3645,8 @@ change:function(event,ui){
 		echo json_encode([
 			'event'=>'hide-modal',
 			'callback'=>true,
-			'post'=>$_POST,
-			'callback_function'=>'console.log(data);reloadAutoPlayFunction();'
+		//	'post'=>$_POST,
+			'callback_function'=>'reloadAutoPlayFunction();'
 		]); exit;
 		break;
 	case 'quickGetAutoVehicleAjax':

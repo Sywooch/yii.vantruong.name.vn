@@ -2807,10 +2807,11 @@ function getSupplierPricesList($supplier_id = 0, $o = []){
 			break;
 		case TYPE_ID_REST:
 			$h['menu'] = true;
+			
 			$l = \app\modules\admin\models\Menus::getMenus(['supplier_id'=>$supplier_id]);
 			break;
 		case TYPE_ID_GUIDES:
-			$h['guide'] = true;
+			$h['guide'] = true;$h['package'] = false;
 			$l = \app\modules\admin\models\Guides::getGuides(['supplier_id'=>$supplier_id]);
 			//view($l);
 			break;
@@ -4128,6 +4129,7 @@ function loadTourProgramDistances($id = 0,$o=[]){
 	$updateDatabase = isset($o['updateDatabase']) && cbool($o['updateDatabase']) == 1 ? true : false;
 	$item = \app\modules\admin\models\ToursPrograms::getItem($id);
 	$segment = isset($o['segment']) ? $o['segment'] : [];
+	$package_id = isset($o['package_id']) ? $o['package_id'] : 0;
 	//
 	
 	//
@@ -4294,24 +4296,68 @@ function loadTourProgramDistances($id = 0,$o=[]){
 						</td></tr>';
 	$html .= '</tbody> </table>';
 	
-	//
+	if(!empty($selected_car)){
+	// Huong dan
 	$html .= '<p class="upper bold grid-sui-pheader aleft ">Hướng dẫn viên</p>
 					<table class="table table-bordered mgb0 table-sm vmiddle">
 					<thead><tr><th colspan="12"></th></tr></thead><tbody>';
-	$html .= '<tr><td colspan="3" class="col-ws-3">HDV tại HN - HDV Tiếng Anh</td>
+	$guide_type = 1;
+	foreach ( \app\modules\admin\models\ToursPrograms::getProgramGuides([
+				'item_id'=>$item_id,
+				'segment_id'=>$segment['id'],
+		]) as $kv=>$sv){
+		$guide_type = $sv['type_id'];
+		$prices = Yii::$app->zii->getProgramGuidesPrices([
+				'controller_code'=>TYPE_ID_GUIDES,
+				'quotation_id'=>$quotation['id'],
+				'nationality_id'=>$nationality_group['id'],
+				'season_id'=>isset($seasons['seasons_prices']['id']) ? $seasons['seasons_prices']['id'] : 0,
+				'supplier_id'=>$supplier_id,
+				//'total_pax'=>$total_pax,
+				'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
+				'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
+				'package_id'=>$package_id, 
+				'item_id'=>$sv['id'],
+				//'season_time_id'=>$season_time_id,
+				'seasons'=>$seasons,
+				'segment_id'=>$segment['id'],
+	 
+		]);
+		 
+		if(!empty($prices) && isset($prices['price1'])){
+			$price = Yii::$app->zii->getServicePrice($prices['price1'],[
+					'item_id'=>$id,
+					//'price'=>$prices['price1'],
+					'from'=>$prices['currency'],
+					'to'=>$item['currency']
+			]);
+		}
+	$html .= '<tr><td colspan="3" class="col-ws-3">'.uh($sv['supplier_name']).' - '.uh($sv['title']).'</td>
 					<td class="col-ws-1 center"><span class="badge">'.(isset($car['quantity']) ? $car['quantity'] : 0).'</span></td>
-			<td colspan="5">HDV Suốt tuyến</td>
+			<td colspan="5">'.getGuideTypeName($guide_type).'</td>
 					<td class="col-ws-1 center" title="Số ngày">'.$segment['number_of_day'].'</td>
 					<td class="col-ws-1 center">0</td>
 					<td class="col-ws-1 center">0</td>
 					</tr>';
+	}
 	$html .= '<tr><td colspan="12" class="pr vtop">';
-	$html .= '<p class="aright"><button data-place_id="'.implode(',', $places_id).'" data-segment_id="'.(isset($segment['id']) ? $segment['id'] : 0).'" data-toggle="tooltip" data-placement="left" data-nationality="'.$item['nationality'].'" data-guest="'.$item['guest'].'" data-class="w90" data-action="add-more-tours-program-guides" data-title="Chọn hướng dẫn viên" data-item_id="'.$item_id.'" onclick="open_ajax_modal(this);" title="Chọn hướng dẫn viên'.(!empty($segment) ? ' cho chặng '. uh($segment['title']) : '').'" class="btn btn-warning input-sm" type="button"><i class="fa fa-universal-access"></i> Chọn hướng dẫn viên</button></p>';
+	$html .= '<p class="aright"><button data-guide_type="'.$guide_type.'" data-place_id="'.implode(',', $places_id).'" data-segment_id="'.(isset($segment['id']) ? $segment['id'] : 0).'" data-toggle="tooltip" data-placement="left" data-nationality="'.$item['nationality'].'" data-guest="'.$item['guest'].'" data-class="w90" data-action="add-more-tours-program-guides" data-title="Chọn hướng dẫn viên" data-item_id="'.$item_id.'" onclick="open_ajax_modal(this);" title="Chọn hướng dẫn viên'.(!empty($segment) ? ' cho chặng '. uh($segment['title']) : '').'" class="btn btn-warning input-sm" type="button"><i class="fa fa-universal-access"></i> Chọn hướng dẫn viên</button></p>';
 	$html .= '</td></tr>';
 	$html .= '</tbody> </table>';
+	//
+	}
 	return $html;
 }
 
+function getGuideTypeName($type = 1){
+	switch ($type){
+		case 1:
+			return 'HDV suốt tuyến';
+			break;
+		case 2: return 'HDV chặng'; break;
+		default: return 'Chưa xác định'; break;
+	}
+}
 function discountPrice($price2 = 0, $price1 = 0, $price_type = 0){ // 0: % 
 	if($price1 > $price2 && $price2 > 0){
 		$du = $price1 - $price2;

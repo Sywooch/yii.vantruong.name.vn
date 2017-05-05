@@ -1220,21 +1220,32 @@ class Zii extends yii\base\Object
 			}
 		}
 		if(!empty($filters)){
-			$fArrays = Filters::getFilters(array('id'=>$filters,'parent_id'=>-1,'select'=>'a.id,a.menu_id',));
+			$fArrays = Filters::getFilters(['id'=>$filters,'parent_id'=>-1,'select'=>['a.id','a.menu_id','a.code','a.value','a.vmax']]);
 			///view($fArrays);
 			$f1 = $f2 = array();
 			if(!empty($fArrays)){
 				foreach ($fArrays as $f){
-					if($f['menu_id'] > 0){
-						$fxs = SiteMenu::getAllChildID($f['menu_id']);// Zii::$CRouter->_get_all_child_id($f['menu_id']);
-						if(!empty($fxs)){
-							foreach ($fxs as $fx){
-								$f1[] = $fx;
+					switch ($f['code']){
+						case 'filter_prices':
+							$query->andWhere(['between','a.price2',$f['value'],$f['vmax']]);
+							break;
+						default:
+							if($f['menu_id'] > 0){
+								$fxs = SiteMenu::getAllChildID($f['menu_id']);// Zii::$CRouter->_get_all_child_id($f['menu_id']);
+								if(!empty($fxs)){
+									foreach ($fxs as $fx){
+										$f1[] = $fx;
+									}
+								}
+							}else{
+								$f2[] = $f['id'];
 							}
-						}
-					}else{
-						$f2[] = $f['id'];
+							break;
 					}
+					
+					
+					
+					
 				}
 			}
 			if(!empty($f1)){
@@ -1833,6 +1844,108 @@ class Zii extends yii\base\Object
 		
 	}
 	
+	public function getProgramGuidesPrices($o = []){
+		//\\//\\ *.* //\\//\\
+		$from_date = isset($o['from_date']) && check_date_string($o['from_date']) ? $o['from_date'] : false;
+		$day = isset($o['day']) ? $o['day'] : -1;
+		$time = isset($o['time']) ? $o['time'] : -1;
+		
+		$day_id = isset($o['day_id']) ? $o['day_id'] : $day;
+		$time_id = isset($o['time_id']) ? $o['time_id'] : $time;
+		$season_time_id = isset($o['season_time_id']) ? $o['season_time_id'] : $time_id;
+		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
+		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
+		$service_id = isset($o['service_id']) ? $o['service_id'] : 0;
+		$type_id = isset($o['type_id']) ? $o['type_id'] : 0;
+		$state = isset($o['state']) ? $o['state'] : 1;
+		$package_id = isset($o['package_id']) ? $o['package_id'] : 0;
+		$sub_item_id = isset($o['sub_item_id']) ? $o['sub_item_id'] : 0;
+		$segment_id = isset($o['segment_id']) ? $o['segment_id'] : 0;
+		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
+		$nationality = isset($o['nationality']) ? $o['nationality'] : 0;
+		$nationality_id = isset($o['nationality_id']) ? $o['nationality_id'] : $nationality;
+		$loadDefault = isset($o['loadDefault']) ? $o['loadDefault'] : false;
+		$updateDatabase = isset($o['updateDatabase']) ? $o['updateDatabase'] : true;
+		if($from_date === false && $item_id>0){
+			$item = \app\modules\admin\models\ToursPrograms::getItem($item_id);
+			$from_date = date('Y-m-d', mktime(0,0,0,
+					date('m',strtotime($item['from_date'])),
+					date('d',strtotime($item['from_date']))+$day_id,
+					date('Y',strtotime($item['from_date']))));
+		}
+		//$updateDatabase = false;
+		$supplier_id = $this->getSupplierIDFromService($service_id,$type_id);
+		//$supplier_id = $supplier_id > 0 ? $supplier_id : $service_id;
+		//\\//\\ *.* //\\//\\
+		$quotation = \app\modules\admin\models\Suppliers::getQuotation([
+				'supplier_id'=>$supplier_id,
+				'date'=>$from_date
+		]);
+		//view($quotation);
+		//view($from_date);
+		//
+		$nationality_group = \app\modules\admin\models\Suppliers::getNationalityGroup([
+				'supplier_id'=>$supplier_id,
+				'nationality_id'=>$nationality_id,
+		]);
+		//
+		$seasons = \app\modules\admin\models\Suppliers::getSeasons([
+				'supplier_id'=>$supplier_id,
+				'date'=>$from_date,
+				'time_id'=>$time_id
+		]);
+		//	view($seasons);
+		$groups = \app\modules\admin\models\Suppliers::getGuestGroup([
+				'supplier_id'=>$supplier_id,
+					
+				'date'=>$from_date,
+				'time_id'=>$time_id
+		]);
+		
+		//
+		if(!$loadDefault && $item_id>0){
+			// Lấy giá đã lưu riêng
+				
+			$query = (new Query())->from(['a'=>'tours_programs_guides_prices'])
+			->where([
+					'a.item_id'=>$item_id,
+					//'supplier_id'=>$supplier_id,
+					//'a.state'=>$state,
+					//'day'=>$day,
+					//'time'=>$time,
+					'a.package_id'=>$package_id,
+					'a.type_id'=>$type_id
+			]);
+			//
+			if($segment_id > 0){
+				$query->andWhere(['a.segment_id'=>$segment_id]);
+			}
+			if($time_id > -1){
+				//$query->andWhere(['a.time_id'=>$time_id]);
+			}
+			//
+			if($service_id>0){
+				$query->andWhere(['a.service_id'=>$service_id]);
+			}
+			//
+			if($supplier_id>0){
+				$query->andWhere(['a.supplier_id'=>$supplier_id]);
+			}
+				
+			//
+			$r = $service_id > 0 ? $query->one() : $query->all();
+		
+			if(!empty($r)){
+				$loadDefault = false;
+				if($service_id > 0 && $r['state'] == 2){
+					$loadDefault = true;
+				}
+			}else{
+				$loadDefault = true;
+			}
+		}
+	}
+	
 	public function getServiceDetailPrices($o = []){
 		//\\//\\ *.* //\\//\\
 		$from_date = isset($o['from_date']) && check_date_string($o['from_date']) ? $o['from_date'] : false;
@@ -2036,18 +2149,7 @@ class Zii extends yii\base\Object
 						'time_id'=>$time_id,
 						'type_id'=>$type_id,
 				])->execute();
-			/*	
-			if((new Query())->from('tours_programs_services_prices')->where([
-					'item_id'=>$item_id,
-					'package_id'=>$package_id,
-					'sub_item_id'=>[isset($r['sub_item_id']) ? $r['sub_item_id'] : 0,0],
-					'service_id'=>$service_id,
-					'day_id'=>$day_id,
-					'time_id'=>$time_id,
-					'type_id'=>$type_id,
-					//'item_id',
-						
-			])->count(1) == 0){*/
+		 
 				Yii::$app->db->createCommand()->insert('tours_programs_services_prices',[
 					'item_id'=>$item_id,
 					'supplier_id'=>$supplier_id,
@@ -2062,39 +2164,7 @@ class Zii extends yii\base\Object
 					'package_id'=>$package_id,
 						 
 			])->execute();
-			/*
-			}else{
-				 
-				Yii::$app->db->createCommand()->update('tours_programs_services_prices',[
-						//'item_id'=>$item_id,
-						//'supplier_id'=>$supplier_id,
-						'sub_item_id'=>isset($r['sub_item_id']) ? $r['sub_item_id'] : 0,
-						//'service_id'=>$service_id,
-						//'day_id'=>$day, 
-						//'time_id'=>$time,
-						'state'=>1,
-						'supplier_id'=>$supplier_id,
-						'quantity'=>isset($r['quantity']) ? $r['quantity'] : 0,
-						'price1'=>isset($r['price1']) ? $r['price1'] : 0,
-						'currency'=>isset($r['currency']) ? $r['currency'] : 1
-				
-				],[
-						'item_id'=>$item_id,
-						//'supplier_id'=>$supplier_id,
-						//'sub_item_id'=>0,
-						'package_id'=>$package_id,
-						'service_id'=>$service_id,
-						'day_id'=>$day_id,
-						'time_id'=>$time_id,
-						'type_id'=>$type_id,
-						//'quantity'=>$r['quantity'],
-						//'price1'=>$r['price1'],
-						//'currency'=>$r['currency']
-				
-				])->execute();
-			}
-			/*/
-		 
+			 
 			
 			}
 		}
@@ -2640,7 +2710,7 @@ class Zii extends yii\base\Object
 		$sid = isset($o['sid']) ? $o['sid'] : 0;
 		$level = isset($o['level']) && $o['level'] == true ? true : false;
 		$orderBy = isset($o['orderBy']) ? $o['orderBy'] : ['title'=>SORT_ASC]; 
-		foreach ((new Query())->from($table)->where(['parent_id'=>$id]+($sid>0 ? ['sid'=>$sid] : []))->orderBy($orderBy)->all() as $k=>$v){
+		foreach ((new Query())->from(['a'=>$table])->where(['parent_id'=>$id]+($sid>0 ? ['sid'=>$sid] : []))->orderBy($orderBy)->all() as $k=>$v){
 			$lftx[] = $table_lft;
 			$lft_c = $table_lft;
 			$childs = $this->count_all_child($table,$v['id'],$sid);
