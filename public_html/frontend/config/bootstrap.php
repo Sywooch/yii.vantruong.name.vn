@@ -6,16 +6,10 @@ Yii::setAlias('@admin', '/themes/admin');
 Yii::setAlias('@modules', dirname(__DIR__) . '/modules');
 Yii::setAlias('@applications', dirname(__DIR__) . '/applications');
 define('NO_IMAGE', '');
-$d = array(
-		//'__ROOT_PATH__'=>$root_path,
+$d = [
 		'__SS_ID'=>isset($_SESSION['__SS_ID']) && $_SESSION['__SS_ID'] > 0 ? $_SESSION['__SS_ID'] : rand(1111,9999),
-		//'DS'=>'/',
+		'DS' => '/',
 		'DRS'=>DIRECTORY_SEPARATOR,
-		//"SRC_FOLDER"=>"",
-		//"ROOT_FOLDER"=>"",
-		//"LIBS_FOLDER"=>"libs",
-		//'ASSETS_FOLDER'=>'assets',
-		//"DOCUMENT_ROOT"=>$d,
 		"MAIN_DOMAIN"=>'vantruong.name.vn',
 		"THEMES_FOLDER"=>"themes",
 		"BASE_FOLDER"=>"base",
@@ -53,6 +47,8 @@ $d = array(
 		'TYPE_ID_STUDENTS'=>15, // Học viên
 		'TYPE_ID_TRANSFORM_TICKET'=>16, // Phương tiện bán vé
 		'TYPE_ID_TEXT'=>17, // Text
+		'TYPE_ID_LAND'=>18, // Text
+		
 		'TYPE_ID_ORDER'=>80, //Order Status
 		'TYPE_ID_PAYMETHOD'=>81, //Pay method
 		
@@ -80,7 +76,7 @@ $d = array(
 		'SEASON_TYPE_WEEKEND' => 3, // Cuối tuần
 		'SEASON_TYPE_WEEKDAY' => 4, // Ngày thường
 		'SEASON_TYPE_TIME' => 5, // Buổi trong ngày (sáng, trưa, chiều, tối)
-);
+];
 foreach($d as $k=>$v){
 	defined($k) or define($k,$v);
 } 

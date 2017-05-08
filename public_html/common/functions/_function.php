@@ -1293,7 +1293,6 @@ function convertTime($timeString = '', $format = "Y-m-d H:i:s",$r = 0){
 			return date($format,strtotime(str_replace('/', '-', $timeString)));
 			break;
 	}
-
 }
 function roundMoney($val = 0){
 	$r = $val > 1000000 ? -4 : -3;
@@ -4322,7 +4321,7 @@ function loadTourProgramDistances($id = 0,$o=[]){
 				'seasons'=>$seasons,
 				'segment_id'=>$segment['id'],
 	 
-		]);
+		]); 
 		 
 		if(!empty($prices) && isset($prices['price1'])){
 			$price = Yii::$app->zii->getServicePrice($prices['price1'],[

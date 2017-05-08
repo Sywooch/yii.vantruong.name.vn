@@ -64,9 +64,14 @@ class Application extends \yii\base\Application
 	 */
 
 	public function sendEmail($o=[]){
+		 
 		$send_smtp = isset($o['send_smtp']) && $o['send_smtp'] == false ? false : true;
+		
 		$sid = isset($o['sid']) && $o['sid'] > 0 ? $o['sid'] : __SID__;
 		$smtp = $this->getConfigs('EMAILS',false,$sid); 
+		
+		//var_dump(dString($smtp['password'])); exit;  
+		 
 		$write_log = isset($o['write_log']) && $o['write_log'] == false ? false : true;
 		if($send_smtp && !empty($smtp)){
 			switch ($smtp['type']){
@@ -103,7 +108,7 @@ class Application extends \yii\base\Application
 					break;
 			}
 			
-		}else{
+		}else{ 
 			Yii::$app->set('mailer', [
 					'class' => 'yii\swiftmailer\Mailer',
 					'useFileTransport' => false,
@@ -677,7 +682,7 @@ class Application extends \yii\base\Application
 		define ('__IS_MOBILE__',Yii::$is_mobile);
 		define('__LIBS_DIR__',Yii::getAlias('@libs'));
 		define('__LIBS_PATH__',Yii::getAlias('@frontend') . '/web/libs');
-		define('DS',DIRECTORY_SEPARATOR);
+		defined('DS') or define('DS',DIRECTORY_SEPARATOR);
 		 
 	}
 	protected function __registed_domain(){
