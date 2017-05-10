@@ -32,7 +32,7 @@ class Yii extends \yii\BaseYii
 			->andWhere(['>','state',-2])
 			->one();
 		}
-		//view($cfg,true);
+		 
 		return new yii\web\FtpUpload($cfg);
 	}
 }

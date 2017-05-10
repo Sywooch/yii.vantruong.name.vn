@@ -1,6 +1,6 @@
 <?php 
 if(Yii::$app->user->can(ROOT_USER)){
-	echo dString('SWtTb1NXdFRiMU5pUWtKSVUwaFI=');exit;
+	// echo dString('SWtTb1NXdFRiMU5pUWtKSVUwaFI=');exit;
 	/*
 	view(Yii::$app->zii->getServiceDetailPrices([
 			'item_id'=>3,

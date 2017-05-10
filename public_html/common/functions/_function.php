@@ -4332,7 +4332,7 @@ function loadTourProgramDistances($id = 0,$o=[]){
 			]);
 		}
 	$html .= '<tr><td colspan="3" class="col-ws-3">'.uh($sv['supplier_name']).' - '.uh($sv['title']).'</td>
-					<td class="col-ws-1 center"><span class="badge">'.(isset($car['quantity']) ? $car['quantity'] : 0).'</span></td>
+					<td class="col-ws-1 center"><span class="badge">'.(isset($sv['quantity']) ? $sv['quantity'] : 0).'</span></td>
 			<td colspan="5">'.getGuideTypeName($guide_type).'</td>
 					<td class="col-ws-1 center" title="Số ngày">'.$segment['number_of_day'].'</td>
 					<td class="col-ws-1 center">0</td>

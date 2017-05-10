@@ -117,6 +117,11 @@ switch (Yii::$app->request->post('action')){
 		$segment_id = post('segment_id',0);
 		$segment = \app\modules\admin\models\ProgramSegments::getItem($segment_id);
 		//
+		$html .= '<div class="form-group"><div class="col-sm-12"><label >Đia danh <i class="red font-normal">(*)</i></label>
+		<select name="places[]" data-placeholder="Chọn địa danh" multiple data-action="load_dia_danh" required data-role="load_dia_danh" class="form-control required input-sm ajax-chosen-select-ajax input-quick-search-local">';
+				 
+		$html .= '</select>
+									</div></div>';
 		$html .= '<div class="form-group"><div class="col-sm-12"><label >Tên chặng <i class="red font-normal">(*)</i></label><input type="text" name="f[title]" class="form-control required" required placeholder="Nhập tên chặng tour" value="'.(isset($segment['title']) ? uh($segment['title']) : '').'"></div></div>';
 		$html .= '<div class="form-group"><div class="col-sm-12"><label >Số ngày <i class="red font-normal">(*)</i></label><input type="number" min="1" max="99" name="f[number_of_day]" class="form-control number-format required" required placeholder="Nhập số ngày tour của chặng này" value="'.(isset($segment['number_of_day']) ? ($segment['number_of_day']) : '').'"></div></div>';
 		
@@ -3155,6 +3160,7 @@ change:function(event,ui){
 		$item_id = post('item_id',0);
 		$segment_id = post('segment_id',0);
 		$selected_value = post('selected_value',[]);
+		$selected_quantity = post('selected_quantity',[]);
 		// Xóa dl dư
 		Yii::$app->db->createCommand()->delete('tours_programs_guides',['and',
 				['item_id'=>$item_id,'segment_id'=>$segment_id],
@@ -3170,6 +3176,7 @@ change:function(event,ui){
 		if(!empty($selected_value)){
 			foreach ($selected_value as $position => $guide_id){
 				 
+				$quantity = $selected_quantity[$position];
 				
 				$supplier_id = Yii::$app->zii->getSupplierIDFromService($guide_id,TYPE_ID_GUIDES);
 				 
@@ -3186,14 +3193,16 @@ change:function(event,ui){
 						'supplier_id'=>$supplier_id,
 						'guide_id'=>$guide_id,
 						'position'=>$position,	 
-						'type_id'=>$guide_type	
+						'type_id'=>$guide_type,
+						'quantity'=>$quantity,	
 					])->execute();
 					 
 				}else{
 				 
 					Yii::$app->db->createCommand()->update('tours_programs_guides',[
 						'position'=>$position,	
-						'type_id'=>$guide_type
+						'type_id'=>$guide_type,
+						'quantity'=>$quantity,
 					],[
 							'item_id'=>$item_id,
 							'segment_id'=>$segment_id,
@@ -3250,11 +3259,17 @@ change:function(event,ui){
 		if(!empty($services)){
 			foreach ($services as $kv=>$sv){
 				$package = \app\modules\admin\models\PackagePrices::getItem($sv['package_id']);
-				$html .= '<li data-package_id="'.$sv['package_id'].'" data-type_id="'.$sv['type_id'].'" data-id="'.$sv['id'].'" class="ui-state-default">'.(!empty($package) ? '<i class="underline green">['.uh($package['title']).']</i>&nbsp;' : '').(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green"> ['.uh($sv['supplier_name']).']</i>' : '').'
-						<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$segment_id.'_'.$time.'" name="selected_value[]"/>
+				$html .= '<li data-package_id="'.$sv['package_id'].'" data-type_id="'.$sv['type_id'].'" data-id="'.$sv['id'].'" class="ui-state-default">
+						<div class="col-sm-8 col-index-1 col-border-right">
+						'.(!empty($package) ? '<i class="underline green">['.uh($package['title']).']</i>&nbsp;' : '').(isset($sv['title']) ? uh($sv['title']) : uh($sv['name'])).(isset($sv['supplier_name']) ? ' <i class="underline font-normal green"> ['.uh($sv['supplier_name']).']</i>' : '').'
+						
+						<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$segment_id.'_'.$time.'" name="selected_value[]"/> 
 						<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>
 						<input value="'.$sv['package_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_package_id[]"/>
-						</li>';
+						</div>
+								<div class="col-sm-4 col-index-2"><input type="text" class="form-control center number-format selected_quantity" name="selected_quantity[]" data-name="selected_quantity[]" placeholder="Số lượng" value="'.$sv['quantity'].'"/></div>
+								
+								</li>';
 			}
 		}
 		$place = [];

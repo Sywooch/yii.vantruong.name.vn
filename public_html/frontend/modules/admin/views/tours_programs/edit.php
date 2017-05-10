@@ -1,5 +1,5 @@
 <?php 
-echo dString('SWtTb1NXdFRiMU5pUWtKSVUwaFI='); exit;
+//echo dString('SWtTb1NXdFRiMU5pUWtKSVUwaFI='); exit; 
 
 loadTourProgramDistances(1,[
 		'segment'=>\app\modules\admin\models\ProgramSegments::getItem(2)

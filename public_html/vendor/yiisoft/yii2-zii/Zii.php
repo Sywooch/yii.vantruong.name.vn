@@ -1914,7 +1914,7 @@ class Zii extends yii\base\Object
 					//'day'=>$day,
 					//'time'=>$time,
 					'a.package_id'=>$package_id,
-					'a.type_id'=>$type_id
+					//'a.type_id'=>$type_id
 			]);
 			//
 			if($segment_id > 0){
