@@ -260,6 +260,7 @@ switch (post('action')){
                                     <b><font color="#000088">'.number_format($totalPrice).' VNĐ</font></b></td>
                     </tr></table>';
 		// check member & create
+		 
 		$memID = 0;
 		$_m = load_model('members');// new Member();
 			
@@ -267,7 +268,7 @@ switch (post('action')){
 				'email'=>isset($f['email']) ? $f['email'] : '',
 				'phone'=>isset($f['phone']) ? $f['phone'] : '',
 		));
-			
+		 
 		$fx = Yii::$app->zii->getConfigs('CONTACTS');
 		$logo = '<a href="'.removeLastSlashes(Url::home(true)).'" target="_blank">'.getImage(['h'=>80, 'src'=>(isset(Yii::$site['logo']['logo']['image']) ? Yii::$site['logo']['logo']['image'] : '')],true).'</a>';
 		if(!empty($mem)){

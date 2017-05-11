@@ -5,7 +5,7 @@ jQuery(document).ready(function(){
 		 //console.log($r)
 	},'json');
 	jQuery.get($cfg.baseUrl +'/sajax',{action:'execute_cronjobs'},function($r){
-		 console.log($r)
+		 //console.log($r)
 	},'json');
 	setAutoHeightElement();
 	if($body.has('#gridTable').length==0){jQuery('body').append('<div id="gridTable"></div>')}if($body.has('#gridTableExportExcel').length==0){jQuery('body').append('<table id="gridTableExportExcel"></table>')}if(jQuery('body').has('.mymodal').length==0){jQuery('body').append('<div class="modal mymodal" tabindex="-1" role="dialog" aria-labelledby=""></div>')}if(jQuery('body').has('.mymodal1').length==0){jQuery('body').append('<div class="modal mymodal2" tabindex="-1" role="dialog" aria-labelledby=""></div>')}if(jQuery('body').has('.mymodal2').length==0){jQuery('body').append('<div class="modal mymodal2" tabindex="-1" role="dialog" aria-labelledby=""></div>')}jQuery(window).scroll(function(){if($cfg.is_admin==false&&jQuery(this).scrollTop()>500){if(jQuery('.btn-scroll-to-top').length==0){jQuery('body').append('<a class="btn-scroll-to-top" onclick="return scrollToTop();" href="javascript:void(0);"></a>');}jQuery('.btn-scroll-to-top').show();}else{jQuery('.btn-scroll-to-top').hide();}})
@@ -23,6 +23,7 @@ resizeItem4x3();setAutoHeightElement();
 	});
 	jQuery("#slivechat .chat_fb_header").click(function() {
 		jQuery('#slivechat .fchat').toggle('slow');
+		return false;
 	});
 	//
 	if(jQuery('.system-style.bottom_nav').length>0){var $h=0;jQuery('.system-style.bottom_nav li.li-level-1').each(function(){if((jQuery(this).height())>$h){$h=jQuery(this).height();}});jQuery('.system-style.bottom_nav li.li-level-1').css({"min-height":$h+'px'});}jQuery('.system.btnPaging').click(function(){var $this=jQuery(this);$role=($this.attr('role'));$loading=$this.parent().find('.img_loading');$loading.removeClass('hide');$.ajax({type:'post',datatype:'json',url:'/ajax',data:{role:$role,action:'loadingItem'},success:function(data){$loading.addClass('hide');var $d=JSON.parse(data);$this.attr('role',$d.role);jQuery('ul.ajax_result').append($d.r);var $d=JSON.parse($d.role);if($d.end==true){$this.parent().addClass('hide');}},error:function(err,req){alert("Error");}});});jQuery('.sys_lang .sys_flag').click(function(){$role=jQuery(this).attr('role');__system_set_language($role);});setItemRatio();jQuery('.sdatetimepicker').each(function(i,e){$maxDate=jQuery(e).attr('data-maxDate')?jQuery(e).attr('data-maxDate'):false;jQuery(e).datetimepicker({format:'DD/MM/YYYY HH:mm',maxDate:$maxDate});});jQuery('.sdatepicker').each(function(i,e){$maxDate=jQuery(e).attr('data-maxDate')?jQuery(e).attr('data-maxDate'):false;$locale=jQuery(e).attr('data-locale')?jQuery(e).attr('data-locale'):false;jQuery(e).datetimepicker({format:'DD/MM/YYYY',maxDate:$maxDate});});
@@ -160,7 +161,12 @@ function ajaxSubmitForm(t){
 	//alert($ckc);
 	if(!$ckc)return false;if($this.find('.cke_editor_ckeditor_content').length>0)CKupdate();
 	
-	jQuery.ajax({type:'post',datatype:'json',url:$href,data:$this.serialize(),beforeSend:function(){showFullLoading();},success:function(data){ 
+	jQuery.ajax({type:'post',datatype:'json',url:$href,data:$this.serialize(),
+		beforeSend:function(){
+			//console.log($href);
+			showFullLoading();},
+		success:function(data){ 
+	
 		hideFullLoading();
 		if(data!=""){ var $d=JSON.parse(data);if($d.error==true){showModal('Thông báo',$d.error_content)}else{if($d.modal==true){showModal('Thông báo',$d.modal_content)
 $timeout=$d.delay!=undefined?$d.delay:0;if($timeout>0){window.setTimeout(function(){$modal=jQuery('.mymodal');$modal.modal('hide');},$timeout);}}}
