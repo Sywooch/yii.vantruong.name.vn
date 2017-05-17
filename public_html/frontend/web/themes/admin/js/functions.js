@@ -4757,11 +4757,15 @@ function quick_search_tour_service($t){
 	
 	$data['selected'] = jQuery($selected_input).map(
 	        function () {return this.value;}).get().join(",");
-	console.log($data['selected']);
+	//console.log($data['selected']);
 	$data['place_id'] = jQuery('.input-quick-search-local').val();
 	$data['total_pax'] = jQuery('#input-tour-sokhach').val();
 	$data['nationality'] = jQuery('#inputNationality').val();
 	$data['action'] = 'quick_search_tour_service';
+	if($this.attr('data-language')){
+		$data['language'] = jQuery('.input-quick-search-language').val();
+	}
+	//console.log($data['language']);
 	$data['value'] = $this.val();
 	jQuery.ajax({
 	      type: 'post',

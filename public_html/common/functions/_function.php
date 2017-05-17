@@ -4228,7 +4228,7 @@ function loadTourProgramDistances($id = 0,$o=[]){
 		//for($j=0;$j<4;$j++){
 		foreach ($selected_car as $k3=>$car){
 			 
-			$html .= '<tr><td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="2"><button class="btn btn-sm btn-label btn-danger" data-segment_id="'.$segment['id'].'" data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="f12p">'.$car['title'].'s</span></button></td>';
+			$html .= '<tr><td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="2"><button class="btn btn-sm btn-label btn-danger" data-segment_id="'.$segment['id'].'" data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="f12p">'.$car['title'].'</span></button></td>';
 			$html .= '<td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="1"><a data-segment_id="'.$segment['id'].'" data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="badge">'.(isset($car['quantity']) ? $car['quantity'] : 0).'</span></a></td>';
 	
 			$html .= '</tr>';
@@ -4441,21 +4441,32 @@ function loadTourProgramGuides($item_id=0, $o = []){
 	if(!empty($segments) && isset($item['guide_language']) && isset($item['guide_type']) && $item['guide_type'] == 2){  
 		foreach ($segments as $km=>$segment){
 			$segments1 = \app\modules\admin\models\ProgramSegments::getAll($item_id,['parent_id'=>$segment['id']]);
-
+			$guide_type = isset($item['guide_type']) ? $item['guide_type'] : 2;
+			$guide_language = isset($item['guide_language']) ? $item['guide_language'] : DEFAULT_LANG;
 			$html .= '<div class="block-examples">
-					<p data-class="w60" class="pointer upper bold block-title"><i class="fa fa-puzzle-piece"></i> '.uh($segment['title']).' <i>('.$segment['number_of_day'].' ngày)</i></p>
+					<p data-class="w60" class="pointer upper bold block-title"><i class="fa fa-puzzle-piece"></i> '.uh($segment['title']) .' <i>('.$segment['number_of_day'].' ngày)</i></p>
 					<div>';
+			
+			if(!empty($segments1)){
+				
+				$sg = \app\modules\admin\models\ProgramSegments::getSegmentGuideType([
+						'item_id'=>$item_id,
+						'segment_id'=>$segment['id']
+				]);
+				$guide_type = isset($sg['type_id']) ? $sg['type_id'] : (
+						isset($item['guide_type']) ? $item['guide_type'] : 2
+						);
+				$guide_language = isset($sg['lang']) ? $sg['lang'] : false;
 			$html .= '<div class="root-chosse-guides-2 mg5 block f14px">
 			<span>[2] Đã chọn: </span>'.(
-								!(isset($item['guide_language']) && isset($item['guide_type'])) ? '<b class="red underline">Chưa thiết lập</b>' : '
-					<b class="red">'.getGuideTypeName($item['guide_type']).'</b>
-					<b class="green"> - '.(\app\modules\admin\models\AdLanguage::getLanguage($item['guide_language'])['title']).'</b>'
+								!$guide_language ? '<b class="red underline">Chưa thiết lập</b>' : '
+					<b class="red">'.getGuideTypeName($guide_type).'</b>
+					<b class="green"> - '.(\app\modules\admin\models\AdLanguage::getLanguage($guide_language)['title']).'</b>'
 								).'
 			
-			<button data-guide_type="'.(isset($item['guide_type']) ? $item['guide_type'] : 2).'" data-guide_language="'.(isset($item['guide_language']) ? $item['guide_language'] : DEFAULT_LANG).'" data-action="setup-tourprogram-guides" data-toggle="tooltip" title="Thiết lập này sẽ áp dụng cho toàn bộ các chặng con của chặng '.$segment['title'].'." data-placement="right" type="button" data-item_id="'.$item_id.'" data-segment_id="0"  data-title="Chọn hướng dẫn viên [level 2: áp dụng cho tất cả các chặng con của chặng '.$segment['title'].']" onclick="open_ajax_modal(this);" class="btn btn-default f14px btn-sm mgl30"><i class="fa-gears fa"></i> Thiết lập</button>
-			</div>';
-			
-								
+			<button data-guide_type="'.$guide_type.'" data-guide_language="'.$guide_language.'" data-action="setup-tourprogram-guides" data-toggle="tooltip" title="Thiết lập này sẽ áp dụng cho toàn bộ các chặng con của chặng '.$segment['title'].'." data-placement="right" type="button" data-item_id="'.$item_id.'" data-segment_id="'.$segment['id'].'"  data-title="Chọn hướng dẫn viên [level 2: áp dụng cho tất cả các chặng con của chặng '.$segment['title'].']" onclick="open_ajax_modal(this);" class="btn btn-default f14px btn-sm mgl30"><i class="fa-gears fa"></i> Thiết lập</button>
+			</div>';			
+			}		
 								
 								
 			if(!empty($segments1)){
@@ -4463,13 +4474,19 @@ function loadTourProgramGuides($item_id=0, $o = []){
 					$html .= '<div class="bc1 block-example mgb5 '.($km%2==1 ? ' bg-success' : '').'">
 					<span class="f12e block-title btn-sm btn btn-default mgl0 bdl0"><i class="fa fa-hand-o-right"></i> '.uh($segment1['title']).' <i>('.$segment1['number_of_day'].' ngày)</i></span>';
 					$html .= '<div class="form-group mgb0">';
-					$html .= getTourProgramGuides($item_id,['segment'=>$segment1,'item'=>$item]);
-						
+					$html .= getTourProgramGuides($item_id,[
+							'segment'=>$segment1,
+							'item'=>$item,
+							'guide_type'=>$guide_type,
+							'guide_language'=>$guide_language,
+					]);						
 					$html .= '</div>';
 					$html .= '</div>';
 				}
 			}else{
-				///$html .= '<div class="mg5">' . loadTourProgramDistances($item_id,['segment'=>$segment]) .'</div>';
+				$html .= '<div class="mg5">';
+				$html .= getTourProgramGuides($item_id,['segment'=>$segment1,'item'=>$item,'guide_type'=>$guide_type,'guide_language'=>$guide_language]);				
+				$html .= '</div>';
 			}
 			$html .= '</div>';
 			$html .= '</div>';
@@ -4491,17 +4508,19 @@ function getTourProgramGuides($item_id=0, $o = []){
 	$segment = isset($o['segment']) ? $o['segment'] : [];
 	$item = isset($o['item']) ? $o['item'] : \app\modules\admin\models\ToursPrograms::getItem($item_id);
 	$html = '<div class="mg5">';
+	$guide_type = isset($o['guide_type']) ? $o['guide_type'] : 2;
+	$guide_language = isset($o['guide_language']) ? $o['guide_language'] : DEFAULT_LANG;
 	$places_id = [];
 		// Huong dan
 		$html .= '<p class="upper bold grid-sui-pheader aleft ">Hướng dẫn viên</p>
 					<table class="table table-bordered mgb0 table-sm vmiddle">
 					<thead><tr><th colspan="12"></th></tr></thead><tbody>';
-		$guide_type = 2;
+		 
 		foreach ( \app\modules\admin\models\ToursPrograms::getProgramGuides([
 				'item_id'=>$item_id,
 				'segment_id'=>$segment['id'],
 		]) as $kv=>$sv){
-			$guide_type = $sv['type_id'];
+			//$guide_type = $sv['type_id'];
 			$prices = Yii::$app->zii->getProgramGuidesPrices([
 					'controller_code'=>TYPE_ID_GUIDES,
 					'quotation_id'=>$quotation['id'],
@@ -4529,14 +4548,15 @@ function getTourProgramGuides($item_id=0, $o = []){
 			}
 			$html .= '<tr><td colspan="3" class="col-ws-3">'.uh($sv['supplier_name']).' - '.uh($sv['title']).'</td>
 					<td class="col-ws-1 center"><span class="badge">'.(isset($sv['quantity']) ? $sv['quantity'] : 0).'</span></td>
-			<td colspan="5">'.getGuideTypeName($guide_type).'</td>
+			<td colspan="5">'.getGuideTypeName($sv['type_id']).'</td>
 					<td class="col-ws-1 center" title="Số ngày">'.$segment['number_of_day'].'</td>
 					<td class="col-ws-1 center">0</td>
 					<td class="col-ws-1 center">0</td>
 					</tr>';
 		}
+		$places = \app\modules\admin\models\ProgramSegments::getPlaceIDs($segment['id']);
 		$html .= '<tr><td colspan="12" class="pr vtop">';
-		$html .= '<p class="aright"><button data-guide_type="'.$guide_type.'" data-place_id="'.implode(',', $places_id).'" data-segment_id="'.(isset($segment['id']) ? $segment['id'] : 0).'" data-toggle="tooltip" data-placement="left" data-nationality="'.$item['nationality'].'" data-guest="'.$item['guest'].'" data-class="w90" data-action="add-more-tours-program-guides" data-title="Chọn hướng dẫn viên" data-item_id="'.$item_id.'" onclick="open_ajax_modal(this);" title="Chọn hướng dẫn viên'.(!empty($segment) ? ' cho chặng '. uh($segment['title']) : '').'" class="btn btn-warning input-sm" type="button"><i class="fa fa-universal-access"></i> Chọn hướng dẫn viên</button></p>';
+		$html .= '<p class="aright"><button data-place_id="'.(!empty($places) ? $places[0] : '').'" data-guide_language="'.$guide_language.'" data-guide_type="'.$guide_type.'" data-place_id="'.implode(',', $places_id).'" data-segment_id="'.(isset($segment['id']) ? $segment['id'] : 0).'" data-toggle="tooltip" data-placement="left" data-nationality="'.$item['nationality'].'" data-guest="'.$item['guest'].'" data-class="w90" data-action="add-more-tours-program-guides" data-title="Chọn hướng dẫn viên" data-item_id="'.$item_id.'" onclick="open_ajax_modal(this);" title="Chọn hướng dẫn viên'.(!empty($segment) ? ' cho chặng '. uh($segment['title']) : '').'" class="btn btn-warning input-sm" type="button"><i class="fa fa-universal-access"></i> Chọn hướng dẫn viên</button></p>';
 		$html .= '</td></tr>';
 		$html .= '</tbody></table>';
 		//

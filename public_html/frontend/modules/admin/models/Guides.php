@@ -114,6 +114,7 @@ class Guides extends Customers
     	$menu_id = isset($o['guide_id']) ? $o['guide_id'] : 0;
     	$place_id = isset($o['place_id']) ? $o['place_id'] : 0;
     	$filter_text = isset($o['filter_text']) ? $o['filter_text'] : '';
+    	$language = isset($o['language']) ? $o['language'] : '';
     	$query = static::find()->from(['a'=>self::tableGuide()])
     	//->innerJoin(['b'=>self::tableToSupplier()],'a.id=b.guide_id')
     	
@@ -131,6 +132,9 @@ class Guides extends Customers
     	}
     	if(strlen($filter_text) > 0){
     		$query->andFilterWhere(['like', 'a.title', $filter_text]);
+    	}
+    	if(strlen($language) > 0){
+    		$query->andWhere(['a.language'=> $language]);
     	}
     	if($menu_id>0){
     		$query->andWhere(['a.id'=>$menu_id]);

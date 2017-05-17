@@ -14,6 +14,7 @@ switch (Yii::$app->request->post('action')){
 		$f = post('f');
 		$item_id = post('item_id');
 		$segment_id = post('segment_id',0);
+		$package_id = post('package_id',0);
 		//
 		if($segment_id == 0){ // Level 1
 			\app\modules\admin\models\Siteconfigs::updateBizrule(\app\modules\admin\models\ToursPrograms::tableName(),[
@@ -23,10 +24,32 @@ switch (Yii::$app->request->post('action')){
 					'guide_type'=>$f['guide_type'],
 			]);
 		}else{
-			 
+			 if((new Query())->from('tours_programs_segments_guides')->where([
+			 		'item_id'=>$item_id,
+			 		'segment_id'=>$segment_id,			 		 
+			 		'package_id'=>$package_id,
+			 ])->count(1) == 0){
+			 	Yii::$app->db->createCommand()->insert('tours_programs_segments_guides', [
+			 		'item_id'=>$item_id,
+			 		'segment_id'=>$segment_id,
+			 		'type_id'=>$f['guide_type'],
+			 		'lang'=>$f['guide_language'],
+			 		'package_id'=>$package_id,
+			 	])->execute();
+			 }else{
+			 	Yii::$app->db->createCommand()->update('tours_programs_segments_guides',[
+			 		'type_id'=>$f['guide_type'],
+			 		'lang'=>$f['guide_language'],
+			 	],[
+			 		'item_id'=>$item_id,
+			 		'segment_id'=>$segment_id,			 			
+			 		'package_id'=>$package_id,
+			 	])->execute();
+			 }
 		}
 		switch ($f['guide_type']){
 			case 2: // Từng chặng
+				// Tu dong chon cho level ben duoi
 				
 				break;
 			case 1: // Suốt tuyến
@@ -174,13 +197,13 @@ switch (Yii::$app->request->post('action')){
 		}
 		$html .= '</select></div></div>';
 		
-		$html .= '<div class="form-group"><div class="col-sm-12"><label >Thứ tự sắp xếp</label><input type="number" min="1" max="99" name="f[position]" class="form-control number-format" placeholder="Thứ tự sắp xếp" value="'.(isset($segment['position']) ? ($segment['position']) : 0).'"></div></div>';
+		$html .= '<div class="form-group"><div class="col-sm-12"><label >Thứ tự sắp xếp</label><input type="number" min="0" max="99" name="f[position]" class="form-control number-format" placeholder="Thứ tự sắp xếp" value="'.(isset($segment['position']) ? ($segment['position']) : post('index')).'"></div></div>';
 		//
 		$html .= '<div class="modal-footer">';
 		$html .= '<button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Lưu lại</button>';
 		$html .= $segment_id > 0 ? '<button data-action="open-confirm-dialog" data-title="Xác nhận xóa chặng tour !" data-class="modal-sm" data-confirm-action="quick_delete_program_segment" onclick="return open_ajax_modal(this);" data data-id="'.$segment_id.'" data-item_id="'.$item_id.'" type="button" class="btn btn-warning"><i class="fa fa-trash "></i> Xóa chặng</button>' : '';
 		$html .= '<button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-window-close"></i> Hủy</button>';
-		$html .= '</div><input type="hidden" name="f[position]" value="'.(isset($segment['position']) ? $segment['position'] : post('index')).'"/>
+		$html .= '</div> 
 				<input type="hidden" name="f[item_id]" value="'.$item_id.'"/>';		
 		$_POST['action'] = 'quick-' . $_POST['action'];
 		foreach ($_POST as $k=>$v){
@@ -1604,10 +1627,10 @@ switch (Yii::$app->request->post('action')){
 				$id = post('id',0);
 				$item_id = post('item_id',0);
 				$segment = \app\modules\admin\models\ProgramSegments::getItem($id);
-				Yii::$app->db->createCommand()->delete(\app\modules\admin\models\ProgramSegments::tableName(),[
-						'id'=>[$id,(new Query())->from(\app\modules\admin\models\ProgramSegments::tableName())->where(['parent_id'=>$id])->select('id')],
-						'item_id'=>$item_id,'sid'=>__SID__
-				])->execute();
+				 
+								
+				Yii::$app->db->createCommand()->delete(\app\modules\admin\models\ProgramSegments::tableName(),
+						['or',['id'=>$id],['parent_id'=>$id]])->execute(); 
 				 
 				$callback = true;
 				$callback_function = 'reloadAutoPlayFunction();';
@@ -2700,8 +2723,10 @@ switch (Yii::$app->request->post('action')){
 							'p'=>1,
 							'place_id'=>$place_id,
 							'filter_text'=>post('value'),
-							'not_in'=>post('selected')
+							'not_in'=>post('selected'),
+							'language'=>post('language','')
 					]);
+					
 					//$html .= json_encode($l);
 					if(!empty($l)){
 						foreach($l as $k=>$v){
@@ -3294,13 +3319,19 @@ change:function(event,ui){
 		$time = post('time',0);		
 		$item_id = post('item_id',$id);
 		$segment_id = post('segment_id',0);
+		$guide_type = post('guide_type',2);
+		$guide_language = post('guide_language',DEFAULT_LANG);
 		$html = '';
 		
-		$html .= '<div>
-				<label data-toggle="tooltip" title="HDV suốt tuyến chỉ được chọn 1 lần duy nhất ở chặng đầu tiên của tour." class="mgr15">
-				<input type="radio" name="guide_type" value="1" checked/> HDV Suốt tuyến</label>
+		$html .= '<div class="hide">
 				<label data-toggle="tooltip" title="HDV từng chặng sẽ chọn ở từng chặng riêng biệt." >
-				<input type="radio" name="guide_type" value="2"/> HDV Từng chặng</label>
+				<input readonly type="radio" name="guide_type" value="2" '.($guide_type == 2 ? 'checked' : '').'/> HDV Từng chặng</label>
+				
+				<label data-toggle="tooltip" title="HDV suốt tuyến chỉ được chọn 1 lần duy nhất ở chặng đầu tiên của tour." class="mgr15">
+				<input readonly type="radio" name="guide_type" value="1" '.($guide_type == 1 ? 'checked' : '').'/> HDV Suốt tuyến</label>
+				
+				
+				
 				</div> 
 				<table class="table table-bordered vmiddle"><thead><tr>
 			 
@@ -3348,7 +3379,7 @@ change:function(event,ui){
 				<td class="">
 <div class="div-quick-search-service"> 
 						<div class=" col-sm-4"><div class="row">
-						<select data-placeholder="Chọn địa danh" onchange="quick_search_tour_service(\'.input-quick-search-service\');" data-action="load_dia_danh" data-role="load_dia_danh" class="form-control input-sm ajax-chosen-select-ajax input-quick-search-local">';
+						<select data-language="'.$guide_language.'" data-placeholder="Chọn địa danh" onchange="quick_search_tour_service(\'.input-quick-search-service\');" data-action="load_dia_danh" data-role="load_dia_danh" class="form-control input-sm ajax-chosen-select-ajax input-quick-search-local">';
 				if(!empty($place)){
 					$html .= '<option value="'.$place['id'].'" selected>'.$place['name'].'</option>'; 
 				}
@@ -3356,15 +3387,15 @@ change:function(event,ui){
 						</div></div>
 						
 						<div class=" col-sm-4"><div class="row">
-						<select data-placeholder="Chọn ngôn ngữ" data-search="hidden" onchange="quick_search_tour_service(\'.input-quick-search-service\');" class="form-control chosen-select"><option></option>'; 
+						<select data-language="'.$guide_language.'" data-placeholder="Chọn ngôn ngữ" data-search="hidden" onchange="quick_search_tour_service(\'.input-quick-search-service\');" class="form-control chosen-select input-quick-search-language"><option></option>'; 
 				foreach (\app\modules\admin\models\AdLanguage::getList() as $lang){
-					$html .= '<option value="'.$lang['code'].'">'.$lang['title'].'</option>';  
+					$html .= '<option '.($lang['code'] == $guide_language ? 'selected' : '').' value="'.$lang['code'].'">'.$lang['title'].'</option>';  
 				}
 				$html .= '</select>
 						</div></div>
 						
 						<div class=" col-sm-4"><div class="row">
-						<input data-time="'.$time.'" data-day="'.$segment_id.'" data-type_id="'.TYPE_ID_GUIDES.'" type="text" onkeyup="quick_search_tour_service(this);" onkeypress="return disabledFnKey(this);" placeholder="Tìm kiếm nhanh" class="form-control input-quick-search-service"/>
+						<input data-language="'.$guide_language.'" data-time="'.$time.'" data-day="'.$segment_id.'" data-type_id="'.TYPE_ID_GUIDES.'" type="text" onkeyup="quick_search_tour_service(this);" onkeypress="return disabledFnKey(this);" placeholder="Tìm kiếm nhanh" class="form-control input-quick-search-service"/>
 								</div></div>
 								
 								</div>				
@@ -3431,7 +3462,7 @@ change:function(event,ui){
      
         console.log("New position: " + ui.item.index());
     }
-}).disableSelection();'
+}).disableSelection();jQuery(\'.input-quick-search-language\').change();'
 				//'alert'=>$state ? '' : 'Mã tour không hợp lệ hoặc đã được sử dụng.',
 		]+$_POST);
 		exit;

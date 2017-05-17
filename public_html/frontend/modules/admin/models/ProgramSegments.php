@@ -21,6 +21,10 @@ class ProgramSegments extends \yii\db\ActiveRecord
     {
     	return '{{%tours_programs_segments_to_places}}';
     }
+    public static function tableToGuide()
+    {
+    	return '{{%tours_programs_segments_guides}}';
+    }
     /**
      * @inheritdoc
      */
@@ -44,7 +48,28 @@ class ProgramSegments extends \yii\db\ActiveRecord
     public function getID(){
     	return (new Query())->select('max(id) +1')->from(self::tableName())->scalar();
     }     
-     
+    
+    public static function getPlaceIDs($segment_id = 0){
+    	$l = (new Query())->from(self::tableToPlace())->where(['segment_id'=>$segment_id])->all();
+    	$r = [];
+    	if(!empty($l)){
+    		foreach ($l as $v){
+    			$r[] = $v['place_id']; 
+    		}
+    	}
+    	return $r;
+    }
+    
+    public static function getSegmentGuideType($o= []){
+    	$item_id = isset($o['item_id']) ?  $o['item_id'] : 0;
+    	$segment_id = isset($o['segment_id']) ?  $o['segment_id'] : 0;
+    	$package_id = isset($o['package_id']) ?  $o['package_id'] : 0;
+    	return (new Query())->from(self::tableToGuide())->where([
+    			'item_id'=>$item_id,
+    			'segment_id'=>$segment_id,
+    			'package_id'=>$package_id,
+    	])->one();
+    }
     public static function getItem($id=0,$o=[]){    	
     	$item = static::find()
     	->where(['id'=>$id, 'sid'=>__SID__]);    

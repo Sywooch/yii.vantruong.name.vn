@@ -2,10 +2,7 @@
 $this->registerCssFile(__RSDIR__.'/css/slider.css');
 $this->registerCssFile(__RSDIR__.'/css/global2.css');
 $this->registerCssFile(__RSDIR__.'/css/global3.css');
-
-?> 
- 
- 
+?>
 <div class="wapper_home">
     <div class="top_top"></div>
     <div class="row">
@@ -40,15 +37,10 @@ if(!empty($l)){
 	echo '</ul>';	
 }
 ?>
- 
 </div>
-
-<div style="clear:both;height:0px;">&nbsp;</div>
-        
+<div style="clear:both;height:0px;">&nbsp;</div>       
 </div>
 </div>
-
-
 <?php 
 include_once '_slider.php';
 $b = Yii::$app->zii->getBox('marquee');
@@ -62,12 +54,8 @@ if(!empty($b)){
 </div>';
 }
 ?>
-
-        
-
-
-        <div style="clear:both;height:0px;"></div>
-    </div>
+<div style="clear:both;height:0px;"></div>
+</div>
 <?php 
 $lb = Yii::$app->zii->getBoxIndex([
 		'listSubMenu'=>true ,
@@ -164,7 +152,7 @@ if(!empty($l['listItem'])){
     <div class="defaultContent SideTopSeller-content">
         <div class="BlockContent"><ul class="ProductList">';
 	foreach ($l['listItem'] as $k=>$v){
-		echo '<li class="pr pdt15">
+		echo '<li class="'.($k%2==0 ? 'Odd' : 'Event').' pr pdt15">
                             <div class="TopSellerNumber1">'.($k+1).'</div>
                             <div class="ProductImage" style="display: block">
                                 <a href="'.$v['url_link'].'" >
