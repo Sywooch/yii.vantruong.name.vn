@@ -10,9 +10,9 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
         '2cffec82183ee1cea088009cef9a6fc3' => __DIR__ . '/..' . '/ezyang/htmlpurifier/library/HTMLPurifier.composer.php',
         '383eaff206634a77a1be54e64e6459c7' => __DIR__ . '/..' . '/sabre/uri/lib/functions.php',
-        'a0edc8309cc5e1d60e3047b5df6b7052' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/functions_include.php',
-        'c964ee0ededf28c96ebd9db5099ef910' => __DIR__ . '/..' . '/guzzlehttp/promises/src/functions_include.php',
-        '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
+        //'a0edc8309cc5e1d60e3047b5df6b7052' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/functions_include.php',
+        //'c964ee0ededf28c96ebd9db5099ef910' => __DIR__ . '/..' . '/guzzlehttp/promises/src/functions_include.php',
+       // '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
         '3569eecfeed3bcf0bad3c998a494ecb8' => __DIR__ . '/..' . '/sabre/xml/lib/Deserializer/functions.php',
         '93aa591bc4ca510c520999e34229ee79' => __DIR__ . '/..' . '/sabre/xml/lib/Serializer/functions.php',
         '2b9d0f43f9552984cfa82fee95491826' => __DIR__ . '/..' . '/sabre/event/lib/coroutine.php',
@@ -21,8 +21,8 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         'decc78cc4436b1292c6c0d151b19445c' => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib/bootstrap.php',
         'ebdb698ed4152ae445614b69b5e4bb6a' => __DIR__ . '/..' . '/sabre/http/lib/functions.php',
         '2c102faa651ef8ea5874edb585946bce' => __DIR__ . '/..' . '/swiftmailer/swiftmailer/lib/swift_required.php',
-        '7e702cccdb9dd904f2ccf22e5f37abae' => __DIR__ . '/..' . '/facebook/php-sdk-v4/src/Facebook/polyfills.php',
-        'c65d09b6820da036953a371c8c73a9b1' => __DIR__ . '/..' . '/facebook/graph-sdk/src/Facebook/polyfills.php',
+       // '7e702cccdb9dd904f2ccf22e5f37abae' => __DIR__ . '/..' . '/facebook/php-sdk-v4/src/Facebook/polyfills.php',
+       // 'c65d09b6820da036953a371c8c73a9b1' => __DIR__ . '/..' . '/facebook/graph-sdk/src/Facebook/polyfills.php',
         '180092cfc969a12e06f2132a203a3184' => __DIR__ . '/..' . '/codeception/verify/src/Codeception/function.php',
         'ef49e2d680177bff6b87f195ea2420b2' => __DIR__ . '/..' . '/hguenot/yii2-gftp/autoload.php',
     );
@@ -34,6 +34,7 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
             'yii\\redis\\' => 10,
             'yii\\jui\\' => 8,
             'yii\\imagine\\' => 12,
+            'yii\\httpclient\\' => 15,
             'yii\\gii\\' => 8,
             'yii\\faker\\' => 10,
             'yii\\debug\\' => 10,
@@ -44,7 +45,12 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         's' => 
         array (
             'sweelix\\oauth2\\server\\' => 22,
+            'smilemd\\htmlcompress\\' => 21,
             'scotthuangzl\\export2excel\\' => 26,
+        ),
+        'r' => 
+        array (
+            'rvkulikov\\yii2\\getResponse\\' => 27,
         ),
         'p' => 
         array (
@@ -126,6 +132,10 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
             'creocoder\\flysystem\\' => 20,
             'cebe\\markdown\\' => 14,
         ),
+        'b' => 
+        array (
+            'bazilio\\stubsgenerator\\' => 23,
+        ),
         'W' => 
         array (
             'Webmozart\\Assert\\' => 17,
@@ -160,6 +170,8 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         'M' => 
         array (
             'MicrosoftAzure\\Storage\\' => 23,
+            'MatthiasMullie\\PathConverter\\' => 29,
+            'MatthiasMullie\\Minify\\' => 22,
         ),
         'L' => 
         array (
@@ -227,6 +239,10 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         array (
             0 => __DIR__ . '/..' . '/yiisoft/yii2-imagine',
         ),
+        'yii\\httpclient\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/yiisoft/yii2-httpclient',
+        ),
         'yii\\gii\\' => 
         array (
             0 => __DIR__ . '/..' . '/yiisoft/yii2-gii',
@@ -255,9 +271,17 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         array (
             0 => __DIR__ . '/..' . '/sweelix/yii2-oauth2-server/src',
         ),
+        'smilemd\\htmlcompress\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/smilemd/yii2-htmlcompress/src',
+        ),
         'scotthuangzl\\export2excel\\' => 
         array (
             0 => __DIR__ . '/..' . '/scotthuangzl/yii2-export2excel',
+        ),
+        'rvkulikov\\yii2\\getResponse\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/rvkulikov/yii2-getresponse',
         ),
         'phpseclib\\' => 
         array (
@@ -485,6 +509,10 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         array (
             0 => __DIR__ . '/..' . '/cebe/markdown',
         ),
+        'bazilio\\stubsgenerator\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/bazilio/yii2-stubs-generator',
+        ),
         'Webmozart\\Assert\\' => 
         array (
             0 => __DIR__ . '/..' . '/webmozart/assert/src',
@@ -577,6 +605,14 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         array (
             0 => __DIR__ . '/..' . '/microsoft/azure-storage/src',
         ),
+        'MatthiasMullie\\PathConverter\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/matthiasmullie/path-converter/src',
+        ),
+        'MatthiasMullie\\Minify\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/matthiasmullie/minify/src',
+        ),
         'League\\Flysystem\\ZipArchive\\' => 
         array (
             0 => __DIR__ . '/..' . '/league/flysystem-ziparchive/src',
@@ -629,27 +665,12 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         array (
             0 => __DIR__ . '/..' . '/intervention/image/src/Intervention/Image',
         ),
-        'GuzzleHttp\\Psr7\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/guzzlehttp/psr7/src',
-        ),
-        'GuzzleHttp\\Promise\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/guzzlehttp/promises/src',
-        ),
-        'GuzzleHttp\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/guzzlehttp/guzzle/src',
-        ),
+         
         'Faker\\' => 
         array (
             0 => __DIR__ . '/..' . '/fzaninotto/faker/src/Faker',
         ),
-        'Facebook\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/facebook/php-sdk-v4/src/Facebook',
-            1 => __DIR__ . '/..' . '/facebook/graph-sdk/src/Facebook',
-        ),
+         
         'Doctrine\\Instantiator\\' => 
         array (
             0 => __DIR__ . '/..' . '/doctrine/instantiator/src/Doctrine/Instantiator',
@@ -678,10 +699,7 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         array (
             0 => __DIR__ . '/..' . '/barryvdh/elfinder-flysystem-driver/src',
         ),
-        'Barracuda\\Copy\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/barracuda/copy/src',
-        ),
+         
     );
 
     public static $prefixesPsr0 = array (
@@ -721,17 +739,7 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
                 0 => __DIR__ . '/..' . '/ezyang/htmlpurifier/library',
             ),
         ),
-        'G' => 
-        array (
-            'Guzzle\\Tests' => 
-            array (
-                0 => __DIR__ . '/..' . '/guzzle/guzzle/tests',
-            ),
-            'Guzzle' => 
-            array (
-                0 => __DIR__ . '/..' . '/guzzle/guzzle/src',
-            ),
-        ),
+        
         'E' => 
         array (
             'Eher\\OAuth' => 

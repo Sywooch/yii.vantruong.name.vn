@@ -379,10 +379,24 @@ switch (Yii::$app->request->post('action')){
 				'loadDefault'=>true,
 				'updateDatabase'=>true,
 			]);
-			loadTourProgramDistances($id,[
-				'loadDefault'=>true,
-				'updateDatabase'=>true,	
-			]);
+			foreach (\app\modules\admin\models\ProgramSegments::getAll($id,['parent_id'=>0]) as $segment){
+				$x1 = \app\modules\admin\models\ProgramSegments::getAll($id,['parent_id'=>$segment['id']]);
+				if(!empty($x1)){
+					foreach ($x1 as $x2) { 
+						loadTourProgramDistances($id,[
+								'loadDefault'=>true,
+								'updateDatabase'=>true,
+								'segment'=>$x2
+						]);
+					}
+				}else{
+				loadTourProgramDistances($id,[
+					'loadDefault'=>true,
+					'updateDatabase'=>true,
+					'segment'=>$segment	
+				]);
+				}
+			}
 				
 			
 		}

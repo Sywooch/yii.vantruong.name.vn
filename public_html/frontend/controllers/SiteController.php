@@ -100,9 +100,18 @@ class SiteController extends Controller
     	exit;
     }
     
+    
     public function actionRobots(){
     	header('Content-type: text/plain');
     	echo (get_site_value('seo/robots'));
+    	exit;
+    }
+    
+    public function actionCustompage(){
+    	
+    	header('Content-type: text/plain');
+    	$x = \app\modules\admin\models\CustomPage::getItem(__ITEM_ID__);
+    	echo uh($x['text'],2);
     	exit;
     }
     
@@ -299,15 +308,21 @@ class SiteController extends Controller
     }
     public function actionSuspended()
     {
-    	 
-    		return $this->render('suspended');
+    	$this->layout = 'suspended'; 
+    	return $this->render('suspended');
     }
     public function actionIndex()
-    {     	
+    {     	 
+    	 
     	if(__DOMAIN_ADMIN__){
-    		$this->redirect(['/admin']);
-    	}else
-        return $this->render(__TEMP_NAME__ .'/index');
+    		$this->redirect(['/admin']); 
+    	}else{
+    		if(__TEMP_NAME__ != ""){
+    			return $this->render(__TEMP_NAME__ .'/index'); 
+    		}
+    		return $this->render('coming1/index'); 
+    	}
+        
     }
     
     public function actionProducts()

@@ -269,7 +269,11 @@ class Cronjobs extends \yii\db\ActiveRecord
     					$state = -1;
     					break;
     				}
-    				
+    				if(isset($_COOKIE['sented_email_expired_'.$v['sid']]) && $_COOKIE['sented_email_expired_'.$v['sid']] ==  1){
+    					$state = -1;
+    					break;
+    				}
+    				 
     				$text1 = Yii::$app->zii->getTextRespon([
     				'code'=>'RP_SHOP_EXPRIED',
     				'sid'=>$v['sid'],
@@ -357,12 +361,14 @@ class Cronjobs extends \yii\db\ActiveRecord
     					]);
     					$state = -1;
     				}
+    				set_cookie('sented_email_expired_'.$v['sid'],1,7200);
+    				
     		
     				break;
     		}
     		if($state !== -1) {
     			Yii::$app->db->createCommand()->update(\common\models\Cronjobs::tableName(),
-    					['state'=>$state],
+    					['state'=>$state,'last_modify'=>date('Y-m-d H:i:s')],
     					['type_code'=>$v['type_code'],'item_id'=>$v['item_id'],'sid'=>$v['sid']])->execute();
     		}
     	}

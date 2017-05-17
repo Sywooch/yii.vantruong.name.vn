@@ -1,20 +1,17 @@
 <?php
 namespace app\modules\admin\controllers;
 use Yii;
-use app\modules\admin\models\Box;
+use app\modules\admin\models\CustomPage;
 use app\modules\admin\models\FormActive;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use common\controllers\CrsController; 
-use app\modules\admin\models\Content;
-use app\modules\admin\models\Filters;
-use app\modules\admin\models\AdForms;
 
 /**
- * Ad_moduleController implements the CRUD actions for Box model.
+ * Ad_moduleController implements the CRUD actions for CustomPage model.
  */
-class BoxController extends CrsController
+class Custom_pageController extends CrsController
 {
     /**
      * @inheritdoc
@@ -23,12 +20,12 @@ class BoxController extends CrsController
 	
     public function behaviors()
     {
-    	$this->model = new Box();
+    	$this->model = new CustomPage();
     	return parent::__behaviors();
     }
 
     /**
-     * Lists all Box models.
+     * Lists all CustomPage models.
      * @return mixed
      */
     public function actionIndex()
@@ -47,7 +44,7 @@ class BoxController extends CrsController
     }
 
     /**
-     * Displays a single Box model.
+     * Displays a single CustomPage model.
      * @param integer $id
      * @param string $lang
      * @return mixed
@@ -60,7 +57,7 @@ class BoxController extends CrsController
     }
 
     /**
-     * Creates a new Box model.
+     * Creates a new CustomPage model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
@@ -74,11 +71,12 @@ class BoxController extends CrsController
     	if(Yii::$app->request->method == 'POST'){
     		FormActive::setBooleanFields($this->model->getBooleanFields());
     		$f = FormActive::getFormSubmit();    		
-    		$f['code'] = $this->model->getBoxCode($f['code'],0);
     		$f['sid'] = __SID__;
-    		Yii::$app->db->createCommand()->insert(Box::tableName(),$f)->execute();
-    		$id = Yii::$app->db->createCommand("select max(id) from ".Box::tableName())->queryScalar();
-    		$this->updateSlug($id, $f);
+    		$f['owner'] = Yii::$app->user->id;
+    		Yii::$app->db->createCommand()->insert(CustomPage::tableName(),$f)->execute();
+    		$id = Yii::$app->db->createCommand("select max(id) from ".CustomPage::tableName())->queryScalar();
+    		$url = \app\modules\admin\models\Slugs::getSlug(($f['link']), $id);
+    		\app\modules\admin\models\Slugs::updateSlug($url,$id,'custom-page',5);
     		$btn = post('btnSubmit');
     		$tab = post('currentTab');
     		btnClickReturn($btn,$id,$tab);
@@ -86,18 +84,13 @@ class BoxController extends CrsController
     	return $this->render('edit', [
     		'v'=>$this->model->getItem(getParam('id',0)),	
     		'model'=>$this->model,	
-    		'id'=>Yii::$app->request->get('id',0),
-    			'articles_list'=>[],
-    			'filters'=>[],
-    			'filter_by'=>[],
-    			'forms'=>AdForms::getUserForms(['is_content'=>1]),
-    			'attrs'=>Content::getListAttrsByType(),
+    		'id'=>Yii::$app->request->get('id',0)
     	]);
     	 
     }
 	     
     /**
-     * Updates an existing Box model.
+     * Updates an existing CustomPage model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param integer $id
      * @param string $lang
@@ -109,53 +102,32 @@ class BoxController extends CrsController
     }
     public function actionEdit($id)
     {    	
-    	$model = $this->model->getItem($id);  
+    	$model = $this->model->getItem($id);
     	if(Yii::$app->request->method == 'POST'){
     		FormActive::setBooleanFields($this->model->getBooleanFields());
-    		$f = FormActive::getFormSubmit();
-    		//
-    		
-    		//
-    		$f['code'] = $this->model->getBoxCode($f['code'],$id);
+    		$f = FormActive::getFormSubmit();    		     		
     		$con = array('id'=> $id,'sid'=>__SID__);
     		// update with lang    		
-    		Yii::$app->db->createCommand()->update(Box::tableName(),$f,$con)->execute();    	
-    		$this->updateSlug($id, $f);
+    		Yii::$app->db->createCommand()->update(CustomPage::tableName(),$f,$con)->execute();  
+    		//
+    		$url = \app\modules\admin\models\Slugs::getSlug(($f['link']), $id);
+    		\app\modules\admin\models\Slugs::updateSlug($url,$id,'custompage',5);
+    		//
     		$btn = post('btnSubmit');
     		$tab = post('currentTab');
     		btnClickReturn($btn,$id,$tab);
     	}
-    	return $this->render($this->action->id, [
+    	return $this->render(!empty($model) ? $this->action->id : '../error/index',[
     			'v' => $model,
     			'model'=>$this->model,
     			'id'=>Yii::$app->request->get('id',0),
-    			'articles_list'=>Content::getListItem(['in'=>isset($model['articles_list']) ? $model['articles_list'] : []]),
-    			'filters'=>Filters::getListItem(['in'=>isset($model['filters']) ? $model['filters'] : []]),
-    			'filter_by'=>Filters::getListItem(['in'=>isset($model['filter_by']) ? $model['filter_by'] : []]),
-    			'forms'=>AdForms::getUserForms(['is_content'=>1]),
-    			'attrs'=>Content::getListAttrsByType(),
     	]);
     	
     }
-    
-    private function updateSlug($id, $f){
-    	$isSlug = false; $route = '';
-    	$biz = post('biz');
-    	if(isset($biz['make_url']) && $biz['make_url'] == 'on'){
-    		$route = isset($biz['route']) ? $biz['route'] : '';   	
-    	 	if($route != ""){
-    			$url = \app\modules\admin\models\Slugs::getSlug(unMark($f['title']), $id);
-    			\app\modules\admin\models\Slugs::updateSlug($url,$id,$route,2);
-    			\app\modules\admin\models\Siteconfigs::updateBizrule($this->model->tableName(),['id'=>$id,'sid'=>__SID__],['url_link'=>cu([DS.$url])]);
-    	 	}elseif(isset($f['menu_id']) && $f['menu_id']>0){
-    	 		\app\modules\admin\models\Siteconfigs::updateBizrule($this->model->tableName(),['id'=>$id,'sid'=>__SID__],['url_link'=>cu(false,false,['category_id'=>$f['menu_id']])]);
-    	 	}
-    	}
-    	 
-    }
+	
      
     /**
-     * Deletes an existing Box model.
+     * Deletes an existing CustomPage model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param integer $id
      * @param string $lang
@@ -169,16 +141,16 @@ class BoxController extends CrsController
     }
 
     /**
-     * Finds the Box model based on its primary key value.
+     * Finds the CustomPage model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param integer $id
      * @param string $lang
-     * @return Box the loaded model
+     * @return CustomPage the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Box::findOne(['id' => $id,'sid'=>__SID__])) !== null) {
+        if (($model = CustomPage::findOne(['id' => $id,'sid'=>__SID__])) !== null) {
             return $model;
         } else {
             throw new NotFoundHttpException('The requested page does not exist.');

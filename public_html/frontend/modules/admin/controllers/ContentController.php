@@ -88,15 +88,19 @@ class ContentController extends CrsController
     		if(isset($_POST['f']['is_active']) && in_array($_POST['f']['is_active'], [-1])){
     			unset($f['is_active']);
     		}
-    		$id = 0;
+    		$id = 0;$biz = post('biz',[]);
     		$titles = explode(';', $f['title']);
     		foreach ($titles as $title){
     			if(trim($title) != ""){
+    				
     				$f['title'] = $title;
     				$f['url'] = Slugs::getSlug(isset($f['url']) && $f['url'] != "" ? $f['url'] : unMark($f['title']), $this->model->getID());
     				$code = isset($f['code']) && $f['code'] != "" ? $f['code'] : ''; 
     				if($code == "") {
-    					$f['code'] = genCustomerCode(isset(Yii::$site['settings'][$f['type']]) ? Yii::$site['settings'][$f['type']]+ ['table'=>$this->model->tableName()]: []);
+    					$cx = isset(Yii::$site['settings'][$f['type']]) ? Yii::$site['settings'][$f['type']] + ['table'=>$this->model->tableName()] : [];
+    					$cx['auto_code'] = isset($biz['auto_code']) ? $biz['auto_code'] : (isset($cx['auto_code']) ? $cx['auto_code'] : '');
+    					$f['code'] = genCustomerCode($cx);
+    					//$f['code'] = genCustomerCode(isset(Yii::$site['settings'][$f['type']]) ? Yii::$site['settings'][$f['type']]+ ['table'=>$this->model->tableName()]: []);
     					if($f['code'] === false){
     						unset($f['code']);
     					}
@@ -115,7 +119,7 @@ class ContentController extends CrsController
 			    		//Slugs::updateSlug($f['url'],$id,$f['type'],1,post('biz',[]));
 			    		$con = array('id'=> $id,'sid'=>__SID__);
 			    		//Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],$con)->execute();
-			    		$biz = post('biz',[]);
+			    		
 			    		Slugs::updateSlug($f['url'],$id,$f['type'],1,$biz);
 			    		if(isset($biz['manual_link']) && $biz['manual_link'] == 'on'){
 			    			Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>$biz['url_link']],$con)->execute();
@@ -196,10 +200,13 @@ class ContentController extends CrsController
     			unset($f['is_active']);
     		}
     		$code = isset($f['code']) && $f['code'] != "" ? $f['code'] : $model['code'];
+    		$biz = post('biz');
     		if($code == "") {
     			//view(Yii::$site['settings'][$model['type']]['code']);
-    			$f['code'] = genCustomerCode(isset(Yii::$site['settings'][$model['type']]['code']) ? Yii::$site['settings'][$model['type']]['code'] + ['table'=>$this->model->tableName()] : []);
-    			//view($f['code']);
+    			$cx = isset(Yii::$site['settings'][$model['type']]['code']) ? Yii::$site['settings'][$model['type']]['code'] + ['table'=>$this->model->tableName()] : [];
+    			$cx['auto_code'] = isset($biz['auto_code']) ? $biz['auto_code'] : (isset($cx['auto_code']) ? $cx['auto_code'] : '');
+    			$f['code'] = genCustomerCode($cx);
+    			 
     			if($f['code'] === false){
     				unset($f['code']);
     			}

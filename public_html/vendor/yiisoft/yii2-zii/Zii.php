@@ -18,16 +18,22 @@ class Zii extends yii\base\Object
 		return (new Query())->from($table)->where($con)->count(1);
 	}
 	public static function getUserCurrency(){
+		$r = [];
 		if(0>1 && isset($_SESSION['config']['currency'])){
-			return $_SESSION['config']['currency'];
+			$r = $_SESSION['config']['currency'];
 		}else{
 			$v = Siteconfigs::getItem('SITE_CONFIGS',__LANG__);
 			//view($v,true);
 			if(isset($v['other_setting']['currency'])){
 				$_SESSION['config']['currency'] = $v['other_setting']['currency'];
-				return $_SESSION['config']['currency'];
+				$r = $_SESSION['config']['currency'];
 			}		
 		}
+		//
+		if(empty($r)){
+			$r['list'] = [['id'=>1,'title'=>'Tiếng Việt','code'=>'vi_VN']];
+		}
+		return $r;
 	}
 	
 	public function removeTransportSupplierTourProgram($o = []){
@@ -313,7 +319,17 @@ class Zii extends yii\base\Object
 				'auto'=>true,
 
 			]);
+			
+			//view($updateDatabase);
+			 
 			if($updateDatabase){
+				/*/ C1
+				Yii::$app->db->createCommand()->delete('tours_programs_to_suppliers',[
+						'supplier_id'=>$supplier_id,
+						'item_id'=>$item_id,
+						'segment_id'=>$segment_id
+				])->execute();
+				/*/
 				// Clear
 				Yii::$app->db->createCommand()->delete('tours_programs_suppliers_vehicles',[
 						'supplier_id'=>$supplier_id,
@@ -330,6 +346,7 @@ class Zii extends yii\base\Object
 								'segment_id'=>$segment_id,
 								'quantity'=>$v['quantity'] 
 						])->execute();
+						 
 					}
 				}
 			}
@@ -377,6 +394,7 @@ class Zii extends yii\base\Object
 		$position = isset($o['position']) ? $o['position'] : 0;
 		$vehicle_id = isset($o['vehicle_id']) ? $o['vehicle_id'] : 0;
 		$default = isset($o['default']) ? $o['default'] : false;
+		$segment_id = isset($o['segment_id']) ? $o['segment_id'] : 0;
 		// Check quốc tịch - 
 		$pax_type = \app\modules\admin\models\Local::getTypeByNationality($nationality_id);
 		$selected_car = [];
@@ -432,7 +450,7 @@ class Zii extends yii\base\Object
 		}
 		// Cập nhật cơ sở dữ liệu
 		if(isConfirm($update)){
-			Yii::$app->db->createCommand()->delete('tours_programs_to_suppliers',['supplier_id'=>$supplier_id,'item_id'=>$item_id])->execute();
+			Yii::$app->db->createCommand()->delete('tours_programs_to_suppliers',['supplier_id'=>$supplier_id,'item_id'=>$item_id,'segment_id'=>$segment_id])->execute();
 			Yii::$app->db->createCommand()->insert('tours_programs_to_suppliers',
 					[
 							'supplier_id'=>$supplier_id,
@@ -440,7 +458,8 @@ class Zii extends yii\base\Object
 							'vehicle_id'=>$selected_car[0]['id'],
 							'quantity'=>$selected_car[0]['quantity'],
 							'type_id'=>TYPE_ID_VECL,
-							'position'=>$position
+							'position'=>$position,
+							'segment_id'=>$segment_id
 					]
 					)->execute();
 		}
@@ -486,7 +505,7 @@ class Zii extends yii\base\Object
 		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
 		$position = isset($o['position']) ? $o['position'] : 0;
 		$type_id = isset($o['type_id']) ? $o['type_id'] : 0;
-		
+		$segment_id = isset($o['segment_id']) ? $o['segment_id'] : 0;
 		// Check quốc tịch -
 		$pax_type = \app\modules\admin\models\Local::getTypeByNationality($nationality_id);
 		$selected_car = [];
@@ -1450,14 +1469,24 @@ class Zii extends yii\base\Object
 		$attr = isset($o['attr']) ? $o['attr'] : false;
 		$type = isset($o['type']) ? $o['type'] : 'products';
 		$module = isset($o['module']) ? $o['module'] : 'index';
+		$listSubMenu = isset($o['listSubMenu']) && $o['listSubMenu'] == true ? true : false;
+		$limitSub= isset($o['limitSub']) ? $o['limitSub'] : 0;
+		
+		 
 		$list_box = \app\models\Box::getBoxIndex($module);
 			
 		$action_detail = '';
 		$result = [];
 		if(!empty($list_box)){
 			foreach($list_box as $kb=>$vb){
-				//$result['box'] = $vb;
-				$result[$vb['code']] = $this->getArticles(['box'=>$vb,'category_id'=>0]);
+				$r = $this->getArticles(['box'=>$vb,'category_id'=>0]);
+				if($listSubMenu && $vb['menu_id'] > 0){
+					$r['listSubMenu'] = \app\models\SiteMenu::getList([
+							'parent_id'=>$vb['menu_id'],
+							'limit'=>$limitSub
+					]);
+				}
+				$result[$vb['code']] = $r;
 			}
 		}
 		return $result;

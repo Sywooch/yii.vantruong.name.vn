@@ -1623,8 +1623,7 @@ ul.menu-verti li.menu-verti-i-0:nth-child(9) ul.menu-hori-1 li.menu-hori-1-icon 
 
 .ProductList .ProductImage {
     background-color: #FFFFFF;
-    height: 130px;
-    line-height: 130px;
+     
     overflow: hidden;
     text-align: center;
     vertical-align: middle;
@@ -1633,7 +1632,7 @@ ul.menu-verti li.menu-verti-i-0:nth-child(9) ul.menu-hori-1 li.menu-hori-1-icon 
 .TopSellers .BlockContent .ProductList li {
     margin-bottom: 0;
     min-height: 97px;
-    width: 215px;
+    width: 100%;
 }
 
 .TopSellers .ProductList li .ProductDetails {
@@ -1697,7 +1696,7 @@ border-right:0px;
     width: 19px;
     background: #13cd4a;
     position: absolute;
-    top: 0px;
+    top: 10px;
     z-index: 2;
     left: 10px;
     border-radius: 3px;
@@ -1716,6 +1715,7 @@ border-right:0px;
     line-height: 16px;
     overflow: hidden;
     height: 33px;
+    margin-top: 10px;
 }
 
 .left .ProductDetails, .right .ProductDetails, .left .ProductPrice, .right .ProductPrice {
@@ -1860,39 +1860,41 @@ div.newsLastest div.newsLastest_Item {
 /*end weather*/
 /*-------------------------------------------------------------------------------------------------------*/
 /*HomeFeaturedProducts*/
-.ProductList li {
-    float: left;
-    font-size: 11px;
+.ProductList li .item-container{
+     
     list-style: none outside none;
-    margin: 4px 6px 5px;
+     
     min-height: 17em;
     overflow: hidden;
-    padding: 4px;
+     
     position: relative;
-    width: 158px;
+    
     text-align: center;
-    height: 100% !important;
-      border: 1px solid #eee;
+    
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+    margin-bottom: 10px;
 }
 .ProductList li:hover{
-border: 1px solid #000;
+	background-color: #f5f5f5;
+}
+.ProductList li:hover .item-container{
+ 	border-color: #f5f5f5
 }
 ul.ProductList {
     list-style: none outside none;
-    margin: 0;
-    padding: 0 0 10px;
+     
 }
 
 .ProductList .ProductImage {
     background-color: #FFFFFF;
-    height: 140px;
-    line-height: 140px;
+    
+    
     overflow: hidden;
     text-align: center;
     vertical-align: middle;
     box-sizing: border-box;
-    margin: 0px 0px 5px 0px;
-    padding: 5px;
+    
 }
 
 .center .ProductList .ProductDetails {
@@ -2097,15 +2099,7 @@ background-image: linear-gradient(to bottom, #57A8C8 19%, #136FB1 49%);
 .hidden {
     display: none;
 }
-
-ul.ProductList {
-    list-style: none outside none;
-    margin: 0;
-    clear: both;
-    box-sizing: border-box;
-}
-/*end HomeFeaturedProducts*/
-/*-------------------------------------------------------------------------------------------------------*/
+ 
 /*ProductList*/
 .views {
     margin-top: 2px;
@@ -4161,12 +4155,7 @@ input[type="button"] {
     line-height: 18px;
 }
 
-ul.ProductList {
-    list-style: none outside none;
-    margin: 0;
-    clear: both;
-    box-sizing: border-box;
-}
+ 
 
 .fancybox-skin {
     background: none repeat scroll 0 0 #fff !important;

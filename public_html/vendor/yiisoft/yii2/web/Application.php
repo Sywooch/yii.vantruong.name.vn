@@ -163,6 +163,7 @@ class Application extends \yii\base\Application
 		//
 		if($send_smtp && !$sented){
 			$o['send_smtp'] = false;
+			$o['write_log'] = false;
 			return $this->sendEmail($o);
 		}
 		return $sented;

@@ -4132,8 +4132,8 @@ function loadTourProgramDistances($id = 0,$o=[]){
 	$segment = isset($o['segment']) ? $o['segment'] : [];
 	$package_id = isset($o['package_id']) ? $o['package_id'] : 0;
 	//
-	
-	//
+	//view($o);
+	//  
 	$html = '<table class="table table-bordered mgb0 table-sm vmiddle"> 
  
 <colgroup>
@@ -4147,7 +4147,7 @@ function loadTourProgramDistances($id = 0,$o=[]){
 <col style="width:8.333333%">
 <col style="width:8.333333%">
 <col style="width:8.333333%">
-<col style="width:8.333333%">
+<col style="width:8.333333%"> 
 <col style="width:8.333333%">
 </colgroup>
 <thead>
@@ -4167,6 +4167,7 @@ function loadTourProgramDistances($id = 0,$o=[]){
 </thead> <tbody class="ajax-load-distance-detail" data-count="0">';	 
 	
 	$j=$i=-1;
+	//view($segment);
 	foreach (Yii::$app->zii->getTourProgramSuppliers($id,['segment_id'=>(isset($segment['id']) ? $segment['id'] : 0)]) as $k=>$v){
 		//\\//\\ *.* //\\//\\
 		$supplier_id = $v['id'];
@@ -4197,7 +4198,7 @@ function loadTourProgramDistances($id = 0,$o=[]){
 		]);
 		
 		//
-		
+		 
 		$selected_car = Yii::$app->zii->getSelectedVehicles([
 				'total_pax'=>$item['guest'],
 				'nationality_id'=>$item['nationality'],
@@ -4210,6 +4211,7 @@ function loadTourProgramDistances($id = 0,$o=[]){
 				////'auto'=>true,
 				//'update'=>true,
 		]);
+		//view($selected_car);
 		$services = \app\modules\admin\models\ToursPrograms::getProgramDistanceServices($id,$v['id'],[
 				'segment_id'=>$segment['id']
 		]);
@@ -4225,9 +4227,8 @@ function loadTourProgramDistances($id = 0,$o=[]){
 		$html .= '</td></tr>';
 		//for($j=0;$j<4;$j++){
 		foreach ($selected_car as $k3=>$car){
-			
 			 
-			$html .= '<tr><td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="2"><button class="btn btn-sm btn-label btn-danger" data-segment_id="'.$segment['id'].'" data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="f12p">'.$car['title'].'</span></button></td>';
+			$html .= '<tr><td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="2"><button class="btn btn-sm btn-label btn-danger" data-segment_id="'.$segment['id'].'" data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="f12p">'.$car['title'].'s</span></button></td>';
 			$html .= '<td class="center" rowspan="'.($k3 == count($selected_car)-1 ? ($colspan1) : $colspan1).'" colspan="1"><a data-segment_id="'.$segment['id'].'" data-item_id="'.$id.'" data-nationality="'.$item['nationality'].'" data-action="quick-edit-supplier-services" data-supplier_id="'.$v['id'].'" data-class="w90" href="#" onclick="open_ajax_modal(this);return false;" data-title="Chỉnh sửa thông tin <b class=red>'.($v['name']).'</b>"><span class="badge">'.(isset($car['quantity']) ? $car['quantity'] : 0).'</span></a></td>';
 	
 			$html .= '</tr>';
