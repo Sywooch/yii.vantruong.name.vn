@@ -89,7 +89,8 @@ class MenuController extends CrsController
     		
     		$f['sid'] = __SID__; $id = 0;
     		$biz = post('biz',[]);
-    		$titles = explode(';', $f['title']);
+    		$f['type'] = $f['type'] == 'manual' && isset($biz['link_target']) ? $biz['link_target'] : $f['type'];
+    		$titles = explode(',', $f['title']); 
     		foreach ($titles as $title){
     			if(trim($title) != ""){
     				$f['title'] = $title;
@@ -99,7 +100,7 @@ class MenuController extends CrsController
 	    			$this->model->updatePosition($id);
 	    			$this->model->updateDestination($id);
 	    			 			 
-	    			
+	    			$con = ['id'=>$id];
 	    			Slugs::updateSlug($f['url'],$id,$f['type'],0,$biz);
 	    			if(isset($biz['manual_link']) && $biz['manual_link'] == 'on'){
 	    				Yii::$app->db->createCommand()->update(Menu::tableName(),['url_link'=>$biz['url_link']],$con)->execute();
@@ -213,6 +214,7 @@ class MenuController extends CrsController
     		//$this->model->updateAllLevel($f['parent_id']);
     		//view(Yii::$site['seo']);
     		$biz = post('biz',[]);
+    		$f['type'] = $f['type'] == 'manual' && isset($biz['link_target']) ? $biz['link_target'] : $f['type'];
     		Slugs::updateSlug($f['url'],$id,$f['type'],0,$biz);
     		if(isset($biz['manual_link']) && $biz['manual_link'] == 'on'){
     			Yii::$app->db->createCommand()->update(Menu::tableName(),['url_link'=>$biz['url_link']],$con)->execute();

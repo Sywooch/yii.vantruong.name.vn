@@ -2,7 +2,7 @@
 //view(Yii::$app->controller->id);
 if(Yii::$app->controller->action->id != 'testimonials'){
 	$vb = Yii::$app->zii->getBoxCode('testimonials');
-	//view($vb,true);
+	 
 	echo '<div class="fusion-fullwidth fullwidth-box fusion-fullwidth-5 fusion-parallax-none nonhundred-percent-fullwidth" >
 	
 <div class="fusion-row container">
@@ -16,7 +16,7 @@ if(Yii::$app->controller->action->id != 'testimonials'){
 	if(!empty($vb['listItem'])){
 		foreach ($vb['listItem'] as $k=>$v){
 			$link = cu([DS.$v['url']]);
-	
+		if(isset($v['icon'])){
 	
 			echo '<div class="item" ><div class="fusion-post-wrapperx col-sm-12">';
 	
@@ -24,7 +24,7 @@ if(Yii::$app->controller->action->id != 'testimonials'){
 		<div class="fusion-testimonials clean fusion-testimonials-2" data-random="0">
 		<div class="reviews"><div class="review avatar-image" style="display: block;">
 		<div class="testimonial-thumbnail"><a href="'.$link.'">'.getImage([
-					'src'=>$v['icon'],
+					'src'=>isset($v['icon']) ? $v['icon'] : '',
 					'w'=>120,'h'=>120,
 					'img_attr'=>[
 							'class'=>'testimonial-image',
@@ -32,12 +32,15 @@ if(Yii::$app->controller->action->id != 'testimonials'){
 			]).'</a>
 		</div>
 		<blockquote style="background-color:;"><q style="background-color:;color:;">
-						<span class="testi-word-enable">“'.uh($v['info']).'</span>
+						<span class="testi-word-enable">“'.uh(isset($v['info']) ? $v['info'] : '').'</span>
 		<a href="'.$link.'" class="testi-more"> '.getTextTranslate(34).'</a><span class="testi-word-disable">'.uh($v['summary']).'”</span></q></blockquote>
 	
 						<div class="author" style="color:;"><a href="'.$link.'" class="company-name"><strong>'.uh($v['title']).'</strong>, <span>'.uh($v['short_title']).'</span></a></div></div></div></div><div class="fusion-clearfix"></div></div></div>';
 			echo '</div></div><!--item-->';
 	
+		}else{
+			view($v);
+		}
 		}
 	}
 	
@@ -51,28 +54,26 @@ if(Yii::$app->controller->action->id != 'testimonials'){
 
 <div class="fl100 subcribes">
 <div class="container">
-
-
 <div class="fusion-one-full fusion-layout-column fusion-column-last fusion-spacing-yes" style="margin-top:0px;margin-bottom:5px;">
 <div class="fusion-column-wrapper">
 <?php 
 $b = $this->app()->getBox('subcribe');
 if(!empty($b)){
-	echo '<div class="fusion-title title fusion-sep-none fusion-title-center fusion-title-size-two fusion-border-below-title">
-
+	switch ($b['style']){
+		case 2:
+			echo uh($b['text'],2);
+			//echo '';
+			break;
+		default:
+			echo '<div class="fusion-title title fusion-sep-none fusion-title-center fusion-title-size-two fusion-border-below-title">
+			
 <h2 class="title-heading-center upper" data-fontsize="24" data-lineheight="35"><strong>'.uh($b['title']).'</strong></h2></div>
 <div class="fusion-title title fusion-sep-none fusion-title-center fusion-title-size-four fusion-border-below-title" style="margin-top:10px;margin-bottom:8px;">
-<h4 class="title-heading-center" data-fontsize="14" >'.uh($b['text']).'</h4>
-
+<h4 class="title-heading-center" data-fontsize="14" >'.uh($b['text'],2).'</h4>
+		
 </div>';
-}
-?>
-
-
-
-
-
-<div class="fusion-widget-area fusion-widget-area-1 fusion-content-widget-area">
+			
+			echo '<div class="fusion-widget-area fusion-widget-area-1 fusion-content-widget-area">
 <div id="newsletterwidget-2" class="fusion-footer-widget-column widget widget_newsletterwidget">
  
 
@@ -91,11 +92,19 @@ if(!empty($b)){
     </div><!-- /input-group -->
   </div><!-- /.col-lg-6 -->
  </div></div>
- <input type="hidden" name="_csrf-frontend" value="<?php echo Yii::$app->request->csrfToken;?>"  />
+ <input type="hidden" name="_csrf-frontend" value="'.Yii::$app->request->csrfToken.'"  />
 <input type="hidden" name="action" value="set_subcribes"/>  
  </form>
 
-</div><div style="clear:both;"></div></div><div class="fusion-additional-widget-content"></div></div><div class="fusion-clearfix"></div></div></div>
+</div><div style="clear:both;"></div></div><div class="fusion-additional-widget-content"></div></div>';
+			
+			break;
+	}
+}
+?>
+ 
+
+<div class="fusion-clearfix"></div></div></div>
 
 
 </div>
@@ -183,9 +192,9 @@ $this->registerJsFile(__LIBS_DIR__ . '/popup/colorbox/jquery.colorbox.js', ['dep
 $this->registerJsFile(__LIBS_DIR__ . '/lazyloadxt/lazy.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 $this->registerJsFile(__RSDIR__ . '/js/jquery.themepunch.tools.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 $this->registerJsFile(__RSDIR__ . '/js/jquery.themepunch.revolution.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
-$this->registerJsFile('http://www.skypeassets.com/i/scom/js/skype-uri.js?ver=4.4.8', ['depends' => [\yii\web\JqueryAsset::className()]]);
+//$this->registerJsFile('http://www.skypeassets.com/i/scom/js/skype-uri.js?ver=4.4.8', ['depends' => [\yii\web\JqueryAsset::className()]]);
 $this->registerJsFile(__RSDIR__ . '/js/main1.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 $this->registerJsFile(__RSDIR__ . '/js/main.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 
 ?> 
-<div id="fb-root"></div>
+ 

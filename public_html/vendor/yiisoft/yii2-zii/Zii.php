@@ -821,7 +821,7 @@ class Zii extends yii\base\Object
 				$m .= '<a '.(isset($v['rel']) ? ' rel="'.$v['rel'].'"' : '').' '.(isset($v['target']) ? ' target="'.$v['target'].'"' : '').' '.($link != '#' ? 'href="'.$link.'"' : 'role="none"').'  class="'.$aActive.'">';
 				
 				if(isset($v['icon_class']) && $v['icon_class'] != ""){
-					$m .= '<i class="'.$v['icon_class'].'"></i>';
+					$m .= '<i class="'.$v['icon_class'].'"></i> ';
 				}
 				
 				//$m .= $hTag[0];

@@ -17,6 +17,10 @@ class ProgramSegments extends \yii\db\ActiveRecord
         return '{{%tours_programs_segments}}';
     }
 
+    public static function tableToPlace()
+    {
+    	return '{{%tours_programs_segments_to_places}}';
+    }
     /**
      * @inheritdoc
      */
@@ -43,10 +47,17 @@ class ProgramSegments extends \yii\db\ActiveRecord
      
     public static function getItem($id=0,$o=[]){    	
     	$item = static::find()
-    	->where(['id'=>$id, 'sid'=>__SID__]);
-    
+    	->where(['id'=>$id, 'sid'=>__SID__]);    
     	$item = $item->asArray()->one();
-    	 
+    	if(!empty($item)){
+    		$item['places'] = (new Query())->from(['a'=>'departure_places'])
+    		->where(['a.id'=>(new Query())
+    				
+    				->from('tours_programs_segments_to_places')->where(['segment_id'=>$item['id']])->select('place_id')
+    		])
+    		->select(['a.*','title'=>'a.name'])
+    		->all();
+    	}
     	return $item;
     }
     /*
@@ -54,7 +65,7 @@ class ProgramSegments extends \yii\db\ActiveRecord
      */
     public static function getList($o = []){
     	$limit = isset($o['limit']) && is_numeric($o['limit']) ? $o['limit'] : 30;
-    	$order_by = isset($o['order_by']) ? $o['order_by'] : ['a.title'=>SORT_ASC,'a.id'=>SORT_DESC];
+    	$order_by = isset($o['order_by']) ? $o['order_by'] : ['a.position'=>SORT_ASC,'a.title'=>SORT_ASC,'a.id'=>SORT_DESC];
     	$p = isset($o['p']) && is_numeric($o['p']) ? $o['p'] : Yii::$app->request->get('p',1);    
     	$count  = isset($o['count']) && $o['count'] == false ? false   : true;
     	$filter_text = isset($o['filter_text']) ? $o['filter_text'] : '';    	
@@ -103,27 +114,32 @@ class ProgramSegments extends \yii\db\ActiveRecord
     public static function getAll($item_id=0, $o = []){
     	$item_id = is_numeric($item_id) ? $item_id : (isset($o['item_id']) ? $o['item_id'] : 0);
     	$limit = isset($o['limit']) && is_numeric($o['limit']) ? $o['limit'] : 30;
-    	$order_by = isset($o['order_by']) ? $o['order_by'] : ['a.title'=>SORT_ASC,'a.id'=>SORT_DESC];
+    	$order_by = isset($o['order_by']) ? $o['order_by'] : ['a.position'=>SORT_ASC, 'a.title'=>SORT_ASC,'a.id'=>SORT_DESC];
     	$p = isset($o['p']) && is_numeric($o['p']) ? $o['p'] : Yii::$app->request->get('p',1);
     	$count  = isset($o['count']) && $o['count'] == false ? false   : true;
     	$filter_text = isset($o['filter_text']) ? $o['filter_text'] : '';
     	$parent_id = isset($o['parent_id']) ? $o['parent_id'] : -1;
     	$type_id = isset($o['type_id']) ?  $o['type_id'] : -1;
     	$is_active = isset($o['is_active']) ? $o['is_active'] : -1;
+    	$not_in = isset($o['not_in']) ? $o['not_in'] : [];
     	$offset = ($p-1) * $limit;
     	$query = static::find()
     	->from(['a'=>self::tableName()])
     	->where(['a.sid'=>__SID__,'a.item_id'=>$item_id])
     	;
     	if(strlen($filter_text) > 0){
-    		$query->andFilterWhere(['like', 'title', $filter_text]);
+    		$query->andFilterWhere(['like', 'a.title', $filter_text]);
     	}
-    	 
+    	if($parent_id>-1){
+    		$query->andWhere(['a.parent_id'=>$parent_id]);
+    	}
+    	if(!empty($not_in)){
+    		$query->andWhere(['not in','a.id',$not_in]);
+    	}    	    	 
     	$query->select(['a.*'])
     	->orderBy($order_by)
     	->offset($offset)
     	->limit($limit);
-    	return $query->asArray()->all();
-    	 
+    	return $query->asArray()->all();    	 
     }
 }

@@ -1,31 +1,6 @@
 <?php 
 if(Yii::$app->user->can(ROOT_USER)){
-	// echo dString('SWtTb1NXdFRiMU5pUWtKSVUwaFI=');exit;
-	/*
-	view(Yii::$app->zii->getServiceDetailPrices([
-			'item_id'=>3,
-			'day_id'=>0,
-			'time_id'=>1,
-			'service_id'=>5,
-			'package_id'=>0,
-			'type_id'=>5,
-			'nationality'=>212,
-			'total_pax'=>$v['guest'],
-			'from_date'=>'2017-05-25',
-			//'sub_item_id'=>(isset($sv['sub_item_id']) ? $sv['sub_item_id'] : 0),
-			'loadDefault'=>true,
-			'updateDatabase'=>false
-	])
-	
-);*/
-	$services = Yii::$app->zii->chooseVehicleAuto([
-			//'totalPax'=>post('total_pax',0),
-			'nationality'=>34,
-			'supplier_id'=>11,
-			'item_id'=>1,
-			////'auto'=>true,
-			//'update'=>true,
-	]);
+	//loadTourProgramGuides($v['id']);
 }
 ?>
 <div class="col-sm-12 bang-thong-tin-chung" style=""><div class="row">

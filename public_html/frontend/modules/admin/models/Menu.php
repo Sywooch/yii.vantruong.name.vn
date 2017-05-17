@@ -202,7 +202,7 @@ class Menu extends \yii\db\ActiveRecord
     	return $c;
     }
     public static function updateAllLevel($id = 0,$parent_id=-1){
-    	if($parent_id > -1 && $id>0){ break;
+    	if($parent_id > -1 && $id>0){ 
     		if($parent_id > 0){
     			$lv = Yii::$app->db->createCommand("select a.level+1 from ".self::tableName()." as a where id=".$parent_id)->queryScalar();
     			Yii::$app->db->createCommand("update ".self::tableName() ." set level=$lv where id=".$id)->execute();

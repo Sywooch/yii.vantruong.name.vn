@@ -2012,7 +2012,7 @@ ul.msg_list li a .message {
     background-color: #fff;
     border-color: #ddd;
     border-width: 1px;
-    border-radius: 4px 4px 0 0;
+    border-radius:0;
     -webkit-box-shadow: none;
     box-shadow: none;
 }
@@ -2040,7 +2040,7 @@ ul.msg_list li a .message {
     left: 0;
     font-size: 12px;
     font-weight: 700;
-    color: #959595;
+    color: #333;
     text-transform: uppercase;
     letter-spacing: 1px;
     border: 1px solid #ddd;
@@ -2439,5 +2439,44 @@ div.tagsinput span.tag, div.tagsinput input{padding-top:0; padding-bottom:0}
 .block-example.bg-success{
 	background: #dff0d8
 }
-.block-example .block-title.btn{color: #fff} 
- 
+.block-example .block-title.btn-success{color: #fff} 
+.block-examples > .block-title{
+	line-height: 36px; font-weight: bold; 
+	/*border: 1px solid #ddd;
+	border-width:1px 1px 0 1px;*/ 
+	padding-left: 10px; background-color: #f3f3f3
+}
+.block-examples .block-example{
+	margin: 5px;
+} 
+.bc1.block-example{padding-top: 38px}
+.block-examples{border:1px solid #ddd;margin-bottom: 5px;}
+.root-chosse-guides{
+	border: 1px solid #ddd;
+	border-width:0 1px;
+	padding: 5px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

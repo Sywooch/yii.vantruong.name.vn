@@ -619,7 +619,7 @@ function submitAjax(t){
     }else{
     	$href = $cfg.cBaseUrl + '/ajax';
     }
-    //console.log($href); return false;    
+     
     
    var $submit = true;
     jQuery('.er').remove();    
@@ -641,10 +641,11 @@ function submitAjax(t){
      $this.find('.required').each(function(i,e){
     	 var $e = jQuery(e);
          if($e.val().trim() == ""){        	
-        	$e.focus();
+        	
         	if($e.attr('data-select') == 'select2'){
         		$e.parent().find('.select2-selection').addClass('error');
         	}else{
+        		$e.focus();
         		$e.addClass('error')
         	}
             $ckc = false;
@@ -1230,7 +1231,7 @@ function showCModal($content,t){
     	var $target = $this.attr('data-target') ?  ($this.attr('data-target')) : '';  
     	$title =  'Chỉnh sửa nhanh' ;
 		
-		$html += '<form name="ajaxForm" action="./ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
+		$html += '<form name="ajaxForm" action="/ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
 		$html += '<div class="modal-dialog" role="document">';
 		$html += '<div class="modal-content">';
 		$html += '<div class="modal-header">';
@@ -1297,7 +1298,7 @@ function showCModal($content,t){
     	}
     	$title =  'Gá»­i email tá»›i: <span style="text-transform:none;font-weight:300">' + $eT + '</span>' ;
 		
-		$html += '<form name="ajaxForm" action="./ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
+		$html += '<form name="ajaxForm" action="/ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
 		$html += '<div class="modal-dialog" role="document">';
 		$html += '<div class="modal-content">';
 		$html += '<div class="modal-header">';
@@ -1362,7 +1363,7 @@ function showCModal($content,t){
     	}
     	$title =  'Chá»�n khÃ¡ch sáº¡n' ;
 		
-		$html += '<form name="ajaxForm" action="./ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
+		$html += '<form name="ajaxForm" action="/ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
 		$html += '<div class="modal-dialog" role="document">';
 		$html += '<div class="modal-content">';
 		$html += '<div class="modal-header">';
@@ -1425,7 +1426,7 @@ function showCModal($content,t){
     	}
     	$title =  'Chá»�n xe' ;
 		 
-		$html += '<form name="ajaxForm" action="./ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
+		$html += '<form name="ajaxForm" action="/ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
 		$html += '<div class="modal-dialog" role="document">';
 		$html += '<div class="modal-content">';
 		$html += '<div class="modal-header">';
@@ -1479,7 +1480,7 @@ function showCModal($content,t){
     	$id = $this.attr('data-id');
     	 
 		
-		$html += '<form name="ajaxForm" action="./ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
+		$html += '<form name="ajaxForm" action="/ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
 		$html += '<div class="modal-dialog" role="document">';
 		$html += '<div class="modal-content">';
 		$html += '<div class="modal-header">';
@@ -1545,7 +1546,7 @@ function showCModal($content,t){
     	$title = 'ThÃªm má»›i khÃ¡ch hÃ ng';
     	$id = $this.attr('data-id');    	 
 		
-		$html += '<form name="ajaxForm" action="./ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
+		$html += '<form name="ajaxForm" action="/ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
 		$html += '<div class="modal-dialog" role="document">';
 		$html += '<div class="modal-content">';
 		$html += '<div class="modal-header">';
@@ -1698,7 +1699,7 @@ function showCModal($content,t){
     	$title = 'ThÃªm nhÃ³m tour / Chá»§ Ä‘á»� tour';
     	$id = $this.attr('data-id');    	 
 		
-		$html += '<form name="ajaxForm" action="./ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
+		$html += '<form name="ajaxForm" action="/ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
 		$html += '<div class="modal-dialog" role="document">';
 		$html += '<div class="modal-content">';
 		$html += '<div class="modal-header">';
@@ -1743,7 +1744,7 @@ function showCModal($content,t){
     	$title = 'ThÃªm má»›i chi phÃ­';
     	$id = $this.attr('data-id');    	 
 		
-		$html += '<form name="ajaxForm" action="./ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
+		$html += '<form name="ajaxForm" action="/ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
 		$html += '<div class="modal-dialog" role="document">';
 		$html += '<div class="modal-content">';
 		$html += '<div class="modal-header">';
@@ -1838,7 +1839,7 @@ function showCModal($content,t){
     	$title = 'ThÃªm má»›i loáº¡i tour';
     	$id = $this.attr('data-id');    	 
 		
-		$html += '<form name="ajaxForm" action="./ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
+		$html += '<form name="ajaxForm" action="/ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
 		$html += '<div class="modal-dialog" role="document">';
 		$html += '<div class="modal-content">';
 		$html += '<div class="modal-header">';
@@ -1883,7 +1884,7 @@ function showCModal($content,t){
 		//$nn = $content == 'phieuthu' ? 'NgÆ°á»�i ná»™p' : 'NgÆ°á»�i nháº­n';
 		//$loaithu = $content == 'phieuthu' ? 'Loáº¡i thu' : 'Loáº¡i chi';
 		
-		$html += '<form name="ajaxForm" action="./ajax" class="ajaxFormd form-horizontal f12e" method="post" onsubmit="return ajaxUploadForm(this);" enctype="multipart/form-data">';
+		$html += '<form name="ajaxForm" action="/ajax" class="ajaxFormd form-horizontal f12e" method="post" onsubmit="return ajaxUploadForm(this);" enctype="multipart/form-data">';
 		//$html += '';
 		$html += '<div class="modal-dialog" role="document">';
 		$html += '<div class="modal-content">';
@@ -3363,7 +3364,7 @@ function add_more_currency($t){
 	var $this = jQuery($t); 
 	$title =  'Chọn thêm tiền tệ' ;
 	$html = '';
-	$html += '<form name="ajaxForm" action="./ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
+	$html += '<form name="ajaxForm" action="/ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
 	$html += '<div class="modal-dialog" role="document">';
 	$html += '<div class="modal-content">';
 	$html += '<div class="modal-header">';
@@ -3522,6 +3523,7 @@ function show_help($t){
 }
 
 function open_ajax_modal($t){
+	 
 	 var $this = jQuery($t);
 	 var $data = getAttributes($this);
 	 $m = $this.attr('data-modal-target') ? $this.attr('data-modal-target') : '.mymodal';
@@ -3544,7 +3546,7 @@ function open_ajax_modal($t){
 		  url: $cfg.adminUrl  + '/ajax',						 		 
 	      data: $data,
 	      beforeSend:function(){
-	    	  $html = '<form name="ajaxForm" action="./ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
+	    	  $html = '<form name="ajaxForm" action="/ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
 	    	  $html += '<div class="modal-dialog '+$this.attr('data-class')+'" role="document">';
 	    	  $html += '<div class="modal-content">';
 	    	  $html += '<div class="modal-header">';
@@ -3575,7 +3577,7 @@ function open_ajax_modal($t){
 	    	loadTagsInput();
 	    	loadTagsInput1();
 	    	loadAutocomplete();
-	    	
+	    	jQuery('.tooltip').remove();
 	      },
 	      error : function(err, req) {}
 	 });
@@ -3820,7 +3822,7 @@ function change_season_price_type($t){
 		var $this = jQuery($t); 
 		$title =  'Chọn phương tiện' ;
 		$html = '';
-		$html += '<form name="ajaxForm" action="./ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
+		$html += '<form name="ajaxForm" action="/ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
 		$html += '<div class="modal-dialog" role="document">';
 		$html += '<div class="modal-content">';
 		$html += '<div class="modal-header">';
@@ -3905,7 +3907,7 @@ function change_season_price_type($t){
 		var $this = jQuery($t);
 		$title =  'Thêm mới phương tiện' ;
 		$html = '';
-		$html += '<form name="ajaxForm" action="./ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
+		$html += '<form name="ajaxForm" action="/ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
 		$html += '<div class="modal-dialog" role="document">';
 		$html += '<div class="modal-content">';
 		$html += '<div class="modal-header">';
@@ -4122,7 +4124,7 @@ function change_season_price_type($t){
 		var $this = jQuery($t); 
 		$title =  'Chọn chặng vận chuyển' ;
 		$html = '';
-		$html += '<form name="ajaxForm" action="./ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
+		$html += '<form name="ajaxForm" action="/ajax" class="ajaxForm form-horizontal f12e" method="post" onsubmit="return submitAjax(this);">';
 		$html += '<div class="modal-dialog" role="document">';
 		$html += '<div class="modal-content">';
 		$html += '<div class="modal-header">';

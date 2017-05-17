@@ -12,8 +12,8 @@ $a = [
 		'USER_RENEWED' => 12,
 		'DOMAIN_RENEWED' => 13,
 		
-		//'SHOP_EXPIRED' => 1,
-		//'SHOP_EXPIRED' => 1,
+		'SHOP_SUSPENDED' => 31,
+		'SHOP_COMINGSOON' => 32,
 ];
 foreach($a as $k=>$v){
 	defined($k) or define($k,$v);

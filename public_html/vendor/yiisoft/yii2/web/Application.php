@@ -126,15 +126,15 @@ class Application extends \yii\base\Application
 		//
 		$subject = isset($o['subject']) ? $o['subject'] : '';
 		$messageBody = isset($o['body']) ? $o['body'] : '';
-		$from = isset($o['from']) ? $o['from'] : (isset($smtp['name']) ? $smtp['name'] : 'no-reply@'.__DOMAIN__); // replace with your own
-		$fromName = isset($o['fromName']) ? $o['fromName'] : $from; // replace with your own
+		$from = isset($o['from']) ? $o['from'] : (isset($smtp['email']) ? $smtp['email'] : 'no-reply@'.__DOMAIN__); // replace with your own
+		$fromName = isset($o['fromName']) ? $o['fromName'] : (isset($smtp['name']) ? $smtp['name'] : $from); // replace with your own
 		$replyTo = isset($o['replyTo']) ? $o['replyTo'] : $from; // replace with your own
 		$replyToName = isset($o['replyToName']) ? $o['replyToName'] : ''; // replace with your own
 		$templete = isset($o['templete']) ? $o['templete'] : [];
 		$to = isset($o['to']) ? $o['to'] : '';
 		//
 		$setFrom = $from != $fromName ? [$from => $fromName] : $from;
-		//
+		// 
 		$sented = Yii::$app
 		->mailer
 		->compose($templete)
@@ -632,8 +632,15 @@ class Application extends \yii\base\Application
 		// Get templete
 		$TEMP = $this->__get_templete_name();
 		 
-		///view($config['language'],true);
-		define('__TEMP_NAME__', __IS_ADMIN__ ? 'admin' : $TEMP['name']);
+		switch (SHOP_STATUS){
+			//case SHOP_COMINGSOON:
+			//	define('__TEMP_NAME__','coming1');
+			//	break;
+			default:
+				define('__TEMP_NAME__', __IS_ADMIN__ ? 'admin' : ($TEMP['name'] != "" ? $TEMP['name'] : 'coming1'));
+				break;
+		}
+		
 		$config['TCID'][__SID__] = !empty($TEMP) ? $TEMP['parent_id'] : 0;
 		$config['TID'][__SID__] = !empty($TEMP) ? $TEMP['id'] : 0;
 		define('__TID__', $config['TID'][__SID__]);
@@ -714,7 +721,7 @@ class Application extends \yii\base\Application
 		// Get SID
 		$config = Yii::$app->session['config'];
 		//$command = Yii::$app->db->createCommand("SELECT a.sid,b.code,a.is_admin FROM {{%domain_pointer}} as a inner join {{%shops}} as b on a.sid=b.id where a.domain='".__DOMAIN__."'");
-		$r = (new \yii\db\Query())->select(['a.sid','b.code','a.is_admin','a.module','b.to_date'])
+		$r = (new \yii\db\Query())->select(['a.sid','b.status','b.code','a.is_admin','a.module','b.to_date'])
 		->from(['a'=>'{{%domain_pointer}}'])
 		->innerJoin(['b'=>'{{%shops}}'],'a.sid=b.id')
 		->where(['a.domain'=>__DOMAIN__])->one();
@@ -724,6 +731,8 @@ class Application extends \yii\base\Application
 		if(!empty($r)){
 			define ('SHOP_TIME_LEFT',countDownDayExpired($r['to_date']));
 			define ('SHOP_TIME_LIFE',($r['to_date']));
+			define ('SHOP_STATUS',($r['status']));
+				
 			define ('__SID__',(float)$r['sid']);
 			define ('__SITE_NAME__',$r['code']);
 			 

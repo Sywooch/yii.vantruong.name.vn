@@ -4,106 +4,122 @@ use app\modules\admin\models\Siteconfigs;
 use app\modules\admin\models\Content;
 use app\modules\admin\models\Menu;
 use app\modules\admin\models\AdminMenu;
- 
-switch (Yii::$app->request->get('action')){
-	case 'load_domains':
-		$r = [];
-		$l = \app\modules\admin\models\Domains::find()
-		->where(['>','state',-2])
-		->andWhere(['sid'=>__SID__])
-		->andFilterWhere(['like','domain',getParam('term')])
-		->asArray()->all();
-		if(!empty($l)){
-			foreach ($l as $k=>$v){
-				$r[$k]['id'] = $v['domain'];
-				$r[$k]['label'] = uh($v['domain']);
-				$r[$k]['value'] = uh($v['domain']);
-			}
-		}
-		echo cjson($r);exit;
-		break;
-	case 'load_dia_danh':
-		$r = [];
-		$l = \app\modules\admin\models\DeparturePlaces::find()->where(['>','state',-2])
-		->andWhere(['sid'=>__SID__])
-		->andFilterWhere(['like','name',getParam('term')])
-		->asArray()->all();
-		if(!empty($l)){
-			foreach ($l as $k=>$v){
-				$r[$k]['id'] = $v['id'];
-				$r[$k]['label'] = uh($v['name']);
-				$r[$k]['value'] = uh($v['name']);
-			}
-		}
-		echo cjson($r);exit;
-		break;
-	case 'load_foods':
-		$r = [];
-		$l = \app\modules\admin\models\Foods::find()->where(['>','state',-2])
-		->andFilterWhere(['like','title',getParam('term')])
-		->andWhere(['sid'=>__SID__])
-		->asArray()->all();
-		if(!empty($l)){
-			foreach ($l as $k=>$v){
-				$r[$k]['id'] = $v['id'];
-				$r[$k]['label'] = uh($v['title']);
-				$r[$k]['value'] = uh($v['title']);
-			}
-		}
-		echo cjson($r);exit;
-		break;
-	case 'countNotifis':		
-		$noti = (new Query())->from('notifications')->where(['state'=>-1,'sid'=>__SID__])->count(1);
-		$r = array('unview'=>$noti,'b'=>2);
-		echo cjson($r);exit;
-		break; 
-	case 'getNotifis':
-		 
-		$l = (new Query())->from(['a'=>'notifications'])->where(['sid'=>__SID__])->andWhere(['>','state',-2])->limit(15)->orderBy([
-				'time'=>SORT_DESC
-		])->all();
-		$html = '<div class="notification-scroll">';
-		if(!empty($l)){
-			foreach ($l as $k=>$v){
-				$user = app\modules\admin\models\Users::getUserName($v['uid']);
-				$html .= '<li class="item-state-'.$v['state'].'">
-                      <a class="state-'.$v['state'].'" data-id="'.$v['id'].'" onclick="return changeNotificationState(this);" href="'.($v['link'] != "" ? $v['link'] : '#').'">
-                        <span class="image hide"></span>
-                        <span>
-                          <span>'.$v['title'].'</span>
-                          <p class="time fa fa-user">'.(trim($user) != "" ? '<span class="italic underline">' . trim($user) . '</span> - ': '').count_time_post($v['time']).'</p>
-                        </span>
-                        <span class="message">
-						'.uh($v['note']).'
-                        </span>
-                      </a>
-                    </li>';
-					
-			}
-		}else{
-			$html .= '<li><a><span><span></span><p class="time fa fa-user"></p></span><span class="message">Bạn chưa có thông báo nào ...</span></a></li>';
-		}
-		$html .= '</div><li onclick="return false;"><div class="text-center w100"><a><strong>Xem thêm thông báo</strong><i class="fa fa-angle-right"></i></a></div></li>';
-		$r = array('html'=>$html);
-		Yii::$app->db->createCommand()->update('notifications',['state'=>0],['sid'=>__SID__,'state'=>-1])->execute();
-		echo json_encode($r); exit;
-		break;
-}
+////////////////////////////////////////////////////////////////////// 
+include_once '_get_action.php';///////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 switch (Yii::$app->request->post('action')){
+	
+	
+	case 'quick-setup-tourprogram-guides':
+		$f = post('f');
+		$item_id = post('item_id');
+		$segment_id = post('segment_id',0);
+		//
+		if($segment_id == 0){ // Level 1
+			\app\modules\admin\models\Siteconfigs::updateBizrule(\app\modules\admin\models\ToursPrograms::tableName(),[
+					'id'=>$item_id
+			],[
+					'guide_language'=>$f['guide_language'],
+					'guide_type'=>$f['guide_type'],
+			]);
+		}else{
+			 
+		}
+		switch ($f['guide_type']){
+			case 2: // Từng chặng
+				
+				break;
+			case 1: // Suốt tuyến
+				
+				break;
+		}
+		echo json_encode([
+				//'html'=>$html,
+				'event'=>'hide-modal',
+				'callback'=>true,
+				'callback_function'=>'reloadAutoPlayFunction();'
+		]); exit;		
+		break;
+	case 'setup-tourprogram-guides':
+		$html = '';
+		$item_id = post('item_id',0);
+		$segment_id = post('segment_id',0);
+		$parent_id = post('parent_id',0);
+		$guide_type = post('guide_type',2);
+		$guide_language = post('guide_language',DEFAULT_LANG);
+		$item = \app\modules\admin\models\ToursPrograms::getItem($item_id);
+		$segment = \app\modules\admin\models\ProgramSegments::getItem($segment_id);
+		  
+		
+		$html .= '<div class="form-group"><div class="col-sm-12 edit-form-left">
+		'.Ad_edit_show_select_field([],[
+				'field'=>'guide_language',
+				'label'=>'Ngôn ngữ',
+				'class'=>'select2 ',
+				//'field_name'=>'category_id[]',
+				//'multiple'=>true,
+				'attrs'=>[
+						'data-search'=>'hidden'
+				],
+				'data'=>\app\modules\admin\models\AdLanguage::getList(),
+				'data-selected'=>[$guide_language],
+				'option-value-field'=>'code',
+				'option-title-field'=>'title',
+		]).'</div></div>';
+						
+		
+		$html .= '<div class="form-group"><div class="col-sm-12"><label >Loại hướng dẫn <i class="red font-normal"></i></label><br>
+		<label class="mgr15"><input name="f[guide_type]" type="radio" value="2" '.($guide_type == 2 ? 'checked' : '').'/> Hướng dẫn viên từng chặng</label>
+		<label class="mgl15"><input name="f[guide_type]" type="radio" value="1" '.($guide_type == 1 ? 'checked' : '').'/> Hướng dẫn viên suốt tuyến</label>				
+		</div></div>';
+		
+		
+		//$html .= '<div class="form-group"><div class="col-sm-12"><label >Số ngày <i class="red font-normal">(*)</i></label><input type="number" min="1" max="99" name="f[number_of_day]" class="form-control number-format required" required placeholder="Nhập số ngày tour của chặng này" value="'.(isset($segment['number_of_day']) ? ($segment['number_of_day']) : '').'"></div></div>';
+		 
+		//$html .= '<div class="form-group"><div class="col-sm-12"><label >Thứ tự sắp xếp</label><input type="number" min="1" max="99" name="f[position]" class="form-control number-format" placeholder="Thứ tự sắp xếp" value="'.(isset($segment['position']) ? ($segment['position']) : 0).'"></div></div>';
+		//
+		$html .= '<div class="modal-footer">';
+		$html .= '<button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Lưu lại</button>';
+		$html .= $segment_id > 0 ? '<button data-action="open-confirm-dialog" data-title="Xác nhận xóa chặng tour !" data-class="modal-sm" data-confirm-action="quick_delete_program_segment" onclick="return open_ajax_modal(this);" data data-id="'.$segment_id.'" data-item_id="'.$item_id.'" type="button" class="btn btn-warning"><i class="fa fa-trash "></i> Xóa chặng</button>' : '';
+		$html .= '<button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-window-close"></i> Hủy</button>';
+		$html .= '</div><input type="hidden" name="f[position]" value="'.(isset($segment['position']) ? $segment['position'] : post('index')).'"/>
+				<input type="hidden" name="f[item_id]" value="'.$item_id.'"/>';
+		$_POST['action'] = 'quick-' . $_POST['action'];
+		foreach ($_POST as $k=>$v){
+			$html .= '<input type="hidden" name="'.$k.'" value="'.$v.'"/>';
+		}
+		//
+		
+		echo json_encode([
+				'html'=>$html,
+				'callback'=>true,
+				'callback_function'=>'reloadAutoPlayFunction();'
+		]); exit;
+		break;
 	case 'quick-add-more-tour-segment':
 		$item_id = post('item_id',0);
 		$segment_id = post('segment_id',0);
 		$f = post('f',[]);
-		
+		//
 		//
 		if($segment_id>0){
-			Yii::$app->db->createCommand()->update('tours_programs_segments',$f,['id'=>$segment_id,'sid'=>__SID__])->execute();
+			Yii::$app->db->createCommand()->update(\app\modules\admin\models\ProgramSegments::tableName(),$f,['id'=>$segment_id,'sid'=>__SID__])->execute();
 		}else {
 			$f['sid'] = __SID__;
-			Yii::$app->db->createCommand()->insert('tours_programs_segments',$f)->execute();
+			$segment_id = Yii::$app->zii->insert(\app\modules\admin\models\ProgramSegments::tableName(),$f);
 		}
 		//
+		if($segment_id>0){
+			Yii::$app->db->createCommand()->delete(\app\modules\admin\models\ProgramSegments::tableToPlace(),['segment_id'=>$segment_id])->execute();
+			if(!empty(post('places',[]))){
+				foreach (post('places') as $p){
+					Yii::$app->db->createCommand()->insert(\app\modules\admin\models\ProgramSegments::tableToPlace(),[
+							'segment_id'=>$segment_id,
+							'place_id'=>$p
+					])->execute();
+				}
+			}
+		}
 		echo json_encode([
 				//'html'=>$html,
 				'event'=>'hide-modal',
@@ -115,16 +131,50 @@ switch (Yii::$app->request->post('action')){
 		$html = '';
 		$item_id = post('item_id',0);
 		$segment_id = post('segment_id',0);
+		$parent_id = post('parent_id',0);
 		$segment = \app\modules\admin\models\ProgramSegments::getItem($segment_id);
-		//
-		$html .= '<div class="form-group"><div class="col-sm-12"><label >Đia danh <i class="red font-normal">(*)</i></label>
-		<select name="places[]" data-placeholder="Chọn địa danh" multiple data-action="load_dia_danh" required data-role="load_dia_danh" class="form-control required input-sm ajax-chosen-select-ajax input-quick-search-local">';
-				 
-		$html .= '</select>
-									</div></div>';
+		$local = Yii::$app->zii->parseCountry(isset($segment['local_id']) ? $segment['local_id'] : 234);
+		$html .= '<div class="form-group">
+				<div class="col-sm-4"><div class="row">
+				<div class="col-sm-12"><label >Quốc gia</label>
+		<select name="f[local_id]" data-placeholder="Chọn quốc gia" class="form-control select-input-country ajax-chosen-select-ajax" data-role="chosen-load-country">';
+		$html .= (!empty($local) ? '<option selected value="'.$local['country']['id'].'">'.uh($local['country']['title']).'</option>' : '');		 
+		$html .= '</select></div>
+				</div></div>
+		 
+				<div class="col-sm-8"><div class="row">
+				<div class="col-sm-12 group-sm34"><label >Địa danh <i class="red font-normal">(*)</i></label>
+		<select data-local_id="'.(!empty($local) ? $local['country']['id'] : 0).'" name="places[]" data-placeholder="Chọn địa danh" multiple data-action="load_dia_danh" data-role="load_dia_danh" class="form-control input-sm ajax-chosen-select-ajax">';
+		if(isset($segment['places']) && !empty($segment['places'])){
+			foreach ($segment['places'] as $sg){
+				$html .= '<option selected value="'.$sg['id'].'">'.uh($sg['title']).'</option>';
+			}
+		}
+		$html .= '</select></div>
+				</div></div>		
+				
+				</div>';
+		
+	 
+		
+		
+		
+		
 		$html .= '<div class="form-group"><div class="col-sm-12"><label >Tên chặng <i class="red font-normal">(*)</i></label><input type="text" name="f[title]" class="form-control required" required placeholder="Nhập tên chặng tour" value="'.(isset($segment['title']) ? uh($segment['title']) : '').'"></div></div>';
 		$html .= '<div class="form-group"><div class="col-sm-12"><label >Số ngày <i class="red font-normal">(*)</i></label><input type="number" min="1" max="99" name="f[number_of_day]" class="form-control number-format required" required placeholder="Nhập số ngày tour của chặng này" value="'.(isset($segment['number_of_day']) ? ($segment['number_of_day']) : '').'"></div></div>';
+		$html .= '<div class="form-group"><div class="col-sm-12"><label >Là chặng con của </label>
+		<select name="f[parent_id]" data-placeholder="Chọn danh mục cha" required class="form-control required input-sm chosen-select">
+		<option value="0">--</option>		';
+		$segments = \app\modules\admin\models\ProgramSegments::getAll($item_id,[
+				'parent_id'=>0,
+				'not_in'=>[$segment_id]
+		]);
+		foreach ($segments as $k=>$v1){
+			$html .= '<option '.($v1['id'] == $parent_id ? 'selected' : '') .' value="'.$v1['id'].'">'.$v1['title'].'</option>';
+		}
+		$html .= '</select></div></div>';
 		
+		$html .= '<div class="form-group"><div class="col-sm-12"><label >Thứ tự sắp xếp</label><input type="number" min="1" max="99" name="f[position]" class="form-control number-format" placeholder="Thứ tự sắp xếp" value="'.(isset($segment['position']) ? ($segment['position']) : 0).'"></div></div>';
 		//
 		$html .= '<div class="modal-footer">';
 		$html .= '<button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Lưu lại</button>';
@@ -134,9 +184,10 @@ switch (Yii::$app->request->post('action')){
 				<input type="hidden" name="f[item_id]" value="'.$item_id.'"/>';		
 		$_POST['action'] = 'quick-' . $_POST['action'];
 		foreach ($_POST as $k=>$v){
-			$html .= '<input type="hidden" name="'.$k.'" value="'.$v.'"/>';
+			$html .= '<input type="hidden" name="'.$k.'" value="'.$v.'"/>'; 
 		}
 		//
+		
 		echo json_encode([
 				'html'=>$html,
 				'callback'=>true,
@@ -1538,10 +1589,12 @@ switch (Yii::$app->request->post('action')){
 			case 'quick_delete_program_segment':
 				$id = post('id',0);
 				$item_id = post('item_id',0);
+				$segment = \app\modules\admin\models\ProgramSegments::getItem($id);
 				Yii::$app->db->createCommand()->delete(\app\modules\admin\models\ProgramSegments::tableName(),[
-						'id'=>$id,
+						'id'=>[$id,(new Query())->from(\app\modules\admin\models\ProgramSegments::tableName())->where(['parent_id'=>$id])->select('id')],
 						'item_id'=>$item_id,'sid'=>__SID__
 				])->execute();
+				 
 				$callback = true;
 				$callback_function = 'reloadAutoPlayFunction();';
 				 
@@ -4352,7 +4405,7 @@ change:function(event,ui){
 		
 		 
 		break;	
-	case 'loadTourProgramGuides':
+	case 'loadTourProgramGuides': 
 		echo json_encode([
 				'html'=>loadTourProgramGuides(post('id',0))
 		]+$_POST);exit;
@@ -5621,8 +5674,8 @@ $html .= '<td class="center">
 		
 		//view($menus,true);
 		if(!empty($menus)){
-			foreach ($menus as $menu){ 
-				Yii::$app->db->createCommand()->insert($foodModel->tableToMenu(),['menu_id'=>$menu_id,'food_id'=>$menu])->execute();
+			foreach ($menus as $km=> $menu){ 
+				Yii::$app->db->createCommand()->insert($foodModel->tableToMenu(),['menu_id'=>$menu_id,'food_id'=>$menu,'position'=>$km])->execute();
 			}
 		}
 		//
@@ -5793,17 +5846,19 @@ $html .= '<td class="center">
           <label class="col-sm-12 control-label aleft">Danh sách món ăn</label>
           <div class="col-sm-12">
 	<table class="table table-bordered vmiddle">
-<thead><th class="center w50p">#</th><th class="center">Tên món ăn</th><th class="center w50p"></th></thead>
-<tbody class="ajax-result-add-more-foods">';
+<thead><th class="center w50p">#</th><th class="center">Tên món ăn</th> <th class="center w50p"></th></thead>
+<tbody class="ajax-result-add-more-foods tb-sortable">';
 			$menu_exitsted = [];$k = 0;
 if(isset($item['foods']) && !empty($item['foods'])){
 	foreach ($item['foods'] as $k=>$v){
 		$menu_exitsted[] = $v['id'];
-		$r['html'] .= '<tr><td class="center">'.($k+1).'
+		$r['html'] .= '<tr class="move-content"><td class="center">'.($k+1).'
 							<input type="hidden" name="menus[]" value="'.$v['id'].'"/>
 							</td>
 		<td class=""><a data-modal-target=".mymodal1" class="pointer after-event-'.$v['id'].'" data-id="'.$v['id'].'" data-title="Sửa món ăn" onclick="open_ajax_modal(this);" data-action="quick-edit-food">'.uh($v['title']).'</a></td>
+		 
 		<td class="center"><i onclick="removeTrItem(this)" class="fa fa-trash f12px pointer"></i></td>
+				
 	
 		</tr>';
 	}
@@ -5826,7 +5881,7 @@ if(isset($item['foods']) && !empty($item['foods'])){
 			///
 				
 			$r['event'] = $_POST['action'];
-			$r['callback'] = true;  $r['callback_function'] = 'reloadTooltip();';
+			$r['callback'] = true;  $r['callback_function'] = 'reloadTooltip();jQuery( ".tb-sortable" ).sortable();jQuery( ".tb-sortable" ).disableSelection();';
 			echo json_encode($r);exit;
 			break;
 	case 'quick-add-more-menus-categorys':
@@ -5962,7 +6017,8 @@ if(isset($item['foods']) && !empty($item['foods'])){
 		$m = load_model('foods');
 		if(!empty($new)){
 			foreach ($new as $v){
-				if($v['title'] != "" && (new Query())->from($m->tableName())->where(['title'=>$v['title'],'sid'=>__SID__])->count(1) == 0){
+				if($v['title'] != "" && (new Query())->from($m->tableName())
+						->where(['title'=>$v['title'],'sid'=>__SID__])->count(1) == 0){
 					$v['sid'] = __SID__;
 					$child_id[] = Yii::$app->zii->insert($m->tableName(),$v);
 				}
@@ -5970,16 +6026,20 @@ if(isset($item['foods']) && !empty($item['foods'])){
 		}
 		
 		$new2 = explode(';', post('new2',''));
+		$xitem = [] ;
 		if(!empty($new2)){
 			foreach ($new2 as $k=>$v){
 				if(trim($v) != ""){
 					$item = (new Query())->from($m->tableName())->where(['title'=>trim($v),'sid'=>__SID__])->one();
+					
 					if(!empty($item)){
 						$id = $item['id'];
+						$xitem[] = $item;
 					}else{
 						$id = Yii::$app->zii->insert($m->tableName(),['title'=>trim($v),'sid'=>__SID__]);
+						$xitem[] = (new Query())->from($m->tableName())->where(['id'=>$id,'sid'=>__SID__])->one();
 					}
-					$child_id[] = $id;
+					//$child_id[] = $id;
 				}
 			}
 		}
@@ -5987,7 +6047,7 @@ if(isset($item['foods']) && !empty($item['foods'])){
 		$r = [];
 		$r['html']  = ''; 
 		if(!empty($child_id)){
-			$l = $m->getList(['listItem'=>false,'limit'=>1000,'in'=>$child_id]);
+			$l = ($m->getList(['listItem'=>false,'limit'=>1000,'in'=>$child_id]));
 			
 			if(!empty($l)){
 				foreach ($l as $k=>$v){
@@ -5997,13 +6057,39 @@ if(isset($item['foods']) && !empty($item['foods'])){
 							<input type="hidden" name="menus[]" value="'.$v['id'].'"/>
 							</td>
 		<td class="">'.uh($v['title']).'</td>
+		<td>
+				<input
+				  
+				data-menu_id="7" 
+				data-food_id="12" 
+				data-action="Ad_quick_change_menus_position" 
+				data-field="position" class="center w100 number-format" type="number" value="'.$count.'">
+				</td>		
 		<td class="center"><i onclick="removeTrItem(this)" class="fa fa-trash f12px pointer"></i></td>
 	
 		</tr>';
 					
 				}
 			}
-		}  
+		}
+			if(!empty($xitem)){
+				foreach ($xitem as $k=>$v){
+					$count++;
+					$existed[] = $v['id'];
+					$r['html'] .= '<tr class="move-content"><td class="center">'.($count).'
+							<input type="hidden" name="menus[]" value="'.$v['id'].'"/>
+							</td>
+		<td class="">'.uh($v['title']).'</td>
+		 
+		<td class="center"><i onclick="removeTrItem(this)" class="fa fa-trash f12px pointer"></i></td>
+			
+		</tr>';
+						
+				}
+			}
+			
+			
+	 
 		 
 		
 		
@@ -8280,8 +8366,8 @@ foreach (\app\modules\admin\models\Seasons::getAvailableSeasons($type_id,post('i
 	case 'forgot':
 		$f = post('f');
 		$user_type = isset($f['user_type']) ? $f['user_type'] : 'users';
-		$m = new app\modules\admin\models\Users();
-		$u = $user_type == 'members' ?  $m->findMember($f['email']) : $m->getItem($f['email']);
+		$m = new \app\modules\admin\models\Users();
+		$u = $user_type == 'members' ?  $m->getItem($f['email']) : $m->getItem($f['email']);
 			
 		if(!empty($u)){
 			$password_reset_token = Yii::$app->security->generateRandomString() . '_' . time();

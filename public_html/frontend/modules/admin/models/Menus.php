@@ -177,13 +177,15 @@ class Menus extends \yii\db\ActiveRecord
     	//$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
     	$menu_id = isset($o['menu_id']) ? $o['menu_id'] : 0;
     	//$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
-    	$query = static::find()->from(['a'=>Foods::tableName()])
+    	$query = static::find()
+    	->select(['a.*','b.position'])
+    	->from(['a'=>Foods::tableName()])
     	->innerJoin(['b'=>Foods::tableToMenu()],'a.id=b.food_id')
     	->where([
     			'b.menu_id'=>$menu_id,
     			'a.sid'=>__SID__
     	])->andWhere(['>','a.state',-2])
-    	->orderBy(['a.title'=>SORT_ASC])
+    	->orderBy(['b.position'=>SORT_ASC, 'a.title'=>SORT_ASC])
     	->asArray()->all();
     	return $query;
     }

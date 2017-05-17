@@ -81,6 +81,7 @@ class Foods extends \yii\db\ActiveRecord
     	return $r;
     }
     public static function getList($o = []){
+    	 
     	$limit = isset($o['limit']) && is_numeric($o['limit']) ? $o['limit'] : 30;
     	$order_by = isset($o['order_by']) ? $o['order_by'] : ['a.title'=>SORT_ASC,'a.id'=>SORT_DESC];
     	$p = isset($o['p']) && is_numeric($o['p']) ? $o['p'] : Yii::$app->request->get('p',1);    
@@ -123,6 +124,7 @@ class Foods extends \yii\db\ActiveRecord
     		//$query->select('count(1)');
     		$c = $query->count(1);
     	}
+    	//view($query->createCommand()->getRawSql());
     	$query->select(['a.*'])
     	->orderBy($order_by)
     	->offset($offset)

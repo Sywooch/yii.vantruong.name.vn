@@ -590,7 +590,9 @@ class Content extends \yii\db\ActiveRecord
 	    			Yii::$app->db->createCommand()->update(self::tableName(),['is_active'=>0],['id'=>$id,'sid'=>__SID__])->execute();
 	    		}	    		 	    			    	
     		}
+    		 
     		Siteconfigs::updateBizrule(self::tableName(),['id'=>$id,'sid'=>__SID__],$task);
+    		//view()
     		return true;
     	}
     	return false;

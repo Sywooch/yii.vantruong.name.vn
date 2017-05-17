@@ -76,7 +76,7 @@ view(Yii::$app->zii->getServiceDetailPrices([
 ?>
 <div class="col-sm-12 bang-thong-tin-chung" style=""><div class="row">
 <div class="" style="margin-top: 10px">
-<p class="upper bold grid-sui-pheader aleft ">Thông tin chi tiết</p>
+<p class="upper bold grid-sui-pheader aleft ">Chi tiết dịch vụ ngày</p>
  
 <table class="table table-bordered table-sm vmiddle table-striped"> 
  

@@ -178,6 +178,16 @@ class AjaxController extends CrsController
     public function actionUpdate(){
     	if(Yii::$app->request->getMethod() == 'POST'){
     		switch(Yii::$app->request->post('action')){
+    			case 'Ad_quick_change_menus_position':
+    				$menu_id = post('menu_id');
+    				$food_id = post('food_id');
+    				Yii::$app->db->createCommand()->update('foods_to_menus', [
+    						'position'=>post('value',0)
+    				],[
+    						'menu_id'=>$menu_id,'food_id'=>$food_id
+    				])->execute();
+    				echo json_encode(['hide_class'=>0,'state'=>true,'status'=>true]);
+    				break;
     			case 'Ad_quick_change_config_item':
     				//
     				$post = Yii::$app->request->post();

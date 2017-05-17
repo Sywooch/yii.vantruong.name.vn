@@ -56,7 +56,7 @@ class FormActive extends \yii\db\ActiveRecord
 			//view($image,true);
 			$check = @getimagesize($image["tmp_name"]);
 			if($check !== false) {
-				$image = Yii::file()->upload_files($image);
+				$image = Yii::file()->upload_files($image,['rename'=>false]);
 				//
 				if(isset($f['favicon']['image'])){
 					$f['favicon']['image'] = $image;
@@ -68,15 +68,33 @@ class FormActive extends \yii\db\ActiveRecord
 			}else{
 				$image = post('old_icon');
 			}
+			// 
+			$thumbnail= isset($_FILES['thumbnail']) && $_FILES['thumbnail']['size'] > 0 ? $_FILES['thumbnail'] : '';
+			//view($image,true);
+			$check = @getimagesize($thumbnail["tmp_name"]);
+			if($check !== false) {
+				$thumbnail= Yii::file()->upload_files($thumbnail,['rename'=>false]);
+				 
+				if(!$thumbnail){
+					$thumbnail= post('old_thumbnail');
+				}
+			}else{
+				$thumbnail= post('old_thumbnail');
+			}
+			
+			
 			if(isset($f['icon'])) $f['icon'] = $image;
 			if(isset($f['image'])) $f['image'] = $image;
+			if(isset($thumbnail) && isset($f['thumbnail'])) $f['thumbnail'] = $thumbnail;
+			if(isset($thumbnail)) $biz['thumbnail'] = $thumbnail;
+			
 			//
 			switch (Yii::$app->controller->id){
 				case 'box':
 					$body_image = isset($_FILES['css_image']) && $_FILES['css_image']['size'] > 0 ? $_FILES['css_image'] : '';
 					$check = @getimagesize($body_image["tmp_name"]);
 					if($check !== false) {
-						$body_image = Yii::file()->upload_files($body_image);
+						$body_image = Yii::file()->upload_files($body_image,['rename'=>false]);
 						$biz['css']['image'] = $body_image;
 							
 					}
@@ -88,7 +106,7 @@ class FormActive extends \yii\db\ActiveRecord
 					$body_image = isset($_FILES['body_image']) && $_FILES['body_image']['size'] > 0 ? $_FILES['body_image'] : '';
 					$check = @getimagesize($body_image["tmp_name"]);
 					if($check !== false) {
-						$body_image = Yii::file()->upload_files($body_image);						 
+						$body_image = Yii::file()->upload_files($body_image,['rename'=>false]);						 
 						$f['body']['image'] = $body_image;
 						 
 					}
@@ -96,14 +114,14 @@ class FormActive extends \yii\db\ActiveRecord
 					$body_image = isset($_FILES['header_out_image']) && $_FILES['header_out_image']['size'] > 0 ? $_FILES['header_out_image'] : '';
 					$check = @getimagesize($body_image["tmp_name"]);
 					if($check !== false) {
-						$body_image = Yii::file()->upload_files($body_image);						 
+						$body_image = Yii::file()->upload_files($body_image,['rename'=>false]);						 
 						$f['header_out']['image'] = $body_image;
 						 
 					}
 					$body_image = isset($_FILES['header_in_image']) && $_FILES['header_in_image']['size'] > 0 ? $_FILES['header_in_image'] : '';
 					$check = @getimagesize($body_image["tmp_name"]);
 					if($check !== false) {
-						$body_image = Yii::file()->upload_files($body_image);						 
+						$body_image = Yii::file()->upload_files($body_image,['rename'=>false]);						 
 						$f['header_in']['image'] = $body_image;
 						 
 					}
@@ -111,14 +129,14 @@ class FormActive extends \yii\db\ActiveRecord
 					$body_image = isset($_FILES['main_out_image']) && $_FILES['main_out_image']['size'] > 0 ? $_FILES['main_out_image'] : '';
 					$check = @getimagesize($body_image["tmp_name"]);
 					if($check !== false) {
-						$body_image = Yii::file()->upload_files($body_image);
+						$body_image = Yii::file()->upload_files($body_image,['rename'=>false]);
 						$f['main_out']['image'] = $body_image;
 							
 					}
 					$body_image = isset($_FILES['main_in_image']) && $_FILES['main_in_image']['size'] > 0 ? $_FILES['main_in_image'] : '';
 					$check = @getimagesize($body_image["tmp_name"]);
 					if($check !== false) {
-						$body_image = Yii::file()->upload_files($body_image);
+						$body_image = Yii::file()->upload_files($body_image,['rename'=>false]);
 						$f['main_in']['image'] = $body_image;
 							
 					}
@@ -126,14 +144,14 @@ class FormActive extends \yii\db\ActiveRecord
 					$body_image = isset($_FILES['footer_in_image']) && $_FILES['footer_in_image']['size'] > 0 ? $_FILES['footer_in_image'] : '';
 					$check = @getimagesize($body_image["tmp_name"]);
 					if($check !== false) {
-						$body_image = Yii::file()->upload_files($body_image);
+						$body_image = Yii::file()->upload_files($body_image,['rename'=>false]);
 						$f['footer_in']['image'] = $body_image;
 							
 					}
 					$body_image = isset($_FILES['footer_out_image']) && $_FILES['footer_out_image']['size'] > 0 ? $_FILES['footer_out_image'] : '';
 					$check = @getimagesize($body_image["tmp_name"]);
 					if($check !== false) {
-						$body_image = Yii::file()->upload_files($body_image);
+						$body_image = Yii::file()->upload_files($body_image,['rename'=>false]);
 						$f['footer_out']['image'] = $body_image;
 							
 					}
@@ -159,6 +177,7 @@ class FormActive extends \yii\db\ActiveRecord
 				$f['lname'] = implode(' ', $name);
 				unset($f['fullName']);
 			}
+			
 			if(!empty($biz)){
 				// $im0 = '';
 				if($image == "" && isset($biz['listImages']) && !empty($biz['listImages'])){
@@ -180,11 +199,12 @@ class FormActive extends \yii\db\ActiveRecord
 				}
 				//view($image,true);
 				$biz['icon'] = $image;
-				$f['bizrule'] = cjson($biz);
+				$f['bizrule'] = json_encode($biz);
 			}
+			 
 			if(!empty(self::$jsonFields)){
 				foreach (self::$jsonFields as $j){
-					$f[$j] = cjson(post($j,[]));
+					$f[$j] = json_encode(post($j,[]));
 				}
 			}
 			if(!empty(self::$booleanFields)){
@@ -207,7 +227,7 @@ class FormActive extends \yii\db\ActiveRecord
 				}
 			}
 			
-			
+			 
 			return $f;
 		}
 	}

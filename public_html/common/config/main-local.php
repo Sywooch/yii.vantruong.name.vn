@@ -1,5 +1,5 @@
 <?php
-return [
+return [ 
     'components' => [
     		'session' => [
     				//'class' => 'yii\web\DbSession',

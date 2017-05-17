@@ -212,12 +212,17 @@ class ContentController extends CrsController
     		$con = array('id'=> $id,'sid'=>__SID__);   		
     		Yii::$app->db->createCommand()->update(Content::tableName(),$f,$con)->execute();
     		$this->model->updateCategory($id);
+    		
     		$this->model->updateArticleAttr($id);
     		$this->model->updateTabs($id);
+    		
+    		
     		$this->model->updatePrice($id);
     		$this->model->updateProducers($id);
+    		
     		$this->model->updateTask($id);
     		$this->model->updateFilters($id);
+    		// view($f['bizrule'],true);
     		$this->model->updateAttrType($id, $f['type']);
     		$biz = post('biz',[]);
     		Slugs::updateSlug($f['url'],$id,$f['type'],1,$biz);
@@ -227,6 +232,7 @@ class ContentController extends CrsController
     			Yii::$app->db->createCommand()->update(Content::tableName(),['url_link'=>Yii::$app->zii->getUrl($f['url'])],$con)->execute();
     		//
     		}
+    		
     		switch (getParam('type')){
     			case FORM_TYPE_TESTIMONIALS:
     				Yii::$app->db->createCommand()->delete('item_to_courses',['item_id'=>$id])->execute();

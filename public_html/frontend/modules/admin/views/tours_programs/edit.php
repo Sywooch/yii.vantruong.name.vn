@@ -1,9 +1,5 @@
 <?php 
-//echo dString('SWtTb1NXdFRiMU5pUWtKSVUwaFI='); exit; 
-
-loadTourProgramDistances(1,[
-		'segment'=>\app\modules\admin\models\ProgramSegments::getItem(2)
-]);
+ 
 ?>
 <div class="table-responsive ">
 <div class="fl100 edit-form">
@@ -24,7 +20,7 @@ echo '<li role="presentation" class=""><a href="#tab-general1" role="tab" data-t
   	echo '<li><a rel="link_target" target="_blank" href="'.cu(DS.$v['url']).'" >'.getTextTranslate(74,ADMIN_LANG).'</a></li>';
   }
   ?>
-</ul>
+</ul> 
 
 <!-- Tab panes -->
 <div class="tab-content edit-form-content-tab">

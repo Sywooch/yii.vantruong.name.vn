@@ -185,19 +185,18 @@ class Cronjobs extends \yii\db\ActiveRecord
     
     public static function clearJobExecuted($time = 30){
     //	$a = ['a.state'=>1];
-    	
-    	Yii::$app->db->createCommand()->delete(self::tableName(),['and',['state'=>1],
-    			['<',(new \yii\db\Expression('UNIX_TIMESTAMP(time)')),time()-($time*86400)]
-    	])->execute();
+    	if(date('H') == 3){
+	    	Yii::$app->db->createCommand()->delete(self::tableName(),['and',['state'=>1],
+	    			['<',(new \yii\db\Expression('UNIX_TIMESTAMP(time)')),time()-($time*86400)]
+	    	])->execute();
+    	}
     }
     
     public static function setExpiredShopsNotification(){
-    	
-    	$cookies = Yii::$app->response->cookies;
     	 
     	if(
-    			//date('H')>0 && date('H')<4 && 
-    			!Yii::$app->request->cookies->has('setExpiredShopsNotification')
+    			date('H')>0 && date('H')<4 && 
+    			!isset($_COOKIE['setExpiredShopsNotification'])
     			){ 
     	 
     	$to_date = mktime(0,0,0,date('m')+2,date('d'),date('Y'));
@@ -206,17 +205,14 @@ class Cronjobs extends \yii\db\ActiveRecord
     	])->all();
     	if(!empty($l)){
     		foreach ($l as $k=>$v){
+    			//view($v); 
     			self::setNotificationDateExpired(countDownDayExpired($v['to_date']),$v['id']);
     		}
     	}
+ 
+    	setcookie("setExpiredShopsNotification", 1, time()+82800);
     	
-    	// Set cookie
-    	$c = new \yii\web\Cookie([    	
-    			'name' => 'setExpiredShopsNotification',    	
-    			'value' => 1,
-    			'expire'=>time() + 82800    	
-    	]);
-    	$cookies->add($c);
+    	 
     	}
     }
     
@@ -268,6 +264,12 @@ class Cronjobs extends \yii\db\ActiveRecord
     		//if(!Yii::$app->user->can(ROOT_USER)) break;
     		switch ($v['type_code']) {
     			case SHOP_EXPIRED: // Tài khoản hết hạn
+    				
+    				if(date('H') > 3 || date('H') <2){
+    					$state = -1;
+    					break;
+    				}
+    				
     				$text1 = Yii::$app->zii->getTextRespon([
     				'code'=>'RP_SHOP_EXPRIED',
     				'sid'=>$v['sid'],
@@ -328,6 +330,7 @@ class Cronjobs extends \yii\db\ActiveRecord
     					
     				}
     				//
+    				if($sented){
     				$notis = [
     						'title'=>'Thông báo gia hạn dịch vụ '.$domain,
     						'sid'=>$v['sid'],
@@ -335,6 +338,7 @@ class Cronjobs extends \yii\db\ActiveRecord
     						 
     				];
     				\app\models\Notifications::insertNotification($notis);
+    				}
     				//
     				if(!$sented){
     					\common\models\SystemLogs::writeLog([
