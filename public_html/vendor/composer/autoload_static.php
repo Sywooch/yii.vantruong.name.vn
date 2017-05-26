@@ -10,9 +10,9 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
         '2cffec82183ee1cea088009cef9a6fc3' => __DIR__ . '/..' . '/ezyang/htmlpurifier/library/HTMLPurifier.composer.php',
         '383eaff206634a77a1be54e64e6459c7' => __DIR__ . '/..' . '/sabre/uri/lib/functions.php',
-        //'a0edc8309cc5e1d60e3047b5df6b7052' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/functions_include.php',
-        //'c964ee0ededf28c96ebd9db5099ef910' => __DIR__ . '/..' . '/guzzlehttp/promises/src/functions_include.php',
-       // '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
+        'a0edc8309cc5e1d60e3047b5df6b7052' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/functions_include.php',
+        'c964ee0ededf28c96ebd9db5099ef910' => __DIR__ . '/..' . '/guzzlehttp/promises/src/functions_include.php',
+        '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
         '3569eecfeed3bcf0bad3c998a494ecb8' => __DIR__ . '/..' . '/sabre/xml/lib/Deserializer/functions.php',
         '93aa591bc4ca510c520999e34229ee79' => __DIR__ . '/..' . '/sabre/xml/lib/Serializer/functions.php',
         '2b9d0f43f9552984cfa82fee95491826' => __DIR__ . '/..' . '/sabre/event/lib/coroutine.php',
@@ -21,8 +21,8 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         'decc78cc4436b1292c6c0d151b19445c' => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib/bootstrap.php',
         'ebdb698ed4152ae445614b69b5e4bb6a' => __DIR__ . '/..' . '/sabre/http/lib/functions.php',
         '2c102faa651ef8ea5874edb585946bce' => __DIR__ . '/..' . '/swiftmailer/swiftmailer/lib/swift_required.php',
-       // '7e702cccdb9dd904f2ccf22e5f37abae' => __DIR__ . '/..' . '/facebook/php-sdk-v4/src/Facebook/polyfills.php',
-       // 'c65d09b6820da036953a371c8c73a9b1' => __DIR__ . '/..' . '/facebook/graph-sdk/src/Facebook/polyfills.php',
+        'c65d09b6820da036953a371c8c73a9b1' => __DIR__ . '/..' . '/facebook/graph-sdk/src/Facebook/polyfills.php',
+        '7e702cccdb9dd904f2ccf22e5f37abae' => __DIR__ . '/..' . '/facebook/php-sdk-v4/src/Facebook/polyfills.php',
         '180092cfc969a12e06f2132a203a3184' => __DIR__ . '/..' . '/codeception/verify/src/Codeception/function.php',
         'ef49e2d680177bff6b87f195ea2420b2' => __DIR__ . '/..' . '/hguenot/yii2-gftp/autoload.php',
     );
@@ -181,8 +181,6 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
             'League\\Flysystem\\Replicate\\' => 27,
             'League\\Flysystem\\Rackspace\\' => 27,
             'League\\Flysystem\\GridFS\\' => 24,
-            'League\\Flysystem\\Dropbox\\' => 25,
-            'League\\Flysystem\\Copy\\' => 22,
             'League\\Flysystem\\Cached\\' => 24,
             'League\\Flysystem\\Azure\\' => 23,
             'League\\Flysystem\\AwsS3v2\\' => 25,
@@ -218,7 +216,6 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         'B' => 
         array (
             'Barryvdh\\elFinderFlysystemDriver\\' => 33,
-            'Barracuda\\Copy\\' => 15,
         ),
     );
 
@@ -637,14 +634,6 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         array (
             0 => __DIR__ . '/..' . '/league/flysystem-gridfs/src',
         ),
-        'League\\Flysystem\\Dropbox\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/league/flysystem-dropbox/src',
-        ),
-        'League\\Flysystem\\Copy\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/league/flysystem-copy/src',
-        ),
         'League\\Flysystem\\Cached\\' => 
         array (
             0 => __DIR__ . '/..' . '/league/flysystem-cached-adapter/src',
@@ -665,12 +654,27 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         array (
             0 => __DIR__ . '/..' . '/intervention/image/src/Intervention/Image',
         ),
-         
+        'GuzzleHttp\\Psr7\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/guzzlehttp/psr7/src',
+        ),
+        'GuzzleHttp\\Promise\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/guzzlehttp/promises/src',
+        ),
+        'GuzzleHttp\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/guzzlehttp/guzzle/src',
+        ),
         'Faker\\' => 
         array (
             0 => __DIR__ . '/..' . '/fzaninotto/faker/src/Faker',
         ),
-         
+        'Facebook\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/facebook/graph-sdk/src/Facebook',
+            1 => __DIR__ . '/..' . '/facebook/php-sdk-v4/src/Facebook',
+        ),
         'Doctrine\\Instantiator\\' => 
         array (
             0 => __DIR__ . '/..' . '/doctrine/instantiator/src/Doctrine/Instantiator',
@@ -699,7 +703,6 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
         array (
             0 => __DIR__ . '/..' . '/barryvdh/elfinder-flysystem-driver/src',
         ),
-         
     );
 
     public static $prefixesPsr0 = array (
@@ -739,20 +742,19 @@ class ComposerStaticInit24a781b000dcd6bad97a39343b918f39
                 0 => __DIR__ . '/..' . '/ezyang/htmlpurifier/library',
             ),
         ),
-        
-        'E' => 
+        'G' => 
         array (
-            'Eher\\OAuth' => 
+            'Guzzle\\Tests' => 
             array (
-                0 => __DIR__ . '/..' . '/eher/oauth/src',
+                0 => __DIR__ . '/..' . '/guzzle/guzzle/tests',
+            ),
+            'Guzzle' => 
+            array (
+                0 => __DIR__ . '/..' . '/guzzle/guzzle/src',
             ),
         ),
         'D' => 
         array (
-            'Dropbox' => 
-            array (
-                0 => __DIR__ . '/..' . '/dropbox/dropbox-sdk/lib',
-            ),
             'Diff' => 
             array (
                 0 => __DIR__ . '/..' . '/phpspec/php-diff/lib',

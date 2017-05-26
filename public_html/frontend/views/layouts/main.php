@@ -50,7 +50,8 @@ $html .= '<meta property="og:url" content="'.URL_WITH_PATH.'" />
 <meta name="author" content="'.(get_site_value('seo/author') != "" ? get_site_value('seo/author') : '').'" />
 <meta name="revisit-after" content="1 days" />';
 echo $html;
-$this->registerCssFile(__LIBS_DIR__ . '/themes/css/base.css');
+//$this->registerCssFile(__LIBS_DIR__ . '/themes/css/base.css');
+$this->registerCustomizeCss();
 echo Html::csrfMetaTags();
 echo get_site_value('seo/meta');
 $domains = explode(',', get_site_value('seo/domain'));
@@ -77,13 +78,14 @@ echo '<div id="main" class="main_out_side">'. $content .'</div>';
 if(file_exists(__VIEWS__ . '/footer.php')){
 	include_once __VIEWS__ . '/footer.php';
 } 
-$this->registerJsFile(__LIBS_DIR__ . '/jquerycookie/jquery.cookie.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
+$this->registerCustomizeJs();
+//$this->registerJsFile(__LIBS_DIR__ . '/jquerycookie/jquery.cookie.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 $this->registerJsFile('https://cdn.ampproject.org/v0/amp-carousel-0.1.js', ['depends' => [\yii\web\JqueryAsset::className()],'async'=>'async','custom-element'=>"amp-carousel"]);
 $this->registerJsFile('https://cdn.ampproject.org/v0/amp-analytics-0.1.js', ['depends' => [\yii\web\JqueryAsset::className()],'async'=>'async','custom-element'=>"amp-analytics"]);
 $this->registerJsFile('https://cdn.ampproject.org/v0/amp-iframe-0.1.js', ['depends' => [\yii\web\JqueryAsset::className()],'async'=>'async','custom-element'=>"amp-iframe"]);
 $this->registerJsFile('https://cdn.ampproject.org/v0/amp-youtube-0.1.js', ['depends' => [\yii\web\JqueryAsset::className()],'async'=>'async','custom-element'=>"amp-youtube"]);
-$this->registerJsFile(__LIBS_DIR__ . '/themes/js/fapi.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
-$this->registerJsFile(__LIBS_DIR__ . '/themes/js/gapi.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
+//$this->registerJsFile(__LIBS_DIR__ . '/themes/js/fapi.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
+//$this->registerJsFile(__LIBS_DIR__ . '/themes/js/gapi.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 $this->registerJsFile('https://apis.google.com/js/client:platform.js', ['depends' => [\yii\web\JqueryAsset::className()],'async'=>'async', 'defer'=>'defer']);
 $this->endBody();?>
 <div id="fb-root"></div></body></html>

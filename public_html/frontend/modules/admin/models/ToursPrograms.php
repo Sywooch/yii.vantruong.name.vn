@@ -145,7 +145,7 @@ class ToursPrograms extends \yii\db\ActiveRecord
     			//$item['sub_item_id'] = $v['sub_item_id'];
     			$item['type_id'] = $v['type_id'];
     			$item['package_id'] = $v['package_id'];
-    			//view($v);
+
     			$r[] = $item;
     		}
     	}
@@ -305,6 +305,7 @@ class ToursPrograms extends \yii\db\ActiveRecord
     
     public static function getProgramGuides($o = []){
     	$a = ['item_id','segment_id','supplier_id'];
+    	$guide_type = isset($o['guide_type']) ? $o['guide_type'] : 2;
     	foreach ($a as $b){
     		$$b = isset($o[$b]) ? $o[$b] : 0;
     	}
@@ -315,13 +316,241 @@ class ToursPrograms extends \yii\db\ActiveRecord
     	->from(['a'=>'tours_programs_guides'])
     	->innerJoin(['b'=>'guides'],'a.guide_id=b.id')
     	->where([
-    			'a.item_id'=>$item_id,
+    			'a.item_id'=>$item_id, 
     			'a.segment_id'=>$segment_id,
+    			'a.type_id'=>$guide_type
     	]);
     	if($supplier_id>0){
     		$query->andWhere(['a.supplier_id'=>$supplier_id]);
     	}
     	
     	return $query->orderBy(['a.position'=>SORT_ASC,'b.title'=>SORT_ASC])->all();
+    }
+    
+    /*
+     * Lấy số lượng hướng dẫn theo nhà xe đã chọn
+     * 1. Lấy theo số lượng xe (nhiều nhất) của nhà xe đầu tiên trong chặng
+     */
+    public static function getNumberOfGuides($o = []){
+    	$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
+    	$segment_id = isset($o['segment_id']) ? $o['segment_id'] : 0;
+    	$s = self::getAutoGuideQuantity($o); 
+    	return $s['quantity']; 
+    }
+    
+    public static function setSegmentsAutoGuides($o = []){
+    	$item_id = isset($o['item_id']) ? $o['item_id'] : 0;    	
+    	$item = \app\modules\admin\models\ToursPrograms::getItem($item_id);
+    	$item_guide_type = (isset($item['guide_type']) ? $item['guide_type'] : 2);
+    	if($item_guide_type == 1) {
+    		$segment_id = 0;
+    		
+    		$segments = [[
+    			'id'=>0	,'guide_type'=>1
+    		]];
+    	}else{
+    		$segments = \app\modules\admin\models\ProgramSegments::getAll($item_id,['parent_id'=>0]);
+    	}
+    	if(!empty($segments)){
+    		foreach ($segments as $segment){
+    			//
+    			$segment_id = $segment['id'];
+    			
+    			
+    			$guide_language = isset($segment['lang']) ? $segment['lang'] : (isset($item['guide_language']) ? $item['guide_language'] : DEFAULT_LANG);
+    			$guide_type = isset($segment['type_id']) ? $segment['type_id'] : (isset($item['guide_type']) ? $item['guide_type'] : 2);
+    			 
+    			
+    			 
+    			
+    			if($guide_type == 1){
+    				$sgms = [$segment];
+    			}else{    			
+    				$segments1 = \app\modules\admin\models\ProgramSegments::getAll($item_id,['parent_id'=>$segment['id']]);
+    				if(!empty($segments1)){
+    					$sgms = $segments1;
+    				}else{
+    					$sgms = [$segment];
+    				}
+    			}
+    			
+    			if(!empty($sgms)){
+    				foreach ($sgms as $sgm){
+    					//
+    					$x = self::getAutoGuideQuantity([
+    							'item_id'=>$item_id,
+    							'segment_id'=>$sgm['id']
+    					]);
+    					Yii::$app->db->createCommand()->delete('tours_programs_guides',[
+    							'item_id'=>$item_id,
+    							'segment_id'=>$sgm['id'],
+    							'type_id'=>$guide_type
+    					])->execute();
+    					Yii::$app->db->createCommand()->delete('tours_programs_guides_prices',[
+    							'item_id'=>$item_id,
+    							'segment_id'=>$sgm['id'],
+    							'type_id'=>$guide_type
+    					])->execute();
+    					 
+    					// Lay ngon ngu HDV tu tours_programs_segments_guides
+    					$c = (new Query())->from('guides')->where([
+    							'language'=>$guide_language,'state'=>1,'sid'=>__SID__,
+    							'id'=>(new Query())->from('guides_to_suppliers')->where([
+    									'supplier_id'=>(new Query())->from('customers_to_places')->where([
+    											'place_id'=>(new Query())->from('tours_programs_segments_to_places')
+    											->where(['segment_id'=>$x['segment_id']])
+    											->select('place_id')
+    									])->select('customer_id')
+    							])->select('guide_id')
+    					
+    					])->one();
+    									
+    					if(!empty($c)){
+    						$supplier_id = Yii::$app->zii->getSupplierIDFromService($c['id'],TYPE_ID_GUIDES);
+    						Yii::$app->db->createCommand()->insert('tours_programs_guides',[
+    								'item_id'=>$item_id,
+    								'segment_id'=>$sgm['id'],
+    								'type_id'=>$guide_type,
+    								'guide_id'=>$c['id']	,
+    								'quantity'=>$x['quantity'],
+    								'supplier_id'=>$supplier_id
+    						])->execute();
+    					
+    						Yii::$app->db->createCommand()->insert('tours_programs_guides_prices',[
+    								'item_id'=>$item_id,
+    								'segment_id'=>$sgm['id'],
+    								'type_id'=>$guide_type,
+    								'service_id'=>$c['id']	,
+    								'supplier_id'=>$supplier_id,
+    								'number_of_day'=>$x['number_of_day']>0 ? $x['number_of_day'] : 0,
+    								'quantity'=>$x['quantity']
+    						])->execute();
+    					}
+    				}
+    			}
+    			    			     			    			
+    			//
+    		}
+    		 
+    		}
+    	//}
+    	
+    	 
+    }
+    
+    public static function getAutoGuideQuantity($o = ['item_id'=>0,'segment_id'=>0]){
+    	$item_id = $o['item_id']; $segment_id = $o['segment_id'];
+    	 
+    	$item = self::getItem($o['item_id']);
+    	$item_guide_type = isset($item['guide_type']) ? $item['guide_type'] : 2;
+    	$quantity = $number_of_day = $supplier_id =  $last_segment_id = 0; 
+    	if($item_guide_type == 1){ // Suot tuyen cho tat ca cac chang
+    		$segment_id = $last_segment_id =0;
+    		$segments = \app\modules\admin\models\ProgramSegments::getAll($item_id,['parent_id'=>0]);
+    		if(!empty($segments)){
+    			$segment = $segments[0];
+    			$segments = \app\modules\admin\models\ProgramSegments::getAll($item_id,['parent_id'=>$segment['id']]);
+    			if(!empty($segments)){
+    				$segment = $segments[0];
+    			}
+    			//    			 
+    			$segment_id = $segment['id']; 
+    			// Lấy sl xe của nhà xe đầu tiên
+    			$supplier = Yii::$app->zii->getTourProgramSuppliers($item_id,['segment_id'=>$segment['id']]);
+    			if(!empty($supplier)){
+    				$supplier = $supplier[0];
+    				$supplier_id = $supplier['id'];
+    			} 
+    			
+    			foreach (Yii::$app->zii->getSelectedVehicles([
+    					'supplier_id'=>$supplier_id,
+    					'item_id'=>$item_id,
+    					'segment_id'=>$segment['id'],
+    					'loadDefault'=>false,
+    					'updateDatabase'=>false
+    			]) as $car){
+    				$quantity = $car['quantity'];
+    				break;
+    			}
+    			//
+    			$number_of_day = ProgramSegments::countDayOfParent($item_id,0);  
+    		}
+    	}elseif($segment_id>0){
+    		$segment = ProgramSegments::getXItem($segment_id);
+    		//view($segment);
+    		$last_segment_id = $segment_id;
+    		if($segment['type_id'] == 1){ // Suot tuyen cho tat ca cac chang cấp 2
+    			$segments = \app\modules\admin\models\ProgramSegments::getAll($item_id,['parent_id'=>$segment_id]);
+    			if(!empty($segments)){
+    				$segment = $segments[0];
+    				$number_of_day = ProgramSegments::countDayOfParent($item_id,$segment_id);
+    				$segment_id = $segment['id'];
+    			}else{
+    				$number_of_day = $segment['number_of_day']; 
+    			}
+    			//
+    			 
+    			 
+    			// Lấy sl xe của nhà xe đầu tiên
+    			$supplier = Yii::$app->zii->getTourProgramSuppliers($item_id,['segment_id'=>$segment['id']]);
+    			if(!empty($supplier)){
+    				$supplier = $supplier[0];
+    				$supplier_id = $supplier['id'];
+    			}
+    			  
+    			foreach (Yii::$app->zii->getSelectedVehicles([
+    					'supplier_id'=>$supplier_id,
+    					'item_id'=>$item_id,
+    					'segment_id'=>$segment['id'],
+    					'loadDefault'=>false, 
+    					'updateDatabase'=>false
+    			]) as $car){
+    				$quantity = $car['quantity'];
+    				break;
+    			}
+    			//    			
+    		}else{
+    			// Lấy sl xe của nhà xe đầu tiên
+    			$supplier = Yii::$app->zii->getTourProgramSuppliers($item_id,['segment_id'=>$segment_id]);
+    			if(!empty($supplier)){
+    				$supplier = $supplier[0];
+    				$supplier_id = $supplier['id'];
+    			} 
+    			
+    			foreach (Yii::$app->zii->getSelectedVehicles([
+    					'supplier_id'=>$supplier_id,
+    					'item_id'=>$item_id,
+    					'segment_id'=>$segment_id,
+    					'loadDefault'=>false,
+    					'updateDatabase'=>false
+    			]) as $car){
+    				$quantity = $car['quantity']; 
+    				break;
+    			}
+    			$number_of_day = $segment['number_of_day'];
+    		}
+    		
+    	}
+    	
+    	return [
+    			'item_id'=>$item_id,
+    			'segment_id'=>$segment_id,
+    			'supplier_id'=>$supplier_id,
+    			'quantity'=>$quantity,
+    			'number_of_day'=>$number_of_day,
+    			'last_segment_id'=>$last_segment_id
+    			
+    	];
+    }
+    
+    public static function getExtendPrices($o = []){
+    	$item_id = isset($o['item_id']) ? $o['item_id'] : 0; 
+    	$segment_id = isset($o['segment_id']) ? $o['segment_id'] : 0;
+    	$type_id = isset($o['type_id']) ? $o['type_id'] : 2;
+    	return (new Query())->from('tours_programs_segments_extend_prices')->where([
+    			'item_id'=>$item_id,
+    			'segment_id'=>$segment_id,
+    			'type_id'=>$type_id
+    	])->orderBy(['title'=>SORT_ASC])->all();
     }
 }

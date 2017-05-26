@@ -152,9 +152,76 @@ class View extends \yii\base\View
     {
         echo self::PH_HEAD;
     }
- public function createUrl($rt, $absolute = false,$o=[]){
- 	return cu($rt,$absolute,$o);
- }
+	public function createUrl($rt, $absolute = false,$o=[]){
+	 	return cu($rt,$absolute,$o);
+	}
+ 	
+ 	public function registerCustomizeCss(){
+ 		
+ 		if(Yii::$app->user->can(ROOT_USER) && (in_array(getParam('dev') ,['dev','reload_css','load_user_css']))){ 			
+ 			(new \MatthiasMullie\Minify\CSS(__RSPATH__ . '/css/site.css'))->minify(__RSPATH__ . '/css/site.min.css');
+ 			if(in_array(getParam('dev') ,['dev','reload_css'])){
+		 		$sources = [
+		 				__LIBS_PATH__ . '/themes/css/base.css',
+		 				__LIBS_PATH__ . '/themes/css/animate.css',
+		 				__LIBS_PATH__ . '/font-awesome/css/font-awesome.min.css',
+		 				__LIBS_PATH__ . '/popup/colorbox/colorbox.css',
+		 				__LIBS_PATH__ . '/menu/superfish-1.7.4/src/css/superfish.css',
+		 				__LIBS_PATH__ . '/slider/slick/slick.css',
+		 				__LIBS_PATH__ . '/slider/slick/slick-theme.css',
+		 				__LIBS_PATH__ . '/themes/js/jquery-ui.css', 
+		 		];		 		 
+		 		$minifier = new \MatthiasMullie\Minify\CSS();
+		 		$minifier->setMaxImportSize(10000000);
+		 		foreach ($sources as $s){
+		 			$minifier->add($s);	 			 
+		 		}
+		 		$minifiedPath = __LIBS_PATH__ . '/c/css/base.min.css';
+		 		$minifier->minify($minifiedPath);	 		 
+ 			}
+ 		}
+ 		$this->registerCssFile(__LIBS_DIR__ . '/c/css/base.min.css'); 		
+ 	}
+ 	
+ 	public function registerCustomizeJs(){ 		 		 		
+ 		if(Yii::$app->user->can(ROOT_USER) && (in_array(getParam('dev') ,['dev','reload_js','load_user_js']))){
+ 			$this->params['jsfile'][] =  __RSPATH__ . '/js/main.js'; 	 
+ 			$m = new \MatthiasMullie\Minify\JS();
+ 			foreach ($this->params['jsfile'] as $j){
+ 				$m->add($j);
+ 			}
+ 			$m->minify(__RSPATH__ . '/js/main.min.js'); 	
+ 			if(in_array(getParam('dev') ,['dev','reload_js'])){
+ 			$sources = [
+ 					__LIBS_PATH__ . '/themes/js/base.js',
+ 					__LIBS_PATH__ . '/themes/js/fapi.js',
+ 					__LIBS_PATH__ . '/themes/js/gapi.js',
+ 					__LIBS_PATH__ . '/themes/js/jquery.number.min.js',
+ 					__LIBS_PATH__ . '/jquerycookie/jquery.cookie.js',
+ 					__LIBS_PATH__ . '/menu/superfish-1.7.4/src/js/hoverIntent.js',
+ 					__LIBS_PATH__ . '/menu/superfish-1.7.4/src/js/superfish.js',
+ 					__LIBS_PATH__ . '/themes/js/jquery-ui.min.js',
+ 					__LIBS_PATH__ . '/bootstrap/assets/js/bootstrap-tooltip.js',
+ 					__LIBS_PATH__ . '/bootstrap/assets/js/moment.min.js',
+ 					__LIBS_PATH__ . '/bootstrap/assets/js/bootstrap-datetimepicker.min.js',
+ 					__LIBS_PATH__ . '/bootstrap/colorpicker/dist/js/bootstrap-colorpicker.js',
+ 					__LIBS_PATH__ . '/bootstrap/3.2.0/js/ie10-viewport-bug-workaround.js',
+ 					__LIBS_PATH__ . '/lazyload.js',
+ 					__LIBS_PATH__ . '/modernizr.js',
+ 					__LIBS_PATH__ . '/slider/slick-master/slick/slick.min.js',
+ 					__LIBS_PATH__ . '/popup/colorbox/jquery.colorbox.js',
+ 					__LIBS_PATH__ . '/lazyloadxt/lazy.js', 					 					 				 					 					 					 					 					 					 					 					 					
+ 			];
+ 			$minifier = new \MatthiasMullie\Minify\JS();
+ 			foreach ($sources as $s){
+ 				$minifier->add($s);
+ 			} 			
+ 			$minifiedPath = __LIBS_PATH__ . '/c/js/base.min.js';
+ 			$minifier->minify($minifiedPath); 	
+ 			}
+ 		} 		 
+ 		$this->registerJsFile(__RSDIR__ . '/js/main.min.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
+ 	}
     /**
      * Marks the beginning of an HTML body section.
      */
@@ -214,6 +281,8 @@ class View extends \yii\base\View
     }
     public function endBody()
     {
+    	 
+    	$identity_field = isset($this->params['identity_field']) ? $this->params['identity_field'] : 'id';
     	$suffix = isset(Yii::$site['seo']['url_config']['suffix']) ? Yii::$site['seo']['url_config']['suffix'] : '';
     	$cfg = array(
     			'is_admin'=>__IS_ADMIN__,
@@ -234,14 +303,18 @@ class View extends \yii\base\View
     			'wwidth'=>'%f%screen.width%f%',
     			'get'=>(Yii::$app->request->get()),
     			'request'=>afGetUrl(),
-    			'returnUrl'=>afGetUrl([],['id','view']),
+    			'returnUrl'=>afGetUrl([],[$identity_field,'view']),
     			'sid'=>__SID__,
     			'time'=>date("d/m/Y H:i"),
     			'lang'=>__LANG__,
     			'locale'=>__LANG__ == 'vi_VN' ? 'vi' : 'en',
     			'browser'=>getBrowser(),
     			'text'=>$this->get_text_auto_load(),
-    			'currency'=>Yii::$app->zii->getUserCurrency()
+    			'currency'=>Yii::$app->zii->getUserCurrency(),
+    			'facebook_app'=>(isset(Yii::$site['other_setting']['facebook_app']) ? Yii::$site['other_setting']['facebook_app'] : [
+    				'appId'=>554071461442224,
+    				'version'=>'v2.7'
+    			])
     	);
     	echo '<script type="text/javascript">$cfg=' .jsonify($cfg).'</script>';
     	//

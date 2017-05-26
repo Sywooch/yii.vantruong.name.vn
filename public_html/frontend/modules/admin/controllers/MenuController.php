@@ -90,6 +90,9 @@ class MenuController extends CrsController
     		$f['sid'] = __SID__; $id = 0;
     		$biz = post('biz',[]);
     		$f['type'] = $f['type'] == 'manual' && isset($biz['link_target']) ? $biz['link_target'] : $f['type'];
+    		if($f['type'] == -1){
+    			$f['type'] = (new Query())->select('type')->from(Menu::tableName())->where(['id'=>$f['parent_id']])->scalar();
+    		}
     		$titles = explode(',', $f['title']); 
     		foreach ($titles as $title){
     			if(trim($title) != ""){

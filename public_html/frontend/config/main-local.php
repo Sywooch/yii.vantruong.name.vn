@@ -1,16 +1,16 @@
 <?php 
 $config = [
 		'modules' => [
-				'acp' => [
-						'class' => 'app\modules\acp\Module',
+				//'acp' => [
+				//		'class' => 'app\modules\acp\Module',
 						//'defaultController' => 'default',
-				],
+				//],
 				'admin' => [
 						'class' => 'app\modules\admin\Module',
 						//'defaultController' => 'default',
 				], 
 		],
-		//'defaultRoute' =>'admin' ,
+ 
 		'components' => [
 				't'=>[
 						'class'=>'yii\translate\TextTranslate'
@@ -36,17 +36,12 @@ $config = [
     				'rules' => array(
     						''=>'site/index',
     						'<action:\w+>'=>'site/<action>',
-    						'<alias:sajax>/<view>'=>'site/<alias>',
-    						//'<action:\w+>/<view>'=>'site/<action>',
-    						//''=>'site/sajax',
-    						//'admin'=>'admin/default/index',
+    						'<alias:sajax>/<view>'=>'site/<alias>',    						
     						'site/<action>'=>'site/<action>',
     						'site/<action>/<view>'=>'site/<action>',
     						'site/<action>/<view>/<id:\d+>'=>'site/<action>',
     						'site/<action>/<view>/<url:\w+>'=>'site/<action>',
-    						'site/<action>/<view>/<url:\w+>/<url2:\w+>'=>'site/<action>',
-    						//'admin/<action>/<view>'=>'admin/<action>',
-    						//'admin/<action>/<view>/<id:\d+>'=>'admin/<action>',
+    						'site/<action>/<view>/<url:\w+>/<url2:\w+>'=>'site/<action>',    						 
     						'gii'=>'gii/default/index',
     						'gii/<controller>'=>'gii/<controller>',
     						'gii/<controller>/<action>'=>'gii/<controller>/<action>',
@@ -56,15 +51,6 @@ $config = [
     						'<module:\w+>/<controller:\w+>'=>'<module>/<controller>',
     						'<module:\w+>/<controller:\w+>/<action:\w+>'=>'<module>/<controller>/<action>',
                 			'<module:\w+><controller:\w+>/<action:update|delete>/<id:\d+>' => '<module>/<controller>/<action>',
-    						
-    							
-    						//'<controller>/<action>'=>'<controller>/<action>',
-    						//		'<controller:\w+>/<action:\w+>'=>'site/index',
-    						//		'<controller:\w+>'=>'site/index',
-    						//		'login' => 'site/login',
-    						//		'<controller:\w+>/<id:\d+>' => '<controller>/view',
-    						//'<controller:\w+>/<action:\w+>/<id:\d+>' => '<controller>/<action>',
-    						//'<controller:\w+>/<action:\w+>' => '<controller>/<action>',    						 
     						 
     				),
     		],

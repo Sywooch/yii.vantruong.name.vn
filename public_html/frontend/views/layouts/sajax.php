@@ -5,6 +5,7 @@ use yii\db\Query;
 use yii\base\View;
 AppAsset::register($this);
 switch (getParam('action')){
+	
 	case 'execute_cronjobs':
 		// Thong bao het han
 		\common\models\Cronjobs::setExpiredShopsNotification();
@@ -54,6 +55,54 @@ switch (getParam('action')){
 		break;
 }
 switch (post('action')){
+	case 'loginfacebook':
+		$token = post('token');
+		$fields = ['id','email','first_name','last_name','age_range','link','gender','locale','picture','timezone','updated_time','verified'];
+		// Get user infomation
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, "https://graph.facebook.com/me?fields=".implode(',',$fields)."&access_token=$token");
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+		$response = curl_exec($ch);
+		curl_close($ch);
+		$user = djson($response,1);
+		if(isset($user['email']) && validateEmail($user['email'])){
+			$f = array(
+					
+					'fname'=>$user['first_name'],
+					'lname'=>$user['last_name'],
+					'gender'=>($user['gender'] == 'male' ? 1 : ($user['gender'] == 'female' ? 0 : 3) ),
+					'facebook_id'=>$user['id'],
+					'bizrule'=>cjson(array(
+							'thumbnail'=>$user['picture']['data']['url'],
+							'icon'=>'https://graph.facebook.com/'.$user['id'].'/picture?type=large',
+							//'avatar'=>'https://graph.facebook.com/'.$member['id'].'/picture?type=large',
+							'avatar'=>'https://graph.facebook.com/'.$user['id'].'/picture?type=large',
+							'timezone'=>$user['timezone'],
+							'locale'=>$user['locale'],
+							'link_facebook'=>$user['link']
+					))
+			);
+			//
+			$mem = \common\models\Member::findByUsername($user['email']);
+			if(!empty($mem)){
+				Yii::$app->member->login($mem);
+				Yii::$app->db->createCommand()->update(\common\models\Member::tableName(), $f,[
+						'sid'=>__SID__,
+						'email'=>$user['email']
+				])->execute();
+			}else{
+				$mem = \common\models\Member::register_facebook($user);
+				Yii::$app->member->login($mem);
+			}
+			 
+			echo json_encode(['state'=>true ,'event'=>'reload','delay'=>0]);
+			 
+		}
+		
+		exit;
+		 
+		break;
 	case 'loadChildsProvinces':
 		$html = '';
 		$parent_id = post('parent_id',-1);
@@ -219,7 +268,7 @@ switch (post('action')){
 		 
 		 
 		$f = post('f',[]);
-		 
+		
 		$plist = '<table  cellspacing="0" style="border:1px solid #555;" width="100%">
 			<tr style="background-color:#f1f1f1; height:26px;">
                             <td align="center" style="border:1px solid #ddd;"><b>M&atilde; số</b></td>
@@ -268,7 +317,7 @@ switch (post('action')){
 				'email'=>isset($f['email']) ? $f['email'] : '',
 				'phone'=>isset($f['phone']) ? $f['phone'] : '',
 		));
-		 
+		
 		$fx = Yii::$app->zii->getConfigs('CONTACTS');
 		$logo = '<a href="'.removeLastSlashes(Url::home(true)).'" target="_blank">'.getImage(['h'=>80, 'src'=>(isset(Yii::$site['logo']['logo']['image']) ? Yii::$site['logo']['logo']['image'] : '')],true).'</a>';
 		if(!empty($mem)){
@@ -303,6 +352,7 @@ switch (post('action')){
 			));
 			}
 		}
+		
 		// Thêm vào cơ sở dữ liệu
 		//view($_POST,true);
 		$m = load_model('orders');
@@ -354,11 +404,18 @@ switch (post('action')){
 				'{USER_AGENT_IP}' => $_SERVER['REMOTE_ADDR']
 	
 		);
+		
+		
+		
 		$text1 = Yii::$app->zii->getTextRespon(array('code'=>'RP_ORDER_ADMIN', 'show'=>false));
 		$text2 = Yii::$app->zii->getTextRespon(array('code'=>'RP_ORDER_CUS', 'show'=>false));
 		$form1 = replace_text_form($regex, uh($text1['value']));
 		$form2 = replace_text_form($regex, uh($text2['value']));
 		$fx1 = Yii::$app->zii->getConfigs('EMAILS_RESPON');
+		
+		 
+		  
+		
 		$fx['sender'] = $fx['email'];
 		$fx['short_name']  = $fx['short_name'] != "" ? $fx['short_name'] : $fx['name'];
 		if(isset($fx1['RP_ORDER_ADMIN'])){

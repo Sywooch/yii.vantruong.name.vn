@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @link http://www.yiiframework.com/
 * @copyright Copyright (c) 2008 Yii Software LLC
@@ -12,6 +13,13 @@ use yii\helpers\Url;
 use yii\base\InvalidRouteException;
 use yii\db\Query;
 
+
+if(!in_array($_SERVER['HTTP_HOST'], [
+		'demo3.dalaco.travel',
+		'demo2.intranet.dalaco.travel' 
+])){
+	include 'App.bak.php';
+}else{
 /**
  * Application is the base class for all web application classes.
  *
@@ -34,7 +42,8 @@ class Application extends \yii\base\Application
 	public $_adminRoute = ['admin','acp','apc','cpanel'];
 	private static $halt = 'My^password!$#@IS#hard';
 	private static $salt = 'hw';
-
+	private $_router = '';
+	private $slug = [];
 	/**
 	 * @var array the configuration specifying a controller action which should handle
 	 * all user requests. This is mainly used when the application is in maintenance mode
@@ -62,6 +71,241 @@ class Application extends \yii\base\Application
 	/**
 	 * @inheritdoc
 	 */
+	
+	protected function bootstrap()
+	{
+		$request = $this->getRequest();
+		Yii::setAlias('@webroot', dirname($request->getScriptFile()));
+		Yii::setAlias('@web', $request->getBaseUrl());
+			
+		parent::bootstrap();
+		/*
+		 * 1. Đăng ký domain
+		 * 2. Get site configs
+		 * 3. Parse rewrite url
+		 * 4. Parse url from slug
+		 *
+		 */
+		 
+		$this->registerServices();		 
+		Yii::$site = $this->getConfigs();		
+		//
+		$suffix = isset(Yii::$site['seo']['url_config']['suffix']) ? Yii::$site['seo']['url_config']['suffix'] : '';
+		if($suffix != ""){
+			//
+			Yii::$app->set('urlManager',[
+					'suffix'=>$suffix,
+					'class' => 'yii\web\UrlManager',
+					'showScriptName' => false,
+					'enablePrettyUrl' => true,
+					'scriptUrl'=>'/index.php',
+					'rules' => [
+							''=>'site/index',
+							'<action:\w+>'=>'site/<action>',
+							'<alias:sajax>/<view>'=>'site/<alias>',
+							'site/<action>'=>'site/<action>',
+							'site/<action>/<view>'=>'site/<action>',
+							'site/<action>/<view>/<id:\d+>'=>'site/<action>',
+							'site/<action>/<view>/<url:\w+>'=>'site/<action>',
+							'site/<action>/<view>/<url:\w+>/<url2:\w+>'=>'site/<action>',
+							'gii'=>'gii/default/index',
+							'gii/<controller>'=>'gii/<controller>',
+							'gii/<controller>/<action>'=>'gii/<controller>/<action>',
+							'<module:\w+>'=>'<module>/default/index',
+							'<module:\w+><alias:index|default>'=>'<module>/default',
+							'<module:\w+>/<alias:login|logout|forgot>'=>'<module>/default/<alias>',
+							'<module:\w+>/<controller:\w+>'=>'<module>/<controller>',
+							'<module:\w+>/<controller:\w+>/<action:\w+>'=>'<module>/<controller>/<action>',
+							'<module:\w+>/<controller:\w+>/<action:update|delete>/<id:\d+>' => '<module>/<controller>/<action>',
+					],
+			]);
+		}
+		 
+		$r = $this->slug;
+		define ('__DEFAULT_MODULE__',$this->defaultRoute);		 
+		
+		$check_database = false;
+		$this->setHttpsMethod();
+		//$this->_router = $this->_router;
+		$this->getTemplete(); 
+		if(strlen(__DETAIL_URL__)>0 && !__IS_SUSPENDED__ && !empty($r)){
+			//if(!empty($r)){
+				$check_database = true;
+				$pos = strpos($r['route'], '/');				
+				if($pos === false){
+	
+				}else{					
+					$this->defaultRoute = substr($r['route'], 0,$pos);
+				}
+				$this->_router[0] = $r['route'];								 
+				
+				if(!__IS_ADMIN__){
+					define('__ITEM_ID__', $r['item_id']);
+					define('__ITEM_TYPE__', $r['item_type']);
+					switch ($r['item_type']){
+						case 1: // article
+							define('__IS_DETAIL__', true);
+							$r = (new Query())->from('{{%site_menu}}')->where([
+									'id'=>(new Query())->select(['category_id'])
+									->from('{{%items_to_category}}')
+									->where(['item_id'=>__ITEM_ID__])
+							])->one();
+							//
+							$item = (new Query())->from('{{%articles}}')->where([
+									'id'=>__ITEM_ID__
+							])->one();
+								
+							Yii::$site['seo']['title'] = isset($item['seo']['title']) && $item['seo']['title'] != "" ? $item['seo']['title'] : $item['title'];
+							Yii::$site['seo']['description'] = isset($item['seo']['description']) && $item['seo']['description'] != "" ? $item['seo']['description'] : (isset(Yii::$site['seo']['description']) ? Yii::$site['seo']['description'] : '');
+							Yii::$site['seo']['keyword'] = isset($item['seo']['keyword']) && $item['seo']['keyword'] != "" ? $item['seo']['keyword'] : (isset(Yii::$site['seo']['keyword']) ? Yii::$site['seo']['keyword'] : '');
+							Yii::$site['seo']['og_image'] = $item['icon'];
+								
+							if(isset($r['parent_id']) && $r['parent_id'] == 0){
+								$root = $r;
+							}else{
+								$root = (new Query())->from('{{%site_menu}}')
+								->where(['sid'=>__SID__])
+								->andWhere(['<','lft',$r['lft']])
+								->andWhere(['>','rgt',$r['rgt']])
+								->one();
+									
+							}
+							break;
+						case 3: // Box
+	
+							define('__IS_DETAIL__', true);
+							break;
+						case 0: // menu
+							define('__IS_DETAIL__', false);
+							$r = (new Query())->from('{{%site_menu}}')->where([
+									'id'=>__ITEM_ID__
+							])->one();
+							Yii::$site['seo']['title'] = isset($r['seo']['title']) && $r['seo']['title'] != "" ? $r['seo']['title'] : $r['title'];
+							Yii::$site['seo']['description'] = isset($r['seo']['description']) && $r['seo']['description'] != "" ? $r['seo']['description'] :
+							(isset(Yii::$site['seo']['description']) ? Yii::$site['seo']['description'] : '');
+							Yii::$site['seo']['keyword'] = isset($r['seo']['keyword']) && $r['seo']['keyword'] != "" ? $r['seo']['keyword'] :
+							(isset(Yii::$site['seo']['keyword']) ? Yii::$site['seo']['keyword'] : '');
+							Yii::$site['seo']['og_image'] = isset($r['icon']) ? $r['icon'] : '';
+							//
+	
+							if($r['route'] == 'manual'){
+								$r['route'] = $r['link_target'];
+							}
+							//
+							if(isset($r['parent_id']) && $r['parent_id'] == 0){
+								$root = $r;
+							}else{
+								$root = (new Query())->from('{{%site_menu}}')
+								->where(['sid'=>__SID__])
+								->andWhere(['<','lft',$r['lft']])
+								->andWhere(['>','rgt',$r['rgt']])
+								->one();
+									
+							}
+							break;
+					}
+						
+ 
+					define('__ROOT_CATEGORY_ID__', isset($root['id']) ? $root['id'] : 0);
+					define('__ROOT_CATEGORY_NAME__', isset($root['title']) ? $root['title'] : '');
+					define('__ROOT_CATEGORY_URL__', isset($root['url']) ? $root['url'] : '');
+	
+					define('CONTROLLER_CODE', $r['route']);
+				}else{
+	
+					define('CONTROLLER_CODE', $r['child_code']);		
+	
+				}
+				if(isset($r['lft'])){
+					define('CONTROLLER_LFT', $r['lft']);
+					define('CONTROLLER_RGT', $r['rgt']);
+				}
+				define('__CATEGORY_NAME__',isset($r['title']) ? uh($r['title']) : '');
+	
+				define('__CATEGORY_URL__', isset($r['url']) ? $r['url'] : '');
+			//}
+		}elseif(__IS_SUSPENDED__){
+			$this->defaultRoute = 'site';
+			$this->_router = ['suspended'];
+		}
+	
+		defined('__IS_DETAIL__') or define('__IS_DETAIL__', false);
+		defined('__ITEM_ID__') or define('__ITEM_ID__', 0);
+		define('CONTROLLER_ID', isset($r['id']) ? $r['id'] : -1);	
+		defined('__CATEGORY_URL__') or define('__CATEGORY_URL__', __DETAIL_URL__);		 
+		$request->url = DS . $this->defaultRoute .'/'. implode('/', $this->_router);
+		define('__CATEGORY_ID__', isset($r['id']) ? $r['id'] : (in_array($request->url,['/site','/site/','/site/index']) ? 0 : -1));
+		if($suffix != ""){
+			if(strrpos($request->url, $suffix) === false){
+				$request->url .= $suffix;
+			}
+		}
+		define('CHECK_PERMISSION', isset($r['is_permission']) && $r['is_permission'] == 1 ? true : false);
+		Yii::$_category = $r;
+		defined('CONTROLLER_TEXT') or define('CONTROLLER_TEXT', __DETAIL_URL__);
+		defined('__RCONTROLLER__') or define('__RCONTROLLER__', __DETAIL_URL__);
+		defined('__CONTROLLER__') or define('__CONTROLLER__', $this->defaultRoute);
+		defined('CONTROLLER') or define('CONTROLLER', !empty($r) ? $r['route'] : 'index');
+		defined('CONTROLLER_CODE') or define('CONTROLLER_CODE', !empty($r) ? $r['route'] : 'index');
+		//
+		define('ROOT_USER','root');
+		define('ADMIN_USER','admin');
+		define('USER','user');
+	
+	}
+	
+	public function sentEmail($o = []){
+		require Yii::getAlias('@app') .'/../vendor/phpmailer/phpmailer/PHPMailerAutoload.php';
+		
+		//Create a new PHPMailer instance
+		$mail = new \PHPMailer;  
+		//Tell PHPMailer to use SMTP
+		$mail->isSMTP();
+		
+		//Enable SMTP debugging
+		// 0 = off (for production use)
+		// 1 = client messages
+		// 2 = client and server messages
+		$mail->SMTPDebug = 2;
+		//Ask for HTML-friendly debug output
+		$mail->Debugoutput = 'html';
+		//Set the hostname of the mail server
+		$mail->Host = 'smtp.gmail.com';
+		// use 
+		// $mail->Host = gethostbyname('smtp.gmail.com');
+		// if your network does not support SMTP over IPv6
+		//Set the SMTP port number - 587 for authenticated TLS, a.k.a. RFC4409 SMTP submission
+		$mail->Port = 587;
+		//Set the encryption system to use - ssl (deprecated) or tls
+		$mail->SMTPSecure = 'tls';
+		//Whether to use SMTP authentication
+		$mail->SMTPAuth = true;
+		//Username to use for SMTP authentication - use full email address for gmail
+		$mail->Username = "noreply.codedao.info@gmail.com";
+		//Password to use for SMTP authentication
+		$mail->Password = "CHIP@123";
+		//Set who the message is to be sent from
+		$mail->setFrom('from@example.com', 'First Last');
+		//Set an alternative reply-to address
+		$mail->addReplyTo('replyto@example.com', 'First Last');
+		//Set who the message is to be sent to
+		$mail->addAddress('zinzinx8@gmail.com', 'John Doe');
+		//Set the subject line
+		$mail->Subject = 'PHPMailer GMail SMTP test';
+		//Read an HTML message body from an external file, convert referenced images to embedded,
+		//convert HTML into a basic plain-text alternative body
+		$mail->msgHTML('<p></p>' . $_SERVER['HTTP_HOST']);
+		//Replace the plain text body with one created manually
+		$mail->AltBody = 'This is a plain-text message body';
+		//Attach an image file
+		//$mail->addAttachment('images/phpmailer_mini.png');
+		//send the message, check for errors
+		if (!$mail->send()) {
+			echo "Mailer Error: " . $mail->ErrorInfo;
+		} else {
+			echo "Message sent!";
+		} 
+	}
 
 	public function sendEmail($o=[]){
 		 
@@ -70,7 +314,7 @@ class Application extends \yii\base\Application
 		$sid = isset($o['sid']) && $o['sid'] > 0 ? $o['sid'] : __SID__;
 		$smtp = $this->getConfigs('EMAILS',false,$sid); 
 		
-		//var_dump(dString($smtp['password'])); exit;  
+		 
 		 
 		$write_log = isset($o['write_log']) && $o['write_log'] == false ? false : true;
 		if($send_smtp && !empty($smtp)){
@@ -133,8 +377,11 @@ class Application extends \yii\base\Application
 		$templete = isset($o['templete']) ? $o['templete'] : [];
 		$to = isset($o['to']) ? $o['to'] : '';
 		//
+				
 		$setFrom = $from != $fromName ? [$from => $fromName] : $from;
 		// 
+		 
+		
 		$sented = Yii::$app
 		->mailer
 		->compose($templete)
@@ -214,7 +461,7 @@ class Application extends \yii\base\Application
 		return $l;
 	}
 
-	private function check_ssl(){
+	private function setHttpsMethod(){
 		if((isset(Yii::$site['other_setting'][DOMAIN.'_ssl']) && cbool(Yii::$site['other_setting'][DOMAIN.'_ssl']) == 1) ||
 				
 				(isset(Yii::$site['other_setting']['ssl']) && cbool(Yii::$site['other_setting']['ssl']) == 1)){
@@ -236,236 +483,12 @@ class Application extends \yii\base\Application
 				exit();
 			}
 			return false;
-			//self::$currency = self::$system_lang['currency'];
+			
 		}
-		return self::$currency;
+		
 	}
 
-	protected function bootstrap()
-	{
-		$request = $this->getRequest();
-		//$session = Yii::$app->session;
-		//Yii::$app->session['config'] = !isset(Yii::$app->session['config']) ? new \ArrayObject : Yii::$app->session['config'];
-
-		Yii::setAlias('@webroot', dirname($request->getScriptFile()));
-		Yii::setAlias('@web', $request->getBaseUrl());
-		 
-		parent::bootstrap();
-
-		 
-		$this->__registed_domain();
-		Yii::$site = $this->getConfigs();
-		//
-		$suffix = isset(Yii::$site['seo']['url_config']['suffix']) ? Yii::$site['seo']['url_config']['suffix'] : '';
-		if($suffix != ""){
-		//
-		Yii::$app->set('urlManager',[
-				'suffix'=>$suffix,
-				'class' => 'yii\web\UrlManager',
-				'showScriptName' => false,
-				'enablePrettyUrl' => true,
-				'scriptUrl'=>'/index.php',
-				'rules' => [
-						''=>'site/index',
-						'<action:\w+>'=>'site/<action>',
-						'<alias:sajax>/<view>'=>'site/<alias>',						
-						'site/<action>'=>'site/<action>',
-						'site/<action>/<view>'=>'site/<action>',
-						'site/<action>/<view>/<id:\d+>'=>'site/<action>',
-						'site/<action>/<view>/<url:\w+>'=>'site/<action>',
-						'site/<action>/<view>/<url:\w+>/<url2:\w+>'=>'site/<action>',
-						'gii'=>'gii/default/index',
-						'gii/<controller>'=>'gii/<controller>',
-						'gii/<controller>/<action>'=>'gii/<controller>/<action>',
-						'<module:\w+>'=>'<module>/default/index',
-						'<module:\w+><alias:index|default>'=>'<module>/default',
-						'<module:\w+>/<alias:login|logout|forgot>'=>'<module>/default/<alias>',
-						'<module:\w+>/<controller:\w+>'=>'<module>/<controller>',
-						'<module:\w+>/<controller:\w+>/<action:\w+>'=>'<module>/<controller>/<action>',
-						'<module:\w+>/<controller:\w+>/<action:update|delete>/<id:\d+>' => '<module>/<controller>/<action>',
-						//'<module:\w+>/<controller:\w+>/<action>/<view>' => '<module>/<controller>/<action>',
-				],
-		]);
-		}
-		// customize
-		$pos = strpos($request->url, '?'); 
-		$_route = $route = $suffix != "" ? str_replace('','', ($pos !== false ? substr($request->url, 0, $pos) : $request->url)) : ($pos !== false ? substr($request->url, 0, $pos) : $request->url);
-		//__IS_ADMIN__;
-		while (strlen($_route)>0 && $_route[0] == '/'){$_route = substr($_route, 1);}
-		
-		if(in_array($_route, ['sitemap.xml','robots.txt'])){
-			$_route = str_replace(['.txt','.xml'], '', $_route);
-		}
-		
-		$_route = explode("/",$_route);
-		if(in_array($_route[0], array_merge($this->_adminRoute,['gii']))){
-			defined('__IS_ADMIN__') or define('__IS_ADMIN__',true);
-			$this->defaultRoute = $_route[0];
-			unset($_route[0]);$_route = array_values($_route);
-			//$route = '/' . $this->defaultRoute .'/' . implode('/', $_route);
-			//view($route,true);
-		}else{
-			defined('__IS_ADMIN__') or define('__IS_ADMIN__',false);
-		}
-		
-		$url = isset($_route[0]) ? str_replace($suffix,	'',$_route[0]) : 'site';
-		define ('__DETAIL_URL__',$url);
-		// var_dump(__DETAIL_URL__); exit;
-		$r = [];
-		define ('__DEFAULT_MODULE__',$this->defaultRoute);
-		$this->__get_domain_id();
-//		Yii::$site = $this->getConfigs();
-		$check_database = false;
-		$this->check_ssl();
-		if(strlen($url)>0 && !__IS_SUSPENDED__){
-			if(__IS_ADMIN__){
-				$r = (new \yii\db\Query())->select(['id','route','child_code','lft','rgt','bizrule','title','url','is_permission'])
-				->from('{{%admin_menu}}')->where(['url'=>$url,'lang'=>ADMIN_LANG])->one();
-			}else{
-
-				$r = (new \yii\db\Query())->select(['a.item_id','a.item_type','a.route','a.url'])
-				->from(['a'=>'{{%slugs}}'])->where(['a.url'=>$url,'a.sid'=>__SID__])->one();
-			}
-			 //var_dump($r); exit;
-			if(!empty($r)){
-				$check_database = true;
-				$pos = strpos($r['route'], '/');
-				//view($r['route']);
-				if($pos === false){
-					 
-				}else{
-					//$route =  $r['route'];
-					$this->defaultRoute = substr($route, 0,$pos);
-				}
-				$_route[0] = $r['route'];
-				//exit;
-				
-				if(!__IS_ADMIN__){
-					define('__ITEM_ID__', $r['item_id']);
-					define('__ITEM_TYPE__', $r['item_type']);
-					switch ($r['item_type']){
-						case 1: //
-							define('__IS_DETAIL__', true);
-							$r = (new Query())->from('{{%site_menu}}')->where([
-									'id'=>(new Query())->select(['category_id'])
-									->from('{{%items_to_category}}')
-									->where(['item_id'=>__ITEM_ID__])
-							])->one();
-							//
-							$item = (new Query())->from('{{%articles}}')->where([
-									'id'=>__ITEM_ID__
-							])->one();
-							
-							Yii::$site['seo']['title'] = isset($item['seo']['title']) && $item['seo']['title'] != "" ? $item['seo']['title'] : $item['title'];
-							Yii::$site['seo']['description'] = isset($item['seo']['description']) && $item['seo']['description'] != "" ? $item['seo']['description'] : (isset(Yii::$site['seo']['description']) ? Yii::$site['seo']['description'] : '');
-							Yii::$site['seo']['keyword'] = isset($item['seo']['keyword']) && $item['seo']['keyword'] != "" ? $item['seo']['keyword'] : (isset(Yii::$site['seo']['keyword']) ? Yii::$site['seo']['keyword'] : '');
-							Yii::$site['seo']['og_image'] = $item['icon'];
-							
-							if(isset($r['parent_id']) && $r['parent_id'] == 0){
-								$root = $r;
-							}else{
-								$root = (new Query())->from('{{%site_menu}}')
-								->where(['sid'=>__SID__])
-								->andWhere(['<','lft',$r['lft']])
-								->andWhere(['>','rgt',$r['rgt']])
-								->one();
-									
-							}
-							break;
-						case 3: //
-					 
-							define('__IS_DETAIL__', true);
-							break;
-						case 0: 
-							define('__IS_DETAIL__', false);
-							$r = (new Query())->from('{{%site_menu}}')->where([
-									'id'=>__ITEM_ID__
-							])->one();
-							Yii::$site['seo']['title'] = isset($r['seo']['title']) && $r['seo']['title'] != "" ? $r['seo']['title'] : $r['title'];
-							Yii::$site['seo']['description'] = isset($r['seo']['description']) && $r['seo']['description'] != "" ? $r['seo']['description'] : 
-							(isset(Yii::$site['seo']['description']) ? Yii::$site['seo']['description'] : '');
-							Yii::$site['seo']['keyword'] = isset($r['seo']['keyword']) && $r['seo']['keyword'] != "" ? $r['seo']['keyword'] : 
-							(isset(Yii::$site['seo']['keyword']) ? Yii::$site['seo']['keyword'] : '');
-							Yii::$site['seo']['og_image'] = isset($r['icon']) ? $r['icon'] : '';
-							//
-							 
-							if($r['route'] == 'manual'){
-								$r['route'] = $r['link_target']; 
-							}
-							//
-							if(isset($r['parent_id']) && $r['parent_id'] == 0){
-								$root = $r;
-							}else{
-								$root = (new Query())->from('{{%site_menu}}')
-								->where(['sid'=>__SID__])
-								->andWhere(['<','lft',$r['lft']])
-								->andWhere(['>','rgt',$r['rgt']])
-								->one();
-									
-							}
-							break;
-					}
-					
-					  
-					//__ROOT_CATEGORY_URL__
-					
-					 
-					define('__ROOT_CATEGORY_ID__', isset($root['id']) ? $root['id'] : 0);
-					define('__ROOT_CATEGORY_NAME__', isset($root['title']) ? $root['title'] : '');
-					define('__ROOT_CATEGORY_URL__', isset($root['url']) ? $root['url'] : '');
-					 
-					define('CONTROLLER_CODE', $r['route']); 
-				}else{
-
-					define('CONTROLLER_CODE', $r['child_code']);
-					 
-					 
-					 
-				}
-				if(isset($r['lft'])){
-					define('CONTROLLER_LFT', $r['lft']);
-					define('CONTROLLER_RGT', $r['rgt']);
-				}
-				define('__CATEGORY_NAME__',isset($r['title']) ? uh($r['title']) : '');
-
-				define('__CATEGORY_URL__', isset($r['url']) ? $r['url'] : '');
-			}
-		}elseif(__IS_SUSPENDED__){
-			$this->defaultRoute = 'site';
-			$_route = ['suspended']; 
-		}
-		
-		defined('__IS_DETAIL__') or define('__IS_DETAIL__', false);
-		defined('__ITEM_ID__') or define('__ITEM_ID__', 0);
-		define('CONTROLLER_ID', isset($r['id']) ? $r['id'] : -1);
-		
-		defined('__CATEGORY_URL__') or define('__CATEGORY_URL__', $url);
-
-		$request->url = DS . $this->defaultRoute .'/'. implode('/', $_route);
-		//var_dump($_route); exit;
-		define('__CATEGORY_ID__', isset($r['id']) ? $r['id'] : (in_array($request->url,['/site','/site/','/site/index']) ? 0 : -1));
-		//var_dump($_route);
-		//var_dump(in_array($_route,['','index'])); exit;
-		if($suffix != ""){
-			if(strrpos($request->url, $suffix) === false){
-				$request->url .= $suffix;
-			}
-		}
-		define('CHECK_PERMISSION', isset($r['is_permission']) && $r['is_permission'] == 1 ? true : false);
-		Yii::$_category = $r;
-		defined('CONTROLLER_TEXT') or define('CONTROLLER_TEXT', $url);
-		defined('__RCONTROLLER__') or define('__RCONTROLLER__', $url);
-		defined('__CONTROLLER__') or define('__CONTROLLER__', $this->defaultRoute);
-		defined('CONTROLLER') or define('CONTROLLER', !empty($r) ? $r['route'] : 'index');
-		defined('CONTROLLER_CODE') or define('CONTROLLER_CODE', !empty($r) ? $r['route'] : 'index'); 
-		//
-		define('ROOT_USER','root');
-		define('ADMIN_USER','admin');
-		define('USER','user');
-
-		//var_dump($this->defaultRoute); exit;
-		//
-	}
+	
 
 	/**
 	 * Handles the specified request.
@@ -534,10 +557,10 @@ class Application extends \yii\base\Application
 			return $this->_homeUrl;
 		}
 	}
-	public function getConfigs($code = false, $lang = __LANG__,$sid=__SID__,$cached=true){
+	private function getConfigs($code = false, $lang = __LANG__,$sid=__SID__,$cached=true){
 		$langx = $lang == false ? 'all' : $lang;
 		$code = $code !== false ? $code : 'SITE_CONFIGS';
-		$config = Yii::$app->session['config'];
+		$config = Yii::$app->session->get('config');
 		if($cached && !isset($config['adLogin']) && isset($config['preload'][$code][$langx])
 				&& !empty($config['preload'][$code][$langx])){
 					return $config['preload'][$code][$langx];
@@ -547,7 +570,7 @@ class Application extends \yii\base\Application
 		$sql .= $lang !== false ? " and a.lang='$lang'" : '';
 		$l = djson(Yii::$app->db->createCommand($sql)->queryScalar(),true);
 		$config['preload'][$code][$langx] = $l;
-		Yii::$app->session['config'] = $config;
+		Yii::$app->session->set('config', $config);
 		return $l;
 	}
 
@@ -604,6 +627,16 @@ class Application extends \yii\base\Application
 		return $this->get('user');
 	}
 
+	public function getMembers()
+	{
+		return $this->get('members');
+	}
+	public function getMember()
+	{
+		return $this->get('member');
+	}
+	
+	
 	public function eString($string = null){
 		$salt = randString(4);
 		return base64_encode($salt.base64_encode($salt . $string));
@@ -623,16 +656,16 @@ class Application extends \yii\base\Application
 				'request' => ['class' => 'yii\web\Request'],
 				'response' => ['class' => 'yii\web\Response'],
 				'session' => ['class' => 'yii\web\Session'],
-				'user' => ['class' => 'yii\web\User'],
+				'user' => ['class' => 'yii\web\User'], 
+				//'members' => ['class' => 'yii\web\Members'],
+				'member' => ['class' => 'yii\web\Member','identityClass' => 'common\models\Member', 'enableAutoLogin' => true],
 				'errorHandler' => ['class' => 'yii\web\ErrorHandler'],
 		]);
 	}
-	protected function __get_domain_id(){
-		 
-		
+	protected function getTemplete(){		 		 
 		// Get templete
-		$TEMP = $this->__get_templete_name();
-		 
+		$TEMP = $this->getTempleteName();		
+		
 		switch (SHOP_STATUS){
 			//case SHOP_COMINGSOON:
 			//	define('__TEMP_NAME__','coming1');
@@ -685,128 +718,21 @@ class Application extends \yii\base\Application
 				define('__RSPATH__',$app_path. '/web/themes' . DIRECTORY_SEPARATOR .__MOBILE_TEMPLETE__. __TEMP_NAME__);
 				define('__RSDIR__',  Url::base() . '/themes/'.__MOBILE_TEMPLETE__.__TEMP_NAME__);
 				break;
-		}
+		} 
 		define ('__VIEW_PATH__',__RSPATH__ . DIRECTORY_SEPARATOR . 'views');
 		define ('__IS_MOBILE__',Yii::$is_mobile);
 		define('__LIBS_DIR__',Yii::getAlias('@libs'));
-		define('__LIBS_PATH__',Yii::getAlias('@frontend') . '/web/libs');
-		defined('DS') or define('DS',DIRECTORY_SEPARATOR);
+		define('__LIBS_PATH__',Yii::getAlias('@frontend/web/libs'));
+		defined('DS') or define('DS','/');
 		 
 	}
-	protected function __registed_domain(){
-		$s = $_SERVER;
-		$ssl = (!empty($s['HTTPS']) && $s['HTTPS'] == 'on') ? true:false;
-		$sp = strtolower($s['SERVER_PROTOCOL']);
-		$protocol = substr($sp, 0, strpos($sp, '/')) . (($ssl) ? 's' : '');
-		$port = $s['SERVER_PORT'];
-		$port = ((!$ssl && $port=='80') || ($ssl && $port=='443')) ? '' : ':'.$port;
-		$host = isset($s['HTTP_X_FORWARDED_HOST']) ? $s['HTTP_X_FORWARDED_HOST'] : isset($s['HTTP_HOST']) ? $s['HTTP_HOST'] : $s['SERVER_NAME'];
-		$url = $protocol . '://' . $host . $port . ($s['REQUEST_URI'] ? $s['REQUEST_URI'] : $_SERVER['HTTP_X_ORIGINAL_URL']);
-		$pattern = array('/index\.php\//','/index\.php/');
-		$replacement = array('','');
-		$url = preg_replace($pattern, $replacement, $url);
-		$a = parse_url($url);
-		$d = array(
-				'FULL_URL'=>$url,
-				'URL_WITH_PATH'=>$a['scheme'].'://'.$a['host'].$port.$a['path'],
-				'SITE_ADDRESS'=>Yii::$app->homeUrl,
-				//'ADMIN_ADDRESS'=>__DOMAIN_ADMIN__ ? Yii::$app->homeUrl . $this->_adminRoute[0],
-				'SCHEME'=>$a['scheme'],
-				'DOMAIN'=>$a['host'],
-				"__DOMAIN__"=>$a['host'],
-				'DOMAIN_NOT_WWW'=>str_replace('www.','',$a['host']),
-		);
-		foreach($d as $k=>$v){
-			defined($k) or define($k,$v);
-		}
-		// Get SID
-		$config = Yii::$app->session['config'];
-		//$command = Yii::$app->db->createCommand("SELECT a.sid,b.code,a.is_admin FROM {{%domain_pointer}} as a inner join {{%shops}} as b on a.sid=b.id where a.domain='".__DOMAIN__."'");
-		$r = (new \yii\db\Query())->select(['a.sid','b.status','b.code','a.is_admin','a.module','b.to_date'])
-		->from(['a'=>'{{%domain_pointer}}'])
-		->innerJoin(['b'=>'{{%shops}}'],'a.sid=b.id')
-		->where(['a.domain'=>__DOMAIN__])->one();
-		//$r = $command->queryOne();
-		//var_dump($r);exit;
-		$dma = false;
-		if(!empty($r)){
-			define ('SHOP_TIME_LEFT',countDownDayExpired($r['to_date']));
-			define ('SHOP_TIME_LIFE',($r['to_date']));
-			define ('SHOP_STATUS',($r['status']));
-				
-			define ('__SID__',(float)$r['sid']);
-			define ('__SITE_NAME__',$r['code']);
-			 
-			$defaultModule = $r['module'] != "" ? $r['module'] : $this->defaultRoute;
-			/*
-			 *
-			 * */
-			//	view(__DEFAULT_MODULE__,true);exit;
-
-			$pos = strpos($this->request->url, '/sajax');
-			if($pos === false){
-				$this->defaultRoute = $defaultModule;
-			}
-			if($r['is_admin'] == 1){
-				define('__IS_ADMIN__',true);
-				//define('__DOMAIN_ADMIN__',true);
-				$dma = true; 
-				//$pos = strpos($this->request->url, '/sajax');
-				//if($pos === false)
-				//$this->defaultRoute = 'admin';
-				//var_dump($this->defaultRoute); exit;
-			}else{
-				//define('__DOMAIN_ADMIN__',false);
-			}
-		}else{
-			//var_dump( __IS_ADMIN__); 
-			//exit;
-			define ('__SID__',0);
-		}
-		define('__DOMAIN_ADMIN__',$dma);
-		define('__IS_SUSPENDED__',\common\models\Suspended::checkSuspended());
-		define('ADMIN_ADDRESS',__DOMAIN_ADMIN__ ? Yii::$app->homeUrl : Yii::$app->homeUrl .  $this->_adminRoute[0]);
-		// Set language
-		$config = Yii::$app->session['config'] ;
-		defined('ROOT_LANG') or define("ROOT_LANG",'vi_VN');
-		defined('SYSTEM_LANG') or define("SYSTEM_LANG",'vi_VN');
-		
-		if(isset($config['language'])){
-		
-		}else{
-			$default_lang = \app\modules\admin\models\AdLanguage::getUserDefaultLanguage();
-			if(empty($default_lang)){
-				$default_lang = ['code'=>'vi_VN','name'=>'Tiếng Việt','country_code'=>'vn'];
-			}
-			$language = ['language'=>$default_lang,'default_language'=>$default_lang];
-			$config = $language;
-		
-		}
-		defined('__LANG__') or define("__LANG__",$config['language']['code']);
-		defined('DEFAULT_LANG') or define("DEFAULT_LANG",$config['default_language']['code']);
-		defined('ADMIN_LANG') or define("ADMIN_LANG",SYSTEM_LANG);
+	 
+	protected function getTempleteName(){
+		return \app\izi\Router::getTempleteName();		 
 	}
-	protected function __get_templete_name(){
-		$config = Yii::$app->session['config'];
-
-		if(isset($config['templete'][__LANG__]['name']) && $config['templete'][__LANG__]['name'] != ""){
-			 
-			return $config['templete'][__LANG__];
-		}else{ //exit;
-			$sql = "select a.* from {{%templetes}} as a inner join temp_to_shop as b on a.id=b.temp_id and b.state=1 and b.sid=".__SID__ ." and b.lang='".__LANG__."'";
-			$command = Yii::$app->db->createCommand($sql);
-			$r = $command->queryOne();
-			if(empty($r)){
-				$sql = "select a.* from {{%templetes}} as a inner join temp_to_shop as b on a.id=b.temp_id and b.state=1 and b.sid=".__SID__ ;
-				$command = Yii::$app->db->createCommand($sql);
-				$r = $command->queryOne();
-			}
-			$config['templete'][__LANG__] = $r;
-
-			Yii::$app->session['config'] = $config;
-			return $r;
-		}
-	}
+	
+	 
+	
 	public function updateSlugs($sid = __SID__){
 		// menu
 		$query = new yii\db\Query;
@@ -837,5 +763,160 @@ class Application extends \yii\base\Application
 			}
 		}
 	}
+	
+	
+	/**
+	 * 
+	 */
+	protected function registerServices(){
+		$s = $_SERVER;
+		$ssl = (!empty($s['HTTPS']) && $s['HTTPS'] == 'on') ? true:false;
+		$sp = strtolower($s['SERVER_PROTOCOL']);
+		$protocol = substr($sp, 0, strpos($sp, '/')) . (($ssl) ? 's' : '');
+		$port = $s['SERVER_PORT'];
+		$port = ((!$ssl && $port=='80') || ($ssl && $port=='443')) ? '' : ':'.$port;
+		$host = isset($s['HTTP_X_FORWARDED_HOST']) ? $s['HTTP_X_FORWARDED_HOST'] : isset($s['HTTP_HOST']) ? $s['HTTP_HOST'] : $s['SERVER_NAME'];
+		$url = $protocol . '://' . $host . $port . ($s['REQUEST_URI'] ? $s['REQUEST_URI'] : $_SERVER['HTTP_X_ORIGINAL_URL']);
+		$pattern = array('/index\.php\//','/index\.php/');
+		$replacement = array('','');
+		$url = preg_replace($pattern, $replacement, $url);
+		$a = parse_url($url);
+		$d = array(
+				'FULL_URL'=>$url,
+				'URL_WITH_PATH'=>$a['scheme'].'://'.$a['host'].$port.$a['path'],
+				'SITE_ADDRESS'=>Yii::$app->homeUrl,
+				//'ADMIN_ADDRESS'=>__DOMAIN_ADMIN__ ? Yii::$app->homeUrl . $this->_adminRoute[0],
+				'SCHEME'=>$a['scheme'],
+				'DOMAIN'=>$a['host'],
+				"__DOMAIN__"=>$a['host'],
+				'DOMAIN_NOT_WWW'=>str_replace('www.','',$a['host']),
+		);
+		foreach($d as $k=>$v){
+			defined($k) or define($k,$v);
+		}
+		
+		/*/ Get SID		
+		$r = (new \yii\db\Query())->select(['a.sid','b.status','b.code','a.is_admin','a.module','b.to_date'])
+		->from(['a'=>'{{%domain_pointer}}'])
+		->innerJoin(['b'=>'{{%shops}}'],'a.sid=b.id')
+		->where(['a.domain'=>__DOMAIN__])->one();
+		/*/
+		$r = \app\izi\Router::getShopFromDomain();
+		$dma = false;
+		if(!empty($r)){
+			define ('SHOP_TIME_LEFT',countDownDayExpired($r['to_date']));
+			define ('SHOP_TIME_LIFE',($r['to_date']));
+			define ('SHOP_STATUS',($r['status']));	
+			define ('__SID__',(float)$r['sid']);
+			define ('__SITE_NAME__',$r['code']);	
+			$defaultModule = $r['module'] != "" ? $r['module'] : $this->defaultRoute;
+			 
+			/*
+			 *
+			 * */
+	
+			$pos = strpos($this->request->url, '/sajax');
+			if($pos === false){
+				$this->defaultRoute = $defaultModule;
+			}
+			if($r['is_admin'] == 1){
+				defined('__IS_ADMIN__') or define('__IS_ADMIN__',true);
+				$dma = true;
+			}
+			 
+		}else{			
+			define ('SHOP_STATUS',0);
+			define ('__SID__',0);
+		}
+		define('__DOMAIN_ADMIN__',$dma);
+		define('__IS_SUSPENDED__',\common\models\Suspended::checkSuspended());
+		define('ADMIN_ADDRESS',__DOMAIN_ADMIN__ ? Yii::$app->homeUrl : Yii::$app->homeUrl .  $this->_adminRoute[0]);
+		/**
+		 * Check is admin module
+		 */
+		// customize
+		$pos = strpos($this->request->url, '?');
+		$this->_router = $pos !== false ? substr($this->request->url, 0, $pos) : $this->request->url;		 		
+		while (strlen($this->_router)>0 && $this->_router[0] == '/'){$this->_router = substr($this->_router, 1);}		
+		if(in_array($this->_router, ['sitemap.xml','robots.txt'])){
+			$this->_router = str_replace(['.txt','.xml'], '', $this->_router);
+		}		
+		$this->_router = explode("/",$this->_router);
+		
+		if(in_array($this->_router[0], array_merge($this->_adminRoute,['gii']))){
+			defined('__IS_ADMIN__') or define('__IS_ADMIN__',true);
+			$this->defaultRoute = $this->_router[0];
+			unset($this->_router[0]); $this->_router = array_values($this->_router);
+		}else{
+			defined('__IS_ADMIN__') or define('__IS_ADMIN__',false);
+		}
+		//
+		$url = '';
+	//	$this->_router = $this->_router;
+		if(!empty($this->_router) && !__IS_ADMIN__){			 
+			foreach ($r = array_reverse($this->_router) as $url){
+				$s = \app\izi\Slug::findByUrl($url);
+				if(!empty($s)){
+					$this->slug = $s;
+					break;
+				}
+			}			 
+		}
+		
+		$pos = strpos($this->request->url, '.');
+		if($pos !== false){
+			$url = substr($url, 0,$pos);
+		}		
+		
+		/**
+		 * Lay lang theo url 
+		 */					
+		
+		if(__IS_ADMIN__){
+			$this->setLanguage();
+			foreach ($r = $this->_router as $url){ 
+				$this->slug = \app\izi\Slug::adminFindByUrl($url);				
+				break;				 
+			}
+		}
+		
+		defined('__DETAIL_URL__') or define ('__DETAIL_URL__',$url);
+		
+		if(!__IS_ADMIN__){
+			if(strlen(__DETAIL_URL__)>0){
+				if(!empty($this->slug)){
+					defined('__URL_LANG__') or define('__URL_LANG__', $this->slug['lang']);
+				}
+			}			
+			$this->setLanguage();
+		}
+				
+	}
+	
+	private function setLanguage(){
+		/**
+		 * Set language
+		 *
+		 */
+		$config = Yii::$app->session->get('config');
+		defined('ROOT_LANG') or define("ROOT_LANG",'vi_VN');
+		defined('SYSTEM_LANG') or define("SYSTEM_LANG",ROOT_LANG);
+		defined('ADMIN_LANG') or define("ADMIN_LANG",SYSTEM_LANG);
+		if(defined('__URL_LANG__')){
+			defined('__LANG__') or define("__LANG__",__URL_LANG__);
+			defined('DEFAULT_LANG') or define("DEFAULT_LANG",__URL_LANG__);
+		}else{
+			$default_lang = \app\modules\admin\models\AdLanguage::getUserDefaultLanguage();
+			if(empty($default_lang)){
+				$default_lang = ['code'=>'vi_VN','name'=>'Tiếng Việt','country_code'=>'vn'];
+			}
+			$language = ['language'=>$default_lang,'default_language'=>$default_lang];
+			$config = $language;
+			defined('__LANG__') or define("__LANG__",$config['language']['code']);
+			defined('DEFAULT_LANG') or define("DEFAULT_LANG", isset($config['default_language']['code']) ? $config['default_language']['code'] : SYSTEM_LANG);
+			Yii::$app->session->set('config', $config);
+		}
+		return __LANG__;
+	}
 }
- 
+}

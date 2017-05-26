@@ -1,11 +1,13 @@
 <?php
 $domain = $_SERVER['HTTP_HOST'];  
 $dev = [
-		'dev.codedao.info','sofaht.vn',
+		'dev.codedao.info', 'songlamht.vn',
 		'dev100.thaochip.com',
 		'demo.intranet.dalaco.travel','demo2.intranet.dalaco.travel',
 		'beta3.lenguyet.vn',
-		'yii.vantruong.name.vn','aplus.codedao.info','choweb.com.vn'
+		'yii.vantruong.name.vn','aplus.codedao.info','choweb.com.vn',
+		'babymart.net.vn',
+		'demo3.dalaco.travel'
 ];
 defined('YII_DEBUG') or define('YII_DEBUG', in_array($domain, $dev) ? true : false);
 defined('YII_ENV') or define('YII_ENV', in_array($domain, $dev) ? 'dev' : 'prod');
@@ -21,6 +23,4 @@ $config = yii\helpers\ArrayHelper::merge(
     require(__DIR__ . '/../config/main.php'),
     require(__DIR__ . '/../config/main-local.php')
 );
-
-(new yii\web\Application($config))->run(); 
- 
+(new yii\web\Application($config))->run();

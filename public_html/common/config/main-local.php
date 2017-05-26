@@ -6,6 +6,12 @@ return [
     				// 'db' => 'mydb',  // the application component ID of the DB connection. Defaults to 'db'.
     				// 'sessionTable' => 'my_session', // session table name. Defaults to 'session'.
     		],
+    		//'members' => [
+    		//		     'identityClass' => 'common\models\Members', // User must implement the IdentityInterface
+    		//		     'enableAutoLogin' => true,
+    		//		     // 'loginUrl' => ['user/login'],
+    				     // ...
+    		//		],
     		//'cookieValidationKey' => 'WXBtZFdYQnRaR3h2WTJGc2FHOXpkQT09',
     	'authManager'=>[
     		'class'=>'yii\rbac\DbManager'

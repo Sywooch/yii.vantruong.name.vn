@@ -2080,7 +2080,8 @@ function afGetEditLink($id = 0,$o = array()){
 function get_link_edit($id = 0, $o = array()){
 	$edit = isset($o['edit']) && $o['edit'] == false ? false : true;
 	$param = isset($o['param']) ? $o['param'] : [];
-	$html = $edit ? cu([__RCONTROLLER__ .'/edit','id'=>$id]+$param+get_params([],['id'])) : '#'; 
+	$identity_field = isset($o['identity_field']) ? $o['identity_field'] : 'id';
+	$html = $edit ? cu([__RCONTROLLER__ .'/edit',$identity_field=>$id]+$param+get_params([],[$identity_field])) : '#'; 
 	return $html;
 }
 function checkAuthByUser($authItem=[], $o = []){
@@ -2102,6 +2103,7 @@ function afShowListButton($id = 0 ,$o = array()){
 	$label = isset($o['label']) ? $o['label'] : array();
 	$btn = isset($o['btn']) ? $o['btn'] : [];
 	$post_by = isset($o['post_by']) ? $o['post_by'] : 0;
+	$identity_field = isset($o['identity_field']) ? $o['identity_field'] : 'id';
 	$tab_click = isset($o['tab_click']) ? $o['tab_click'] : '';
 	//
 	if($edit !== false){
@@ -2130,7 +2132,7 @@ function afShowListButton($id = 0 ,$o = array()){
 	$del = $del === false ? false : Yii::$app->user->can([ROOT_USER,ADMIN_USER,Yii::$app->controller->id . '-' . (defined('CONTROLLER_CODE') && CONTROLLER_CODE != "" ? CONTROLLER_CODE . '-' : '') .'delete','site-'.$id.'-delete','form-'.getParam('type').'-delete']); 
 	
 	//
-	$html = '<a '.($edit ? '' : 'disabled').' href="'.($edit ? cu([__RCONTROLLER__.DS.'edit','id'=>$id]+get_params([],['id'])).$tab_click : '#').'"';
+	$html = '<a '.($edit ? '' : 'disabled').' href="'.($edit ? cu([__RCONTROLLER__.DS.'edit',$identity_field=>$id]+get_params([],[$identity_field])).$tab_click : '#').'"';
 	if(isset($btn['edit']['attr']) && !empty($btn['edit']['attr'])){
 		foreach ($btn['edit']['attr'] as $k=>$v)
 		{
@@ -2281,9 +2283,12 @@ function Ad_list_show_option_field($v=[],$o=[]){
 	$edit = (isset($o['edit']) && $o['edit'] == false) || (isset($o['btn']['edit']) && $o['btn']['edit'] == false) ? false : true;
 	$del = (isset($o['del']) && $o['del'] == false) || (isset($o['btn']['del']) && $o['btn']['del'] == false) ? false : true;
 	$tab_click = isset($o['tab_click']) ? $o['tab_click'] : '';
-	$identity_field = isset($o['identity_field']) ? $o['identity_field'] : $v['id'];
-	$html = '<td class="center pr">'.afShowListButton($identity_field,
+	
+	$identity_field = isset($o['identity_field']) ? $o['identity_field'] : 'id';
+	$identity_value = isset($o['identity_value']) ? $o['identity_value'] : (isset($v[$identity_field]) ? $v[$identity_field] : $v['id']);
+	$html = '<td class="center pr">'.afShowListButton($identity_value,
         array(
+        		'identity_field'=>$identity_field,
         		'edit'=>$edit,
         		'del'=>$del,
         		'post_by'=>$post_by,
@@ -2556,7 +2561,7 @@ function Ad_edit_show_dropdown_currency($v, $o = []){
 	$c = Yii::$app->zii->getCurrency(isset($v['currency']) ? $v['currency'] : 1);	 
 	$html = '';
 	$html .= !$show_group ? '<div class="form-group f12e"><label class="col-sm-12 control-label">'.$label.'</label><div class="col-sm-12">' : '';
-	$html .= '<div class="input-group '.(isset($o['input-group-class']) ? $o['input-group-class'] : '').'" ><input data-decimal="'.(isset($c['decimal_number']) ? $c['decimal_number'] : 1).'" type="text" name="'.$field_name.'" class="input-price-decimal-field form-control number-format aright '.$class.'" value="'.(isset($v[$field]) ? $v[$field] : '') .'" placeholder="'.$placeholder.'">
+	$html .= '<div class="input-group '.(isset($o['input-group-class']) ? $o['input-group-class'] : '').'" ><input data-decimal="'.(isset($c['decimal_number']) ? $c['decimal_number'] : 1).'" type="number" name="'.$field_name.'" class="input-price-decimal-field form-control number-format aright '.$class.'" value="'.(isset($v[$field]) ? $v[$field] : '') .'" placeholder="'.$placeholder.'">
       <span class="input-group-btn"><div class="btn-group">
   <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
   <b class="input-currency-symbol f12px">'.(Yii::$app->zii->showCurrency(isset($v['currency']) ? $v['currency'] : 1)).'</b> <span class="caret"></span>
@@ -3762,8 +3767,8 @@ function loadTourProgramDetail($o = []){
 				
 			if(!empty($services)){
 				foreach ($services as $kv=>$sv){
-					$price = [];
-					//view($sv);
+					$price = [];  
+					//if($sv['id'] == 228) view($sv);
 					$prices = Yii::$app->zii->getServiceDetailPrices([
 							'item_id'=>$id,
 							'day_id'=>$i,
@@ -3778,7 +3783,7 @@ function loadTourProgramDetail($o = []){
 							'loadDefault'=>$loadDefault,
 							'updateDatabase'=>$updateDatabase
 					]);
-					
+					//if($sv['id'] == 228) view($prices);
 					 
 					if(!empty($prices) && isset($prices['price1'])){
 						$price = Yii::$app->zii->getServicePrice($prices['price1'],[
@@ -3789,13 +3794,33 @@ function loadTourProgramDetail($o = []){
 						]);
 					}
 					$sub_item = Yii::$app->zii->getSupplierServiceDetail(isset($prices['sub_item_id']) ? $prices['sub_item_id'] : 0,$sv['type_id']);
-					
+					//if($sv['id'] == 228) view($sub_item);
 					if($sv['type_id'] == TYPE_ID_REST){
 						//view($prices['sub_item_id']);
 					}
 					
 					$package = \app\modules\admin\models\PackagePrices::getItem($sv['package_id']);
-					$html .= '<tr class="bgr-input-odd-event-'.($i%2).'"><td colspan="4"><p><a href="#" '.(!in_array($sv['type_id'], [TYPE_ID_TEXT])).' onclick="open_ajax_modal(this);return false;" data-action="qedit-service-detail-day" data-title="Chỉnh sửa dịch vụ" data-class="w80"
+					$a = '<a 
+							href="#" '.(!in_array($sv['type_id'], [TYPE_ID_TEXT])).' 
+									onclick="open_ajax_modal(this);return false;" 
+									data-action="qedit-service-detail-day" 
+									data-title="Chỉnh sửa dịch vụ" 
+									data-class="w80"
+									data-service_id="'.$sv['id'].'" 
+									data-id="'.$v['id'].'"
+									data-type_id="'.$sv['type_id'].'"	
+									data-package_id="'.$sv['package_id'].'"		
+									data-day_id="'.$i.'"	 
+									data-time_id="'.$j.'"
+									data-item_id="'.(isset($prices['sub_item_id']) ? $prices['sub_item_id'] : (isset($sv['sub_item_id']) ? $sv['sub_item_id'] : 0)).'" 		 
+									data-supplier_id="'.(isset($sv['supplier_id']) ? $sv['supplier_id'] : 0).'" 			
+											>';
+					$html .= '<tr class="bgr-input-odd-event-'.($i%2).'"><td colspan="4"><p><a 
+							href="#" '.(!in_array($sv['type_id'], [TYPE_ID_TEXT])).' 
+									onclick="open_ajax_modal(this);return false;" 
+									data-action="qedit-service-detail-day" 
+									data-title="Chỉnh sửa dịch vụ" 
+									data-class="w80"
 									data-service_id="'.$sv['id'].'" 
 									data-id="'.$v['id'].'"
 									data-type_id="'.$sv['type_id'].'"	
@@ -3820,10 +3845,10 @@ function loadTourProgramDetail($o = []){
 							break;
 					}
 					$html .= '</td>			
-										<td class="center " colspan="1">'.getServiceType($sv['type_id']).'</td>
-										<td class="center">'.getServiceUnitPrice($sv['type_id']).'</td>
-										<td class="center">'.number_format($prices['quantity']).'</td>
-										<td class="center" ><span data-decimal="'.(isset($price['decimal']) ? $price['decimal'] : 0).'" class="number-format '.(isset($price['changed']) && $price['changed'] ? 'red underline' : '').'" title="'.(isset($price['changed']) && $price['changed'] ? $price['old_price'] : '').'">'.(isset($price['price']) ? $price['price'] : '-').'</span></td>
+										<td class="center " colspan="1">'.$a.getServiceType($sv['type_id']).'</a></td>
+										<td class="center">'.$a.getServiceUnitPrice($sv['type_id']).'</a></td>
+										<td class="center">'.$a.number_format($prices['quantity']).'</a></td>
+										<td class="center" >'.$a.'<span data-decimal="'.(isset($price['decimal']) ? $price['decimal'] : 0).'" class="number-format '.(isset($price['changed']) && $price['changed'] ? 'red underline' : '').'" title="'.(isset($price['changed']) && $price['changed'] ? $price['old_price'] : '').'">'.(isset($price['price']) ? $price['price'] : '-').'</span></a></td>
 										<td class="center" ><span data-decimal="'.(isset($price['decimal']) ? $price['decimal'] : 0).'" class="bold underline number-format " >'.(isset($price['price']) ? $price['price'] * $prices['quantity'] : '-').'</span></td>
 										</tr>';
 				}
@@ -3835,7 +3860,7 @@ function loadTourProgramDetail($o = []){
 							<p class=" aright ">   
 							<button data-toggle="tooltip" data-placement="left" data-class="w90" data-action="add-tours-services" data-title="Chọn thêm dịch vụ / Hành trình" data-id="'.$id.'" data-day="'.$i.'" data-time="'.$j.'" onclick="open_ajax_modal(this);" title="Chọn thêm / xóa dịch vụ" class="btn btn-primary btn-sm" type="button"><i class="glyphicon glyphicon glyphicon-pencil"></i> Thêm/ xóa dịch vụ</button></p>
 							</td>';
-				
+				 
 			$html .= '</tr>';
 				
 		}
@@ -3901,7 +3926,6 @@ function splitName($f){
 	if(isset($f['lname']) && $f['lname'] != ""){
 		//return $f;
 	}else{
-		//view($spName);
 		$n = explode(' ', trim($spName));
 		$f['fname'] = $n[count($n)-1];
 		if(count($n) > 1){
@@ -4418,11 +4442,23 @@ function getTourProgramSegments($item_id=0, $o = []){
 function loadTourProgramGuides($item_id=0, $o = []){
 	//
 	$item_id = is_numeric($item_id) ? $item_id : (isset($o['item_id']) ? $o['item_id'] : 0);
+	$item = \app\modules\admin\models\ToursPrograms::getItem($item_id);
 	//
 	$segments = \app\modules\admin\models\ProgramSegments::getAll($item_id,['parent_id'=>0]);
+	$loadDefault = isset($o['loadDefault']) ? $o['loadDefault'] : false;
+	$updateDatabase = isset($o['updateDatabase']) ? $o['updateDatabase'] : true;
+	if($loadDefault && $updateDatabase){
+		\app\modules\admin\models\ToursPrograms::setSegmentsAutoGuides(['item_id'=>$item_id]);
+		//$loadDefault = false; 
+	}
 	//
-	$item = \app\modules\admin\models\ToursPrograms::getItem($item_id);
+	
+	
+	
 	$html = '<div class="col-sm-12 bang-thong-tin-chung"><div class="row">';
+	if((isset($item['guide_language']) && isset($item['guide_type']))){ 
+		$html .= '<input name="biz[guide_language]" type="hidden" value="'.$item['guide_language'].'"/><input name="biz[guide_type]" type="hidden" value="'.$item['guide_type'].'"/>';
+	}
 	$html .= '<div class="" style="margin-top: 10px; "><div class="upper bold grid-sui-pheader aleft f12p">
 			 Hướng dẫn viên 	
 			</div></div>';
@@ -4436,15 +4472,29 @@ function loadTourProgramGuides($item_id=0, $o = []){
 						
 			<button data-guide_type="'.(isset($item['guide_type']) ? $item['guide_type'] : 2).'" data-guide_language="'.(isset($item['guide_language']) ? $item['guide_language'] : DEFAULT_LANG).'" data-action="setup-tourprogram-guides" data-toggle="tooltip" title="Thiết lập này sẽ áp dụng cho toàn bộ các chặng của chương trình này." data-placement="right" type="button" data-item_id="'.$item_id.'" data-segment_id="0"  data-title="Chọn hướng dẫn viên [level 1: áp dụng cho tất cả các chặng]" onclick="open_ajax_modal(this);" class="btn btn-default f14px btn-sm mgl30"><i class="fa-gears fa"></i> Thiết lập</button>
 			</div>';
+	$guide_type = $root_guide_type = isset($item['guide_type']) ? $item['guide_type']  : 2;
+	$guide_language = isset($item['guide_language']) ? $item['guide_language'] : DEFAULT_LANG;
+	if($root_guide_type == 1){
+		 
+		$html .= '<div class="mg5">';
+		$html .= getTourProgramGuides($item_id,[
+				'segment'=>[],
+				'item'=>$item,
+				'guide_type'=>$guide_type,
+				'guide_language'=>$guide_language,
+				'updateDatabase'=>$updateDatabase,
+				'loadDefault'=>$loadDefault
+		]);
+		$html .= '</div>';
+	}else{
 	
-	
-	if(!empty($segments) && isset($item['guide_language']) && isset($item['guide_type']) && $item['guide_type'] == 2){  
+	if(!empty($segments) && isset($item['guide_language']) && isset($item['guide_type']) && $guide_type == 2){  
 		foreach ($segments as $km=>$segment){
 			$segments1 = \app\modules\admin\models\ProgramSegments::getAll($item_id,['parent_id'=>$segment['id']]);
 			$guide_type = isset($item['guide_type']) ? $item['guide_type'] : 2;
 			$guide_language = isset($item['guide_language']) ? $item['guide_language'] : DEFAULT_LANG;
 			$html .= '<div class="block-examples">
-					<p data-class="w60" class="pointer upper bold block-title"><i class="fa fa-puzzle-piece"></i> '.uh($segment['title']) .' <i>('.$segment['number_of_day'].' ngày)</i></p>
+					<p data-class="w60" data-toggle="tooltip" data-placement="top" data-action="add-more-tour-segment" data-title="Chỉnh sửa chặng tour" data-parent_id="'.$segment['parent_id'].'" data-segment_id="'.$segment['id'].'" data-id="'.$item_id.'" data-item_id="'.$item_id.'" onclick="open_ajax_modal(this);" title="Click để chỉnh sửa chặng: '.uh($segment['title']).'" class="pointer upper bold block-title"><i class="fa fa-puzzle-piece"></i> '.uh($segment['title']).' <i>('.$segment['number_of_day'].' ngày)</i></p>
 					<div>';
 			
 			if(!empty($segments1)){
@@ -4465,28 +4515,57 @@ function loadTourProgramGuides($item_id=0, $o = []){
 								).'
 			
 			<button data-guide_type="'.$guide_type.'" data-guide_language="'.$guide_language.'" data-action="setup-tourprogram-guides" data-toggle="tooltip" title="Thiết lập này sẽ áp dụng cho toàn bộ các chặng con của chặng '.$segment['title'].'." data-placement="right" type="button" data-item_id="'.$item_id.'" data-segment_id="'.$segment['id'].'"  data-title="Chọn hướng dẫn viên [level 2: áp dụng cho tất cả các chặng con của chặng '.$segment['title'].']" onclick="open_ajax_modal(this);" class="btn btn-default f14px btn-sm mgl30"><i class="fa-gears fa"></i> Thiết lập</button>
-			</div>';			
+			
+					</div>';			
 			}		
-								
-								
+			if($guide_type==1){
+				$html .= '<div class="mg5">';
+				$html .= getTourProgramGuides($item_id,[
+						'segment'=>$segment,
+						'segment_parent'=>$segment['id'],
+						'item'=>$item,
+						'guide_type'=>$guide_type,
+						'guide_language'=>$guide_language,
+						'updateDatabase'=>$updateDatabase,
+						'loadDefault'=>$loadDefault,
+						'root_guide_type'=>$root_guide_type
+				]);
+				$html .= '</div>';
+			}else{
+				
+			
 			if(!empty($segments1)){
 				foreach ($segments1 as $segment1){
-					$html .= '<div class="bc1 block-example mgb5 '.($km%2==1 ? ' bg-success' : '').'">
-					<span class="f12e block-title btn-sm btn btn-default mgl0 bdl0"><i class="fa fa-hand-o-right"></i> '.uh($segment1['title']).' <i>('.$segment1['number_of_day'].' ngày)</i></span>';
+					
+					$html .= '<div class="bc1 block-example mgb5 '.($km%2==1 ? ' bg-' : '').'">
+					<span data-class="w60" data-toggle="tooltip" data-placement="right" data-action="add-more-tour-segment" data-title="Chỉnh sửa chặng tour" data-parent_id="'.$segment1['parent_id'].'" data-segment_id="'.$segment1['id'].'" data-id="'.$item_id.'" data-item_id="'.$item_id.'" onclick="open_ajax_modal(this);" title="Click để chỉnh sửa chặng: '.uh($segment1['title']).'" class="f12e block-title btn-sm btn btn-default mgl0 bdl1"><i class="fa fa-hand-o-right"></i> '.uh($segment1['title']).' <i>('.$segment1['number_of_day'].' ngày)</i></span>';
 					$html .= '<div class="form-group mgb0">';
 					$html .= getTourProgramGuides($item_id,[
 							'segment'=>$segment1,
 							'item'=>$item,
 							'guide_type'=>$guide_type,
 							'guide_language'=>$guide_language,
+							'updateDatabase'=>$updateDatabase,
+							'loadDefault'=>$loadDefault,
+							'root_guide_type'=>$root_guide_type
 					]);						
 					$html .= '</div>';
-					$html .= '</div>';
+					$html .= '</div>'; 
+					 
 				}
 			}else{
 				$html .= '<div class="mg5">';
-				$html .= getTourProgramGuides($item_id,['segment'=>$segment1,'item'=>$item,'guide_type'=>$guide_type,'guide_language'=>$guide_language]);				
+				$html .= getTourProgramGuides($item_id,[
+						'segment'=>$segment,
+						'item'=>$item,
+						'guide_type'=>$guide_type,
+						'guide_language'=>$guide_language,
+						'updateDatabase'=>$updateDatabase,
+						'loadDefault'=>$loadDefault,
+						'root_guide_type'=>$root_guide_type
+				]);				
 				$html .= '</div>';
+			}
 			}
 			$html .= '</div>';
 			$html .= '</div>';
@@ -4494,7 +4573,7 @@ function loadTourProgramGuides($item_id=0, $o = []){
 
 
 		}
-	}
+	}}
 	$html .= '</div>';
 
  
@@ -4506,66 +4585,278 @@ function loadTourProgramGuides($item_id=0, $o = []){
 
 function getTourProgramGuides($item_id=0, $o = []){ 
 	$segment = isset($o['segment']) ? $o['segment'] : [];
+	
+	$segment_parent_id = isset($o['segment_parent_id']) ? $o['segment_parent_id'] : -1;
 	$item = isset($o['item']) ? $o['item'] : \app\modules\admin\models\ToursPrograms::getItem($item_id);
 	$html = '<div class="mg5">';
 	$guide_type = isset($o['guide_type']) ? $o['guide_type'] : 2;
+	$root_guide_type = isset($o['root_guide_type']) ? $o['root_guide_type'] : (
+			isset($item['guide_type']) ? $item['guide_type'] : 2
+			);
 	$guide_language = isset($o['guide_language']) ? $o['guide_language'] : DEFAULT_LANG;
 	$places_id = [];
+	$loadDefault = isset($o['loadDefault']) ? $o['loadDefault'] : false;
+	$updateDatabase = isset($o['updateDatabase']) ? $o['updateDatabase'] : true;
+	$segment_id = isset($segment['id']) ? $segment['id'] : 0;
+	//
+	
+	
+	//
 		// Huong dan
-		$html .= '<p class="upper bold grid-sui-pheader aleft ">Hướng dẫn viên</p>
+		$html .= '<p class="upper bold grid-sui-pheader aleft ">Hướng dẫn viên <i>('.$guide_language.')</i></p>
 					<table class="table table-bordered mgb0 table-sm vmiddle">
 					<thead><tr><th colspan="12"></th></tr></thead><tbody>';
+		$from_date = $item['from_date'];
+		$package_id = 0;
+		if($loadDefault && $updateDatabase){
+			//
+			
+			//
+			
+			//
+		}
+		
+		 
 		 
 		foreach ( \app\modules\admin\models\ToursPrograms::getProgramGuides([
-				'item_id'=>$item_id,
-				'segment_id'=>$segment['id'],
+				'item_id'=>$item['id'],
+				'segment_id'=>$segment_id,
+				'guide_type'=>$guide_type
 		]) as $kv=>$sv){
-			//$guide_type = $sv['type_id'];
+			
+			$supplier_id = Yii::$app->zii->getSupplierIDFromService($sv['guide_id'],TYPE_ID_GUIDES);
+			$quotation = \app\modules\admin\models\Suppliers::getQuotation([
+					'supplier_id'=>$supplier_id,
+					'date'=>$from_date
+			]);
+			//view($quotation);
+			//
+			$nationality_group = \app\modules\admin\models\Suppliers::getNationalityGroup([
+					'supplier_id'=>$supplier_id,
+					'nationality_id'=>$item['nationality'],
+			]);
+			//
+			$seasons = \app\modules\admin\models\Suppliers::getSeasons([
+					'supplier_id'=>$supplier_id,
+			
+					'date'=>$from_date,
+					//'time_id'=>$time_id
+			]);
+			$groups = \app\modules\admin\models\Suppliers::getGuestGroup([
+					'supplier_id'=>$supplier_id,
+					'total_pax'=>$item['guest'],
+					'date'=>$from_date,
+					//'time_id'=>$time_id
+			]);
+			 
+			
 			$prices = Yii::$app->zii->getProgramGuidesPrices([
 					'controller_code'=>TYPE_ID_GUIDES,
 					'quotation_id'=>$quotation['id'],
 					'nationality_id'=>$nationality_group['id'],
 					'season_id'=>isset($seasons['seasons_prices']['id']) ? $seasons['seasons_prices']['id'] : 0,
 					'supplier_id'=>$supplier_id,
-					//'total_pax'=>$total_pax,
+					'total_pax'=>$item['guest'],
 					'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
 					'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
 					'package_id'=>$package_id,
-					'item_id'=>$sv['id'],
+					'item_id'=>$item_id,
+					'service_id'=>$sv['id'],
 					//'season_time_id'=>$season_time_id,
 					'seasons'=>$seasons,
-					'segment_id'=>$segment['id'],
+					'segment_id'=>$segment_id,
+					'segment_parent_id'=>$segment_parent_id['id'],
+					'loadDefault'=>$loadDefault,
+					'updateDatabase'=>$updateDatabase,
+					'quantity'=>$sv['quantity'], 
+					'number_of_day'=>isset($segment['number_of_day']) ? $segment['number_of_day'] : 0,
+					'guide_type'=>$guide_type,
+					'root_guide_type'=>$root_guide_type
+					
 	
 			]);
+			$prices['number_of_day'] = isset($prices['number_of_day']) ? $prices['number_of_day'] : (isset($segment['number_of_day']) ? $segment['number_of_day'] : 0);
 				
 			if(!empty($prices) && isset($prices['price1'])){
 				$price = Yii::$app->zii->getServicePrice($prices['price1'],[
-						'item_id'=>$id,
+						'item_id'=>$item_id,
 						//'price'=>$prices['price1'],
-						'from'=>$prices['currency'],
+						'from'=>$prices['currency'], 
 						'to'=>$item['currency']
-				]);
+				]); 
 			}
-			$html .= '<tr><td colspan="3" class="col-ws-3">'.uh($sv['supplier_name']).' - '.uh($sv['title']).'</td>
-					<td class="col-ws-1 center"><span class="badge">'.(isset($sv['quantity']) ? $sv['quantity'] : 0).'</span></td>
+			$html .= '<tr><td colspan="3" class="col-ws-3">'.uh($sv['supplier_name']).' - '.uh($sv['title']) .'</td>
+					<td class="col-ws-1 center"><span title="Số lượng" class="badge">'.(isset($sv['quantity']) ? $sv['quantity'] : 0).'</span></td>
 			<td colspan="5">'.getGuideTypeName($sv['type_id']).'</td>
-					<td class="col-ws-1 center" title="Số ngày">'.$segment['number_of_day'].'</td>
-					<td class="col-ws-1 center">0</td>
-					<td class="col-ws-1 center">0</td>
-					</tr>';
-		}
-		$places = \app\modules\admin\models\ProgramSegments::getPlaceIDs($segment['id']);
+					<td class="col-ws-1 center" title="Số ngày">'.$prices['number_of_day'].'</td>
+					<td class="col-ws-1 center" ><span data-decimal="'.(isset($price['decimal']) ? $price['decimal'] : 0).'" class="number-format '.(isset($price['changed']) && $price['changed'] ? 'red underline' : '').'" title="'.(isset($price['changed']) && $price['changed'] ? 'Đơn giá: ' . $price['old_price'] : 'Đơn giá').'">'.(isset($price['price']) ? $price['price'] : '-').'</span></td>
+					<td class="col-ws-1 center" ><span title="Thành tiền" data-decimal="'.(isset($price['decimal']) ? $price['decimal'] : 0).'" class="bold underline number-format " >'.(isset($price['price']) ? $price['price'] * $prices['quantity'] * $prices['number_of_day'] : '-').'</span></td>
+									
+			</tr>';
+		} 
+		$places = \app\modules\admin\models\ProgramSegments::getPlaceIDs($segment_id);
 		$html .= '<tr><td colspan="12" class="pr vtop">';
-		$html .= '<p class="aright"><button data-place_id="'.(!empty($places) ? $places[0] : '').'" data-guide_language="'.$guide_language.'" data-guide_type="'.$guide_type.'" data-place_id="'.implode(',', $places_id).'" data-segment_id="'.(isset($segment['id']) ? $segment['id'] : 0).'" data-toggle="tooltip" data-placement="left" data-nationality="'.$item['nationality'].'" data-guest="'.$item['guest'].'" data-class="w90" data-action="add-more-tours-program-guides" data-title="Chọn hướng dẫn viên" data-item_id="'.$item_id.'" onclick="open_ajax_modal(this);" title="Chọn hướng dẫn viên'.(!empty($segment) ? ' cho chặng '. uh($segment['title']) : '').'" class="btn btn-warning input-sm" type="button"><i class="fa fa-universal-access"></i> Chọn hướng dẫn viên</button></p>';
+		$html .= '<p class="aright"><button data-place_id="'.(!empty($places) ? $places[0] : '').'" data-guide_language="'.$guide_language.'" data-root_guide_type="'.$root_guide_type.'" data-guide_type="'.$guide_type.'" data-place_id="'.implode(',', $places_id).'" data-segment_id="'.(isset($segment['id']) ? $segment['id'] : 0).'" data-toggle="tooltip" data-placement="left" data-nationality="'.$item['nationality'].'" data-guest="'.$item['guest'].'" data-class="w90" data-action="add-more-tours-program-guides" data-title="Chọn hướng dẫn viên" data-item_id="'.$item_id.'" onclick="open_ajax_modal(this);" title="Chọn hướng dẫn viên'.(!empty($segment) ? ' cho chặng '. uh($segment['title']) : '').'" class="btn btn-warning input-sm" type="button"><i class="fa fa-universal-access"></i> Thay đổi hướng dẫn viên</button></p>';
 		$html .= '</td></tr>';
 		$html .= '</tbody></table>';
 		//
 		$html .= '</div>';
+		$html .= loadProgramSegmentExtendPrices([
+				'item_id'=>$item_id,
+				'segment_id'=>$segment_id,
+				'item'=>$item,
+				//'segment'=>$segment, 
+				'guide_type'=>$guide_type
+		]);
 	 return $html;
 	 
 }
 
 
+function loadProgramSegmentExtendPrices($o = []){
+	$html = '<div class="mg5">'; 
+	$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
+	$segment_id = isset($o['segment_id']) ? $o['segment_id'] : 0;
+	$guide_type = isset($o['guide_type']) ? $o['guide_type'] : 2;
+	$item = isset($o['item']) && !empty($item) ? $o['item'] : (
+			\app\modules\admin\models\ToursPrograms::getItem($item_id)
+			);
+	$segment = isset($o['segment']) && !empty($segment) ? $o['segment'] : (
+			\app\modules\admin\models\ProgramSegments::getXItem($segment_id)
+			);
+	//
+	// Huong dan
+	$html .= '<p class="upper bg-danger bold grid-sui-pheader aleft ">Chi phí phát sinh</p>
+					<table class="table table-bordered mgb0 table-sm vmiddle">
+					<thead><tr><th colspan="12"></th></tr></thead><tbody>';
+	 
+		
+	foreach ( \app\modules\admin\models\ToursPrograms::getExtendPrices([
+			'item_id'=>$item['id'],
+			'segment_id'=>$segment_id,
+			 'type_id'=>$guide_type
+	]) as $kv=>$sv){
+		$price = Yii::$app->zii->getServicePrice($sv['price1'],[
+				'item_id'=>$item_id,
+				//'price'=>$prices['price1'],
+				'from'=>$sv['currency'],
+				'to'=>$item['currency']
+		]);
+		$html .= '<tr><td colspan="3" class="col-ws-3"><a class="pointer pdl5"
+				data-segment_id="'.(isset($segment['id']) ? $segment['id'] : 0).'" 
+			data-guide_type="'.$guide_type.'"
+			data-toggle="tooltip" 
+			data-placement="left"  
+			data-class="w60" data-id="'.$sv['id'].'"
+			data-action="add-more-tours-program-extend-prices" 
+			data-title="Chi phí phát sinh - '.(uh($segment['title'])).'" 
+			data-item_id="'.$item_id.'" onclick="open_ajax_modal(this);" 
+				>'.uh($sv['title']) .'</a></td>
+					<td class="col-ws-1 center"> - </td>
+					<td colspan="5"></td>
+					<td class="col-ws-1 center" > <span title="Số lượng" class="">'.(isset($sv['quantity']) ? $sv['quantity'] : 0).'</span> </td>
+					<td class="col-ws-1 center" ><span data-decimal="'.(isset($price['decimal']) ? $price['decimal'] : 0).'" class="number-format '.(isset($price['changed']) && $price['changed'] ? 'red underline' : '').'" title="'.(isset($price['changed']) && $price['changed'] ? 'Đơn giá: ' . $price['old_price'] : 'Đơn giá').'">'.(isset($price['price']) ? $price['price'] : '-').'</span></td>
+					<td class="col-ws-1 center" ><span title="Thành tiền" data-decimal="'.(isset($price['decimal']) ? $price['decimal'] : 0).'" class="bold underline number-format " >'.(isset($price['price']) ? $price['price'] * $sv['quantity']  : '-').'</span></td>
+					
+			</tr>';
+	}
+	 
+	$html .= '<tr><td colspan="12" class="pr vtop">';
+	$html .= '<p class="aright"><button 
+			data-segment_id="'.(isset($segment['id']) ? $segment['id'] : 0).'" 
+			data-guide_type="'.$guide_type.'"
+			data-toggle="tooltip" 
+			data-placement="left" 
+			data-class="w60" 
+			data-action="add-more-tours-program-extend-prices" 
+			data-title="Chi phí phát sinh - '.(uh($segment['title'])).'" 
+			data-item_id="'.$item_id.'" onclick="open_ajax_modal(this);" 
+			title="Chi phí phát sinh'.(!empty($segment) ? ' cho chặng '. uh($segment['title']) : '').'" 
+			class="btn btn-danger input-sm" type="button"><i class="fa fa-arrow-circle-o-up"></i> Chi phí phát sinh</button></p>';
+	$html .= '</td></tr>';
+	$html .= '</tbody></table>';
+	//
+	$html .= '</div></div>';
+	return $html;
+
+}
+
+function Tourprogram_ReloadAllPrice($o = []){
+	$id = $item_id = isset($o['item_id']) ? $o['item_id'] : (isset($o['id']) ? $o['id'] : 0);
+	$guest = isset($o['guest']) ? $o['guest'] : 0;
+	$c = [];
+	$v = \app\modules\admin\models\ToursPrograms::getItem($id);
+		
+	if(!empty($v)){
+		//
+		if($guest>-1){
+			$c = ['guest'=>$guest];
+		}
+			
+		/*/
+		switch (post('field')){
+			case 'guest1':
+				$c['guest1'] = post('value');
+				break;
+			case 'guest2':
+				$c['guest2'] = post('value');
+				break;
+			case 'guest3':
+				$c['guest3'] = post('value');
+				break;
+			case 'nationality':
+				$c['nationality'] = post('value');
+				break;
+			case 'from_date':
+				$c['from_date'] = ctime(['string'=> post('value')]);
+				$time = ctime(['string'=>$c['from_date'] ,'return_type'=>1]);
+				$to_date = date('Y-m-d H:i:s',mktime(0,0,0,date('m',$time),date('d',$time)+max($v['day'],$v['night']),date('Y',$time)));
+				$c['to_date'] = ctime(['string'=> $to_date]);
+				break;
+		}
+		//
+		Yii::$app->db->createCommand()->update( \app\modules\admin\models\ToursPrograms::tableName(),$c,['id'=>$id,'sid'=>__SID__])->execute();
+		/*/
+		$a = loadTourProgramDetail([
+				'id'=>$id,
+				'loadDefault'=>true,
+				'updateDatabase'=>true,
+		]);
+		foreach (\app\modules\admin\models\ProgramSegments::getAll($id,['parent_id'=>0]) as $segment){
+			$x1 = \app\modules\admin\models\ProgramSegments::getAll($id,['parent_id'=>$segment['id']]);
+			if(!empty($x1)){
+				foreach ($x1 as $x2) {
+					loadTourProgramDistances($id,[
+							'loadDefault'=>true,
+							'updateDatabase'=>true,
+							'segment'=>$x2
+					]);
+				}
+			}else{
+				loadTourProgramDistances($id,[
+						'loadDefault'=>true,
+						'updateDatabase'=>true,
+						'segment'=>$segment
+				]);
+			}
+		}
+	
+		/*
+		 loadTourProgramGuides($id,[
+		 'loadDefault'=>true,
+		 'updateDatabase'=>true,
+		 ///'segment'=>$segment
+		 ]);
+		 */
+		//\app\modules\admin\models\ToursPrograms::setSegmentsAutoGuides([
+		//		'item_id'=>$id
+		//]);
+		loadTourProgramGuides($id,[
+				'loadDefault'=>true,
+				'updateDatabase'=>true,
+		]);
+	}
+}
 
 
 

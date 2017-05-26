@@ -1,6 +1,35 @@
 <?php 
+/*/view(\app\modules\admin\models\ProgramSegments::getAllChild(1,0));
+(\app\modules\admin\models\ToursPrograms::setSegmentsAutoGuides([
+		'item_id'=>1,
+			
+]));
+*/
+//\app\modules\admin\models\ToursPrograms::setSegmentsAutoGuides(['item_id'=>1]);/
  
+
+  
+//view($a);
+
+
+  /*
+view(\app\modules\admin\models\ToursPrograms::getProgramGuides([
+				'item_id'=>1,
+				'segment_id'=>7,
+				'guide_type'=>2
+		]));*/
+/*
+view(Yii::$app->zii->getProgramGuidesPrices([
+		'item_id'=>1,
+		'controller_code'=>TYPE_ID_GUIDES,
+		'service_id'=>30,
+		'loadDefault'=>true,
+		'segment_id'=>15,
+		'updateDatabase'=>false
+]));
+*/
 ?>
+
 <div class="table-responsive ">
 <div class="fl100 edit-form">
 <form id="editFormContent" method="post" class="form-horizontal edit-form-left" role="form" enctype="multipart/form-data">
@@ -59,6 +88,7 @@ echo Ad_edit_show_check_field([
 		]
 ]);
 */
+loadTourProgramGuides(1);
 ?>   
 </div></div> 
 <div role="tabpanel" class="tab-panel" id="tab-general1">

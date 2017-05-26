@@ -100,9 +100,9 @@ class Suppliers extends Customers
 		$r['seasons'] = $query->orderBy(['b.price_type'=>SORT_ASC])->all();
 		$r['direct_seasons_prices'] = $r['incurred_seasons_prices'] = [];
 		//
+		//view($r['seasons']);
 		
-		
-		// Danh sách cuối tuần, ngày thường
+		// Danh sách cuối tuần, ngày thường 
 		
 		$thu_trong_tuan = date('w',strtotime($date));
 		$ctt = $thu_trong_tuan == 0 ? 7 : $thu_trong_tuan;

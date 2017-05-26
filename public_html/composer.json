@@ -68,8 +68,7 @@
         "kartik-v/yii2-label-inplace": "*",
         "kartik-v/yii2-detail-view": "*",
         "facebook/graph-sdk": "*",
-        "iutbay/yii2-kcfinder": "dev-master",
-         
+        "iutbay/yii2-kcfinder": "dev-master",        
         "pendalf89/yii2-filemanager": "*",
         "rvkulikov/yii2-getresponse": "0.1.6.1",
         "matthiasmullie/minify": "^1.3",

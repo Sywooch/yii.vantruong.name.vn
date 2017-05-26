@@ -85,6 +85,16 @@ class ProgramSegments extends \yii\db\ActiveRecord
     	}
     	return $item;
     }
+    
+    public static function getXItem($id=0,$o=[]){
+    	$item = (new Query())
+    	->select(['a.*','b.type_id'])
+    	->from(['a'=>self::tableName()])
+    	->innerJoin(['b'=>'tours_programs_segments_guides'],'a.id=b.segment_id')
+    	->where(['a.id'=>$id, 'a.sid'=>__SID__]);
+    	$item = $item->one();    	
+    	return $item;
+    }
     /*
      * 
      */
@@ -150,6 +160,7 @@ class ProgramSegments extends \yii\db\ActiveRecord
     	$offset = ($p-1) * $limit;
     	$query = static::find()
     	->from(['a'=>self::tableName()])
+    	->leftJoin(['b'=>'tours_programs_segments_guides'],'a.id=b.segment_id and b.item_id='.$item_id)
     	->where(['a.sid'=>__SID__,'a.item_id'=>$item_id])
     	;
     	if(strlen($filter_text) > 0){
@@ -161,10 +172,60 @@ class ProgramSegments extends \yii\db\ActiveRecord
     	if(!empty($not_in)){
     		$query->andWhere(['not in','a.id',$not_in]);
     	}    	    	 
-    	$query->select(['a.*'])
+    	$query->select(['a.*','b.type_id','b.lang'])
     	->orderBy($order_by)
     	->offset($offset)
     	->limit($limit);
     	return $query->asArray()->all();    	 
     }
+    
+    public static function getAllChild($item_id = 0, $parent_id = 0,$rs = []){
+    	$l = (new Query())->from(self::tableName())->where([
+    			'item_id'=>$item_id,
+    			'parent_id'=>$parent_id,
+    	])->all();
+    	if(!empty($l)){
+    		foreach ($l as $v){
+    			$rs[] = $v['id'];
+    			$rs = self::getAllChild($item_id,$v['id'],$rs);
+    		}
+    	}
+    	return $rs;
+    }
+    
+    public static function countDayOfParent($item_id = 0, $parent_id = 0,$o = []){
+    	$guide_type = isset($o['guide_type']) ? $o['guide_type'] : 2;
+    	/*
+    	$item = [];
+    	if($guide_type == 1 && $parent_id>0){
+    		$item = self::getItem($parent_id);
+    		$item = self::getItem($item['parent_id']);
+    		$parent_id = $item['id'];
+    		 
+    	}
+    	*/ 
+    	$c = (new Query())
+    	->select((new \yii\db\Expression('SUM(number_of_day)')))
+    	->from(self::tableName())->where([
+    			'item_id'=>$item_id,
+    			'parent_id'=>$parent_id,
+    	])->scalar();
+    	  
+    	return $c;
+    	 
+    }
+    public static function countAllDayOfParent($item_id = 0, $parent_id = 0,$rs = 0){
+    	$l = (new Query())->from(self::tableName())->where([
+    			'item_id'=>$item_id,
+    			'parent_id'=>$parent_id,
+    	])->all();
+    	if(!empty($l)){
+    		foreach ($l as $v){
+    			$rs += $v['number_of_day'];
+    			$rs = self::getAllChild($item_id,$v['id'],$rs);
+    		}
+    	}
+    	return $rs;
+    }
+    
 }

@@ -554,4 +554,14 @@ return array (
       '@yii/httpclient' => $vendorDir . '/yiisoft/yii2-httpclient',
     ),
   ),
+  'smilemd/yii2-htmlcompress' => 
+  array (
+    'name' => 'smilemd/yii2-htmlcompress',
+    'version' => '1.0.5.0',
+    'alias' => 
+    array (
+      '@smilemd/htmlcompress' => $vendorDir . '/smilemd/yii2-htmlcompress/src',
+    ),
+  ),	
+		 
 );

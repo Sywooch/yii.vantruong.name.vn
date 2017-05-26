@@ -5,6 +5,7 @@ Yii::setAlias('@libs', '/libs');
 Yii::setAlias('@admin', '/themes/admin');
 Yii::setAlias('@modules', dirname(__DIR__) . '/modules');
 Yii::setAlias('@applications', dirname(__DIR__) . '/applications');
+Yii::setAlias('@components', dirname(__DIR__) . '/components');
 define('NO_IMAGE', '');
 $d = [
 		'__SS_ID'=>isset($_SESSION['__SS_ID']) && $_SESSION['__SS_ID'] > 0 ? $_SESSION['__SS_ID'] : rand(1111,9999),

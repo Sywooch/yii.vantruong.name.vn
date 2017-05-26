@@ -1,5 +1,5 @@
 <?php
-
+/*
 $this->registerCssFile(__LIBS_DIR__ . '/themes/css/animate.css');
 $this->registerCssFile(__LIBS_DIR__ . '/font-awesome/css/font-awesome.min.css');
 $this->registerCssFile(__LIBS_DIR__ . '/themes/fontello/css/animation.css');
@@ -7,15 +7,49 @@ $this->registerCssFile(__LIBS_DIR__ . '/popup/colorbox/colorbox.css');
 $this->registerCssFile(__LIBS_DIR__ . '/menu/superfish-1.7.4/src/css/superfish.css');
 $this->registerCssFile(__LIBS_DIR__ . '/slider/slick/slick.css');
 $this->registerCssFile(__LIBS_DIR__ . '/slider/slick/slick-theme.css');
-//
+//*/
 //$this->registerCssFile(__RSDIR__ . '/css/flip-countdown.css');
 //$this->registerCssFile(__RSDIR__ . '/css/event.css');
 //$this->registerCssFile(__RSDIR__ . '/css/teacher.css');
-$this->registerCssFile('https://fonts.googleapis.com/css?family=Roboto%3A&#038;ver=4.4.8');
+//$this->registerCssFile('https://fonts.googleapis.com/css?family=Roboto%3A&#038;ver=4.4.8');
 //$this->registerCssFile(__RSDIR__ . '/css/ilightbox.css');
 //$this->registerCssFile(__RSDIR__ . '/css/animations.css');
 //$this->registerCssFile(__RSDIR__ . '/css/responsive.css'); 
- 
+
+//if(Yii::$app->user->can([ROOT_USER])){
+
+	//view(Yii::$app->members->can(['s'])); 
+?>
+<div class="top_header stop_header"><div class="container"><div  class="row">
+	<div class="col-sm-12 pr">
+		 
+	<?php
+	
+echo Yii::$app->zii-> getMenuItem([
+		//'listItem'=> $reg->f->__get_bottom_nav(),
+		//'hTag'=>array('span'),
+		'key'=>'top',
+		'maxLevel'=>1,
+		'attribute'=>array( 'class'=>'ps r15 t0 inline c-white f12p stop-nav mg0'),
+		'a1Class'=>'lh36',
+		//'firstItemClass'=>'first-item',
+		//'lastItemClass'=>'last-item',
+		//'firstItem'=>'<li class="li-child li-child-0 li-level-1 "><a href="./" class=""><i class="fa fa-home"></i>&nbsp;</a></li>',
+		//'ul2Attr'=>['class'=>'sub-menu'],
+		//'li2Class'=>'menu-item menu-item-type-post_type menu-item-object-page', 
+		'afterUl1'=>!Yii::$app->member->isGuest ? '
+<li class="li-child li-child-3 li-level-1"><a rel="" target="_self" href="/members" class=" lh36"><i class="fa '.(Yii::$app->member->getGender() == 1 ? 'fa-male' : 'fa-female').'"></i> Xin chào: <b>'.Yii::$app->member->getUserName().'</b></a></li>
+<li class="li-child li-child-3 li-level-1"><a rel="" target="_self" href="/members/logout" class=" lh36"><i class="fa fa-sign-out"></i> Đăng xuất</a></li>
+' : '<li class="li-child li-child-2 li-level-1"><a rel="" target="_self" href="/dang-nhap" class=" lh36"><i class="fa fa-user"></i> Đăng nhập</a></li>
+					 <li class="li-child li-child-3 li-level-1"><a rel="" target="_self" href="/dang-ky" class=" lh36"><i class="fa fa-user-plus"></i> Đăng ký</a></li>'
+		]);
+?>	
+		
+	</div>
+</div></div></div>
+<?php 
+//}
+
 ?>
 <header id="header" class="header_out_side">
 <div class="fusion-header-wrapper">

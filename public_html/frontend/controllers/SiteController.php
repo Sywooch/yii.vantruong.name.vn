@@ -13,6 +13,8 @@ use frontend\models\ResetPasswordForm;
 use frontend\models\SignupForm;
 use frontend\models\ContactForm;
 use yii\db\Query;
+use frontend\models\MemberSignupForm;
+use common\models\MemberLoginForm;
 
 /**
  * Site controller
@@ -118,6 +120,31 @@ class SiteController extends Controller
     public function actionSajax(){
     	$this->layout = 'sajax';
     	switch (getParam('view')){
+    		case 'minify':
+    			/*/echo 'sssssssssssssssssssssssssssssssssssssssssssss';
+    			$sources = [
+    				__LIBS_PATH__ . '/themes/css/base.css',
+    				__LIBS_PATH__ . '/themes/css/animate.css',
+    				__LIBS_PATH__ . '/font-awesome/css/font-awesome.min.css',
+    				__LIBS_PATH__ . '/popup/colorbox/colorbox.css',
+    				__LIBS_PATH__ . '/menu/superfish-1.7.4/src/css/superfish.css',
+    				__LIBS_PATH__ . '/slider/slick/slick.css',
+    				__LIBS_PATH__ . '/slider/slick/slick-theme.css'
+    					
+    			];
+    			$minifier = new \MatthiasMullie\Minify\CSS();
+    			foreach ($sources as $s){
+    				$minifier->add($s);
+    			}
+    			$minifiedPath = __LIBS_PATH__ . '/c/css/base.min.css';
+    			$minifier->minify($minifiedPath);
+    			
+    			// or just output the content
+    			//echo $minifier->minify();
+    			//exit;
+    			 * /
+    			 */
+    			break;
     		case '__system_init__':
     			$r = getBrowser();
     			$r['device'] = Yii::$device;
@@ -353,11 +380,58 @@ class SiteController extends Controller
     	return $this->render(__TEMP_NAME__ .DS . Yii::$app->controller->action->id . (__IS_DETAIL__ ? '_detail' : ""));
     }
     
+    public function actionGlogin(){
+    	require_once Yii::getAlias('@components') . '/api_google/index.php';
+    }
+    
     public function actionMembers()
     {
-    	$model = new SignupForm();
+    	$error = '';
+    	switch (getParam('view')){
+    		case 'signup':
+    			if (!Yii::$app->member->isGuest) {
+    				return $this->redirect(['members']);
+    			}
+    			$model = new MemberSignupForm();
+    			 
+    			if ($model->load(Yii::$app->request->post())) {
+    				if ($user = $model->signup()) {
+    					if (Yii::$app->getMember()->login($user)) {
+    						return $this->goHome();
+    					}
+    				}
+    				 
+    			}
+    			break;
+    		case 'login':    			
+    			
+    			if (!Yii::$app->member->isGuest) {
+    				return $this->redirect(['members']);
+    			}
+    			$model = new MemberLoginForm();
+    			if ($model->load(Yii::$app->request->post()) && $model->login()) {
+    				return $this->redirect(['members']);
+    			} elseif ($model->load(Yii::$app->request->post())){
+    				$error = 'Tên đăng nhập hoặc mật khẩu không đúng.';
+    			}
+    			
+    			break;
+    		case 'logout':
+    			Yii::$app->member->logout();
+    			return $this->goHome();
+    			break;
+    		default:
+    			if (Yii::$app->member->isGuest) {
+    				return $this->redirect(['members/login']);
+    			} 
+    			break;
+    	}
+    	 
     	return $this->render(__TEMP_NAME__ .DS . Yii::$app->controller->action->id,[
-    			'model'=>$model
+    			'login'=> new MemberLoginForm(),
+    			'signup'=> new MemberSignupForm(),
+    			'error'=>$error,
+    			//'model'=> new \common\models\Members()
     	]);
     }
     public function actionCustomers()
@@ -419,7 +493,7 @@ class SiteController extends Controller
         if (!Yii::$app->user->isGuest) {
             return $this->goHome();
         }
-
+ 
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
             return $this->goBack();

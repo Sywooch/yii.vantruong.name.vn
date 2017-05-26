@@ -36,17 +36,19 @@ em,.italic,i{font-style:italic}
 .mwidth-200{max-width:200px}
 .w150p{width: 150px}
 .f16e{font-size:1.6em !important}
+.f16px,.f16p{font-size:16px !important}
 .f12e{font-size:1.2em !important}
 .f12p,.f12px{font-size:12px !important}
 .f19px{font-size:19px !important}
 .f11e{font-size:1.1em !important}
 .f11ep{font-size:1.1em !important}
 .f11p{font-size:11px}
-.pdl15{padding-left:15px}
+.pdl15{padding-left:15px}.pdl5{padding-left:5px}.pdl10{padding-left:10px}
 i,em,.italic{font-style:italic}
 .mgr15{margin-right:15px}
 .mgt20{margin-top:20px}
-.white{color:#fff}
+.mg5{margin: 5px}
+.white,.cwhite,.c-white{color:white}
 .red{color:red !important}
 .black{color:#000}
 .yellow{color:#ff0}
@@ -56,7 +58,11 @@ i,em,.italic{font-style:italic}
 .byellow{background-color:#ff0}
 .bbrown{background-color:#a52a2a}
 .bwhite{background-color:#fff}
-.f14e{font-size: 1.4em}.fw400{font-weight: 400}.lh15{line-height: 1.5}
+.f14e{font-size: 1.4em}
+.f14p,.f14px{font-size: 14px}
+.fw400{font-weight: 400}.lh15{line-height: 1.5} 
+.lh35{line-height: 35px} .lh36{line-height: 36px}.lh40{line-height: 40px;}
+.c-white a{color: white }
 ul.inline li{display:inline-block}
 ul.style-none li,ul.style-none,ol.style-none,ul.style-none{list-style:none}
 ul.list-item li{display:list-item}
@@ -116,7 +122,18 @@ ul.list-item li{display:list-item}
 .mgb0{margin-bottom:0!important}
 .mgt10{margin-top:10px!important}
 .pdtop5{padding-top:5px}
+.pdb0{padding-bottom:0 !important}
+.bdb0{border-bottom: none !important;}
+.bdl0{border-left: none !important}
+.bdr0{border-right: 0 !important}
+.bdt0{border-top: 0 !important}
 .ptop0{padding-top:0!important}
+.mgl0{margin-left: 0 !important}
+.mgr0{margin-right: 0 !important}
+.bdl1{border-left-width: 1px !important}
+.bdt1{border-top-width: 1px !important}
+.bdb1{border-bottom-width: 1px !important}
+.bdr1{border-right-width: 1px !important}
 .ptop10{padding-top:10px!important}
 .underline{text-decoration:underline}
 .line-through{text-decoration:line-through;}
@@ -248,8 +265,9 @@ a[rel=popover] ~ .popover{max-width:inherit}
 .input-group-sm .select2-container .select2-selection--multiple{min-height:30px}
 .input-group-sm .select2-container--default .select2-selection--multiple{border-radius:4px 0 0 4px;border-color:#ccc}
 .pointer{cursor:pointer}
-.mgr15{margin-right:15px}
+ 
 .mgl15{margin-left:15px}
+.mgl30{margin-left:30px}
 .mgl-1{margin-left:-1px}
 .col-l-0{padding-left:0}
 .row-l-0{margin-left:0}
@@ -264,8 +282,8 @@ a[rel=popover] ~ .popover{max-width:inherit}
 :-ms-input-placeholder{font-weight:400}
 :-moz-placeholder{font-weight:400}
 .booking .error,#form_contact .error{border-color:red;border-width:1px}
-
-
+.r0{right:0}.r5{right:5px}.r10{right:10px}.r15{right:15px}.r-15{right: -15px;}.r-10{right: -10px}.r-5{right:-5px} 
+.t0{top:0}.t5{top:5px}.t10{top:10px}.t15{top:15px}.t-15{top: -15px;}.t-10{top: -10px}.t-5{top:-5px}
 table.vmiddle td,table.vmiddle th,tr.vmiddle td,tr.vmiddle th{vertical-align:middle !important} 
 
 table tr.vtop td,
@@ -470,7 +488,7 @@ ul.ulifl50 li{float:left;width:50%}
 .group-h40 .select2-container .select2-selection--single{height:40px}
 .group-h40 .select2-container--default .select2-selection--single .select2-selection__rendered{line-height:40px}
 .group-h40 .select2-container--default .select2-selection--single .select2-selection__arrow{height:38px}
-.lh15{line-height:1.5}
+
 .sys-gallery{margin-left:-10px;margin-right:-10px}
 .sys-gallery li{width:25%;padding-right:10px;padding-left:10px;float:left;margin-bottom:20px;position:relative;list-style:none}
 .sys-gallery li .img{width:100%;height:160px;overflow:hidden;position:relative}
@@ -1415,3 +1433,137 @@ body .btn-label{
 .life-time.alert{ width: 100%; display: inline-block;border-radius: 0}
 .life-time .cprogress-bar-success{background-color: #05494e}
 .life-time.progress .progress-bar{position: static;}
+.move-content{cursor: move;}
+.stop_header{
+	min-height: 36px;
+	background-color: #00aa4e; /* #f05a22 */
+}
+.stop_header .stop-nav li{
+	margin: 0 5px;
+}
+.stop_header .stop-nav li:hover a{
+	color: yellow;
+}
+.slogin-box.s1  .featured-box{
+    background: #f5f5f5;
+    background-color: rgba(0,0,0,0);
+    background: -webkit-linear-gradient(top,#fff 1%,#f9f9f9 98%) repeat scroll 0 0 rgba(0,0,0,0);
+    background: linear-gradient(to bottom,#fff 1%,#f9f9f9 98%) repeat scroll 0 0 rgba(0,0,0,0);
+    border-bottom: 1px solid #dfdfdf;border-top: 1px solid #efefef ;
+    border-left: 1px solid #ececec;
+    border-right: 1px solid #ececec;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    border-radius: 8px;
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,0.04);
+    min-height: 100px;
+    position: relative;
+    
+    z-index: 1;
+    margin: 20px auto;
+}
+.main-content.smember-form{padding: 35px 0;}
+.slogin-box.s1 .sform-title{
+	color:#f05a22;
+	font-size: 1.3em;
+    font-weight: 600;
+    letter-spacing: -.7px;
+    line-height: 1.42857;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    padding:0 15px 
+}
+.slogin-box.s1 .sform-title span{border-bottom: 1px solid #dfdfdf  ; padding-bottom: 5px}
+
+.slogin-box.s1 .btn-login-facebook {
+    background-color: #3b5998;
+    padding-right: 15px;
+    margin: 15px 0;
+    color: #fff !important;
+    border-radius: 2px;
+    -webkit-transition: background .3s ease;
+    transition: background .3s ease;
+    white-space: nowrap;
+    display: inline-block;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.slogin-box.s1 .btn-login-facebook:hover {
+    background-color: #2d4373;
+    color: #fff;
+    text-decoration: none;
+}
+
+.slogin-box.s1 .btn-login-facebook .fa {
+    padding: 10px;
+    background-color: #344e86;
+    width: 30px;
+    text-align: center;
+}
+.slogin-box.s1 .btn-login-google {
+    background-color: #DF4A32;
+    padding-right: 15px;
+    margin: 15px 0;
+    color: #fff!important;
+    border-radius: 2px;
+    -webkit-transition: background .3s ease;
+    transition: background .3s ease;
+    white-space: nowrap;
+    display: inline-block;
+    cursor: pointer;
+    text-decoration: none;
+}
+.slogin-box.s1 .btn-login-google:hover {
+    background-color: #BB302B;
+    color: #fff;
+    text-decoration: none;
+}
+.slogin-box.s1 .btn-login-google .fa {
+    padding: 10px;
+    background-color: #E36159;
+    width: 30px;
+    text-align: center;
+}
+.slogin-box.s1 .field-membersloginform-rememberme,
+.slogin-box.s1 .field-memberloginform-rememberme
+{
+	position: absolute; left: 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -108,14 +108,14 @@ echo '<input type="hidden" class="input-currency-decimal-number" name="f[currenc
         $key = 'facebook_app';
         echo '<div class="form-group ">
           <label for="inputicon" class="col-sm-2 control-label">ID Ứng dụng</label>
-          <div class="col-sm-8">
+          <div class="col-sm-10">
           <input class="form-control input-sm " name="f['.$key.'][appId]" value="'.(isset($v[$key]['appId']) ? $v[$key]['appId'] : '').'" placeholder="ID ứng dụng facebook của bạn"/>  
           </div>
            
         </div>';
         echo '<div class="form-group ">
           <label for="inputicon" class="col-sm-2 control-label">Phiên bản</label>
-          <div class="col-sm-8">
+          <div class="col-sm-10">
           <input class="form-control input-sm " name="f['.$key.'][version]" value="'.(isset($v[$key]['version']) ? $v[$key]['version'] : '').'" placeholder="Phiên bản ứng dụng (vd: v2.7)"/>
           </div>
       
@@ -123,29 +123,71 @@ echo '<input type="hidden" class="input-currency-decimal-number" name="f[currenc
         ?>
  
         </div>
- <div class="block-example">
+ <div class="block-example pr">
          <span class="f12e block-title">Link mạng xã hội</span>
+         <button data-class="w60" onclick="open_ajax_modal(this)" type="button" data-title="Thêm mạng xã hội" data-action="quick-setup-social-network" class="btn btn-success btn-add-more-social-setting"><i class="fa fa-facebook"></i><i class="fa fa-youtube"></i><i class="fa fa-twitter"></i> Cài đặt thêm mạng xã hội</button>
         <?php 
         $key = 'social';
         $l = get_social();
         foreach ($l as $k1=>$v1){
-        echo '<div class="form-group ">
-          <label for="inputicon" class="col-sm-2 control-label">'.$v1['name'].'</label>
-          <div class="col-sm-8">
-          <input class="form-control input-sm " name="f['.$key.']['.$k1.']" value="'.(isset($v[$key][$k1]) ? $v[$key][$k1] : '').'" placeholder="'.$v1['hint_link'].'"/>  
-          </div>
+        	if(isset($v[$key][$k1]) && ($v[$key][$k1]) != ""){
+        	echo '<div class="form-group ">
+          	<label for="inputicon" class="col-sm-2 control-label">'.$v1['name'].'</label>
+          	<div class="col-sm-10">
+          	<input class="form-control input-sm " name="f['.$key.']['.$k1.']" value="'.(isset($v[$key][$k1]) ? $v[$key][$k1] : '').'" placeholder="'.$v1['hint_link'].'"/>  
+          	</div>
            
         </div>';
-        }
+        }}
         ?>
  
-        </div>            
+        </div>     
+        
+<?php 
+if(Yii::$app->user->can([ROOT_USER])){
+	echo '<div class="block-example">
+         <span class="f12e block-title">Editor</span>
+        
+        <div class="form-group ">
+          
+          <div class="col-sm-12">
+        <table class="table table-bordered vmiddle">
+		<tr>
+		<td class="center col-ws-2 bold f16px">Ckeditor</td>
+		<td class="center col-ws-1">Version</td>
+		<td><select class="select2 form-control" data-search="hidden"><option value="">Mặc định</option>
+		<option value="4.6.2">4.6.2</option>
+		
+		</select></td>
+		</tr>
+		
+		
+		
+		<tr>
+		<td class="center col-ws-2 bold f16px">Ckfinder</td>
+		<td class="center col-ws-1">Version</td>
+		<td><select class="select2 form-control" data-search="hidden"><option value="">Mặc định</option>
+		<option value="3.4.1">3.4.1</option>
+		
+		</select></td>
+		</tr>
+		</table>
+          </div>
+           
+        </div>
+        
+	 
+   
+        </div>';
+}
+
+?>               
         <div class="block-example">
          <span class="f12e block-title">Khác</span>
         
         <div class="form-group ">
-          <label for="inputicon" class="col-sm-2 control-label ptop0">Chứng chỉ số (SSL)</label> 
-          <div class="col-sm-8">
+          <label for="inputicon" class="col-sm-2 control-label ptop0">Chứng chỉ số (SSL - Áp dụng cho tất cả các domain)</label> 
+          <div class="col-sm-10">
           <input type="checkbox"  name="f[ssl]" <?php echo isset($v['ssl']) && $v['ssl'] == 'on' ? 'checked' : '';?> />  
           </div>
            
@@ -154,7 +196,7 @@ echo '<input type="hidden" class="input-currency-decimal-number" name="f[currenc
         if(Yii::$app->user->can([ROOT_USER])){ 
         ?>
         <div class="form-group ">
-          <label for="inputicon" class="col-sm-2 control-label ptop0">Chứng chỉ số (Domain SSL)</label> 
+          <label for="inputicon" class="col-sm-2 control-label ptop0">Chứng chỉ số (Domain SSL - Áp dụng cho riêng domain này)</label> 
           <div class="col-sm-8">
           <input type="checkbox" name="f[<?php echo DOMAIN;?>_ssl]" <?php echo (isset($v['ssl']) && $v['ssl'] == 'on') || (isset($v[DOMAIN.'_ssl']) && $v[DOMAIN.'_ssl'] == 'on') ? 'checked' : '';?> />  
           </div>

@@ -8,8 +8,146 @@ use app\modules\admin\models\AdminMenu;
 include_once '_get_action.php';///////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 switch (Yii::$app->request->post('action')){
+	case 'quick-quick-setup-social-network':
+		$field_name = post('field_name');
+		$field_value = post('field_value');
+		
+		
+		\app\modules\admin\models\Siteconfigs::updateSiteConfigs("other_setting/social/$field_name", $field_value);
+		
+		echo json_encode([
+			'event'=>'hidemodal',
+			'callback'=>true,
+			'callback_function'=>'window.location=window.location'
+		]);
+		exit;
+		break;
+	case 'change_social_setting_link':
+		$value = post('value'); $key = post('key');
+		$v = get_social()[$value];
+		$c = isset(Yii::$site['other_setting'][$key][$value]) ? Yii::$site['other_setting'][$key][$value] : '';
+		echo json_encode([
+				'callback'=>true,
+				'callback_function'=>'var $target = jQuery(".input-change-social-setting-link");$target.attr({\'placeholder\':\''.$v['hint_link'].'\'}).val(\''.($c).'\');jQuery(\'.input-change-social-setting-link-name\').val(\''.$value.'\')'
+		]);
+		exit;
+		break;
+	case 'quick-setup-social-network':
+		$html = '';$key = 'social';
+		$html .= '<div class="form-group"><div class="col-sm-12">
+		<div class="col-sm-3"><div class="row"><select data-key="'.$key.'" onchange="call_ajax_function(this)" data-action="change_social_setting_link" class="form-control chosen-select" data-search="hidden">';
+		$i=0;
+		foreach (get_social() as $k1=>$v1){
+			if($i++ == 0) $value = $k1;
+			$html .= '<option value="'.$k1.'">'.$v1['name'].'</option>';
+		}
+		$c = isset(Yii::$site['other_setting'][$key][$value]) ? Yii::$site['other_setting'][$key][$value] : '';
+		$html .= '</select></div></div>
+		<div class="col-sm-9 mgl-1"><div class="row">				 
+				<input type="text" name="field_value" class="form-control required input-change-social-setting-link" required placeholder="" value="'.$c.'">
+		</div></div></div>				
+		</div>';
+		
+		$html .= '<div class="modal-footer">';
+		$html .= '<button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Lưu lại</button>';
+		 
+		$html .= '<button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-window-close"></i> Hủy</button>';
+		$html .= '<input type="hidden" value="'.$value.'" name="field_name" class="input-change-social-setting-link-name"/>';
+		$_POST['action'] = 'quick-' . $_POST['action'];
+		foreach ($_POST as $k=>$v){
+			$html .= '<input type="hidden" name="'.$k.'" value="'.$v.'"/>';
+		}
+		//
+			
+		//
+		echo json_encode([
+				'html'=>$html,
+				'callback'=>true,
+				'callback_function'=>'load_number_format();'
+		]); exit;
+		 
+		break;
+	case 'quick-add-more-tours-program-extend-prices':
+		$f = post('f',[]);
+		$id = post('id',0);
+		$f['bizrule'] = json_encode(post('biz',[]));
+		$f['item_id'] = post('item_id',0);
+		$f['segment_id'] = post('segment_id',0);
+		$f['type_id'] = post('guide_type',2);
+		//
+		$f['quantity'] = cprice($f['quantity']);
+		$f['price1'] = cprice($f['price1']);
+		//
+		if($id == 0){
+			Yii::$app->db->createCommand()->insert('tours_programs_segments_extend_prices', $f)->execute();
+		}else{			
+			Yii::$app->db->createCommand()->update('tours_programs_segments_extend_prices', $f,[
+				'id'=>$id
+			])->execute();
+		}
+		//
+		echo json_encode([
+			'event'=>'hide-modal',
+			'callback'=>true,
+			'callback_function'=>'reloadAutoPlayFunction();'
+		]); exit;
+		break;
+	case 'add-more-tours-program-extend-prices':
+		$html = '';
+		$item_id = post('item_id',0);
+		$segment_id = post('segment_id',0);
+		$id = post('id',0);
+		$parent_id = post('parent_id',0);
+		$guide_type = post('guide_type',2);
+		$guide_language = post('guide_language',DEFAULT_LANG);
+		$item = \app\modules\admin\models\ToursPrograms::getItem($item_id);
+		$segment = \app\modules\admin\models\ProgramSegments::getItem($segment_id);
+		$v = (new Query())->from('tours_programs_segments_extend_prices')->where(['id'=>$id])->one();
+		$html .= '<div class="form-group"><div class="col-sm-12"><label >Tên chi phí <i class="red font-normal">(*)</i></label><input type="text" name="f[title]" class="form-control required" required placeholder="Nhập tên chi phí" value="'.(isset($v['title']) ? uh($v['title']) : '').'"></div></div>';
+		$html .= '<div class="form-group"><div class="col-sm-12"><label >Diễn giải  </label><input type="text" name="biz[note]" class="form-control " placeholder="Diễn giải" value="'.(isset($v['note']) ? uh($v['note']) : '').'"></div></div>';
+		$html .= '<div class="form-group"><div class="col-sm-12"><label >Số lượng <i class="red font-normal">(*)</i></label><input type="number" min="0" name="f[quantity]" class="form-control " required placeholder="Số lượng" value="'.(isset($v['quantity']) ? ($v['quantity']) : 0).'"></div></div>';		
+		$html .= '<div class="form-group"><div class="col-sm-12 edit-form-left">
+		'.Ad_edit_show_dropdown_currency($v,[
+				'field'=>'price1',
+				'label'=>'Đơn giá',
+				'class'=>'bold red aleft required',
+				'placeholder'=>'Nhập đơn giá',
+				'currency_name'=>'f[currency]',
+				'attrs'=>[
+						'data-search'=>'hidden',
+						'required'=>'required',
+						'placeholder'=>'Nhập đơn giá',
+				],
+				//'data'=>\app\modules\admin\models\AdLanguage::getList(),
+				'data-selected'=>[isset($v['currency']) ? $v['currency'] : 1],
+				'option-value-field'=>'id',
+				'option-title-field'=>'title',
+			]).'</div></div>';
 	
+	 
+			 
 	
+			//$html .= '<div class="form-group"><div class="col-sm-12"><label >Số ngày <i class="red font-normal">(*)</i></label><input type="number" min="1" max="99" name="f[number_of_day]" class="form-control number-format required" required placeholder="Nhập số ngày tour của chặng này" value="'.(isset($segment['number_of_day']) ? ($segment['number_of_day']) : '').'"></div></div>';
+				
+			//$html .= '<div class="form-group"><div class="col-sm-12"><label >Thứ tự sắp xếp</label><input type="number" min="1" max="99" name="f[position]" class="form-control number-format" placeholder="Thứ tự sắp xếp" value="'.(isset($segment['position']) ? ($segment['position']) : 0).'"></div></div>';
+			//
+			$html .= '<div class="modal-footer">';
+			$html .= '<button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Lưu lại</button>';
+			$html .= $id > 0 ? '<button data-action="open-confirm-dialog" data-title="Xác nhận xóa chi phí !" data-class="modal-sm" data-confirm-action="quick_delete_program_segment_extend_price" onclick="return open_ajax_modal(this);" data data-id="'.$id.'" data-item_id="'.$item_id.'" type="button" class="btn btn-warning"><i class="fa fa-trash "></i> Xóa chi phí</button>' : '';
+			$html .= '<button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-window-close"></i> Hủy</button>';			
+			$_POST['action'] = 'quick-' . $_POST['action'];
+			foreach ($_POST as $k=>$v){
+				$html .= '<input type="hidden" name="'.$k.'" value="'.$v.'"/>';
+			}
+			//
+			
+			//
+			echo json_encode([
+					'html'=>$html,
+					'callback'=>true,
+					'callback_function'=>'load_number_format();'
+			]); exit;
+			break;
 	case 'quick-setup-tourprogram-guides':
 		$f = post('f');
 		$item_id = post('item_id');
@@ -47,6 +185,34 @@ switch (Yii::$app->request->post('action')){
 			 	])->execute();
 			 }
 		}
+		//
+		 
+		foreach (\app\modules\admin\models\ProgramSegments::getAllChild($item_id,$segment_id) as $s2){
+				if((new Query())->from('tours_programs_segments_guides')->where([
+						'item_id'=>$item_id,
+						'segment_id'=>$s2,
+						'package_id'=>$package_id,
+				])->count(1) == 0){
+					Yii::$app->db->createCommand()->insert('tours_programs_segments_guides', [
+							'item_id'=>$item_id,
+							'segment_id'=>$s2,
+							'type_id'=>$f['guide_type'],
+							'lang'=>$f['guide_language'],
+							'package_id'=>$package_id,
+					])->execute();
+				}else{
+					Yii::$app->db->createCommand()->update('tours_programs_segments_guides',[
+							'type_id'=>$f['guide_type'],
+							'lang'=>$f['guide_language'],
+					],[
+							'item_id'=>$item_id,
+							'segment_id'=>$s2,
+							'package_id'=>$package_id,
+					])->execute();
+				}
+		}
+		 
+		//
 		switch ($f['guide_type']){
 			case 2: // Từng chặng
 				// Tu dong chon cho level ben duoi
@@ -56,11 +222,16 @@ switch (Yii::$app->request->post('action')){
 				
 				break;
 		}
+		///\app\modules\admin\models\ToursPrograms::setSegmentsAutoGuides(['item_id'=>$item_id]);
+		loadTourProgramGuides($item_id,[
+				'loadDefault'=>true,
+				'updateDatabase'=>true,
+		]);
 		echo json_encode([
-				//'html'=>$html,
+				//'html'=>$html, 
 				'event'=>'hide-modal',
 				'callback'=>true,
-				'callback_function'=>'reloadAutoPlayFunction();'
+				'callback_function'=>'console.log(data);reloadAutoPlayFunction();'
 		]); exit;		
 		break;
 	case 'setup-tourprogram-guides':
@@ -115,8 +286,8 @@ switch (Yii::$app->request->post('action')){
 		
 		echo json_encode([
 				'html'=>$html,
-				'callback'=>true,
-				'callback_function'=>'reloadAutoPlayFunction();'
+				//'callback'=>true,
+				//'callback_function'=>'reloadAutoPlayFunction();'
 		]); exit;
 		break;
 	case 'quick-add-more-tour-segment':
@@ -130,9 +301,44 @@ switch (Yii::$app->request->post('action')){
 		}else {
 			$f['sid'] = __SID__;
 			$segment_id = Yii::$app->zii->insert(\app\modules\admin\models\ProgramSegments::tableName(),$f);
+			
+			
 		}
 		//
 		if($segment_id>0){
+			
+			if((new Query())->from('tours_programs_segments_guides')->where([
+					'item_id'=>$item_id,
+					'segment_id'=>$segment_id
+			])->count(1) == 0){
+				
+				
+				if($f['parent_id']>0){
+					$p = (new Query())->select('type_id','lang')->from('tours_programs_segments_guides')->where([
+							'item_id'=>$item_id,
+							'segment_id'=>$f['parent_id'],
+					])->one();
+					$type_id = $p['type_id'];
+					$lang = $p['lang'];
+				}else{
+					$p = \app\modules\admin\models\ToursPrograms::getItem($item_id);
+					$type_id = isset($p['guide_type']) ? $p['guide_type'] : 2;
+					$lang = isset($p['guide_language']) ? $p['guide_language'] : DEFAULT_LANG;
+				}
+				
+				 
+				Yii::$app->db->createCommand()->insert('tours_programs_segments_guides', [
+						'item_id'=>$item_id,
+						'segment_id'=>$segment_id,
+						'type_id'=>$type_id,
+						'lang'=>$lang,
+				])->execute();
+			}else{
+			
+			}
+			
+			
+			
 			Yii::$app->db->createCommand()->delete(\app\modules\admin\models\ProgramSegments::tableToPlace(),['segment_id'=>$segment_id])->execute();
 			if(!empty(post('places',[]))){
 				foreach (post('places') as $p){
@@ -143,6 +349,14 @@ switch (Yii::$app->request->post('action')){
 				}
 			}
 		}
+	 	//
+	 
+		//
+		loadTourProgramGuides($item_id,[
+				'loadDefault'=>true,
+				'updateDatabase'=>true,
+		]);
+	 
 		echo json_encode([
 				//'html'=>$html,
 				'event'=>'hide-modal',
@@ -363,7 +577,7 @@ switch (Yii::$app->request->post('action')){
 		break;
 	case 'Tourprogram_ReloadAllPrice':
 		//
-		$id = post('id',0);
+		$id = $item_id = post('id',0);
 		$guest = post('guest',0);
 		$c = [];
 		$v = \app\modules\admin\models\ToursPrograms::getItem($id);
@@ -421,9 +635,21 @@ switch (Yii::$app->request->post('action')){
 				}
 			}
 				
-			
-		}
-		
+			/*
+			loadTourProgramGuides($id,[
+					'loadDefault'=>true,
+					'updateDatabase'=>true,
+					///'segment'=>$segment	
+			]);
+			*/
+			//\app\modules\admin\models\ToursPrograms::setSegmentsAutoGuides([
+			//		'item_id'=>$id
+			//]); 
+			loadTourProgramGuides($id,[
+					'loadDefault'=>true,
+					'updateDatabase'=>true,
+			]); 
+		}		
 		
 		//
 		echo json_encode(['post'=>$_POST,'html'=>'']);
@@ -1634,8 +1860,27 @@ switch (Yii::$app->request->post('action')){
 				 
 				$callback = true;
 				$callback_function = 'reloadAutoPlayFunction();';
-				 
+				loadTourProgramGuides($item_id,[
+						'loadDefault'=>true,
+						'updateDatabase'=>true,
+				]);
 				break;
+			case 'quick_delete_program_segment_extend_price':
+				$id = post('id',0);
+				$item_id = post('item_id',0);
+				 
+				Yii::$app->db->createCommand()->delete('tours_programs_segments_extend_prices',
+						[
+							'id'=>$id, 'item_id'=>$item_id
+								
+						])->execute(); 
+				 
+				$callback = true;
+				$callback_function = 'reloadAutoPlayFunction();';
+				 
+				break;	
+				
+				
 			case 'quick-remove-supplier-seasons':
 				$callback = true;
 				$supplier_id = post('supplier_id');
@@ -2736,7 +2981,7 @@ switch (Yii::$app->request->post('action')){
 								$packages = [['id'=>0,'title'=>'']];
 							}
 							foreach ($packages as $package){
-								$html .= '<li data-package_id="'.$package['id'].'" data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight">'.uh($v['title']).' &nbsp;<i class="underline font-normal green">['.uh($v['supplier_name']).']</i></li>';
+								$html .= '<li data-package_id="'.$package['id'].'" data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight"><div class="col-sm-8 col-index-1 col-border-right">'.uh($v['title']).' &nbsp;<i class="underline font-normal green">['.uh($v['supplier_name']).']</i></div></li>';
 							}
 						}
 					}
@@ -2780,7 +3025,7 @@ switch (Yii::$app->request->post('action')){
 					foreach($l as $k=>$v){
 						$html .= '<li data-type_id="'.$id.'" data-id="'.$v['id'].'" class="ui-state-highlight li_child_item_id_'.$v['id'].'">
 								<div class="col-sm-8 col-index-1 col-border-right">'.uh($v['title']).' <i class="underline font-normal green">['.uh($v['maker_title']).']</i></div>
-								<div class="col-sm-4 col-index-2"><input type="text" class="form-control center number-format selected_quantity" data-name="selected_quantity[]" placeholder="Số lượng"/></div>
+								<div class="col-sm-4 col-index-2"><input type="number" class="form-control center number-format selected_quantity" data-name="selected_quantity[]" placeholder="Số lượng"/></div>
 								</li>';
 					}
 				}
@@ -2893,6 +3138,10 @@ switch (Yii::$app->request->post('action')){
 				}
 			}
 		}
+		loadTourProgramGuides($item_id,[
+				'loadDefault'=>true,
+				'updateDatabase'=>true,
+		]);
 		echo json_encode([
 				'event'=>'hide-modal',
 				'callback'=>true,
@@ -3264,6 +3513,7 @@ change:function(event,ui){
 				['not in','service_id',$selected_value] 
 		])->execute();
 		//
+		 
 		$supplier_id = 0;
 		if(!empty($selected_value)){
 			foreach ($selected_value as $position => $guide_id){
@@ -3276,10 +3526,11 @@ change:function(event,ui){
 						'item_id'=>$item_id,
 						'segment_id'=>$segment_id,
 						'supplier_id'=>$supplier_id,
-						'guide_id'=>$guide_id
-				])->count(1) == 0){
-				 
-					Yii::$app->db->createCommand()->insert('tours_programs_guides',[
+						'guide_id'=>$guide_id,
+						'type_id'=>$guide_type,
+				])->count(1) == 0){ 
+				  
+					$c = Yii::$app->db->createCommand()->insert('tours_programs_guides',[
 						'item_id'=>$item_id,
 						'segment_id'=>$segment_id,
 						'supplier_id'=>$supplier_id,
@@ -3287,29 +3538,75 @@ change:function(event,ui){
 						'position'=>$position,	 
 						'type_id'=>$guide_type,
 						'quantity'=>$quantity,	
+							
 					])->execute();
-					 
+					
 				}else{
 				 
-					Yii::$app->db->createCommand()->update('tours_programs_guides',[
-						'position'=>$position,	
-						'type_id'=>$guide_type,
+					$c = Yii::$app->db->createCommand()->update('tours_programs_guides',[
+						'position'=>$position,						 
 						'quantity'=>$quantity,
 					],[
 							'item_id'=>$item_id,
 							'segment_id'=>$segment_id,
 							'supplier_id'=>$supplier_id,
 							'guide_id'=>$guide_id,
-							
+							'type_id'=>$guide_type,							
+					])->execute();
+				}				 				
+				
+				if((new Query())->from('tours_programs_guides_prices')->where([
+						'item_id'=>$item_id,
+						'segment_id'=>$segment_id,
+						'supplier_id'=>$supplier_id,
+						'service_id'=>$guide_id,
+						'type_id'=>$guide_type,
+				])->count(1) == 0){
+					$cprice = Yii::$app->zii->getProgramGuidesPrices([
+							'item_id'=>$item_id,
+							'controller_code'=>TYPE_ID_GUIDES,
+							'service_id'=>$guide_id,
+							'loadDefault'=>true,
+							'segment_id'=>$segment_id,
+							'updateDatabase'=>false
+					]);
+					$cdays = \app\modules\admin\models\ToursPrograms::getAutoGuideQuantity([
+							'item_id'=>$item_id,
+							'segment_id'=>$segment_id
+					]);
+					
+					$c = Yii::$app->db->createCommand()->insert('tours_programs_guides_prices',[
+							'item_id'=>$item_id,
+							'segment_id'=>$segment_id,
+							'supplier_id'=>$supplier_id,
+							'service_id'=>$guide_id,							 
+							'type_id'=>$guide_type,
+							'quantity'=>$quantity,
+							'price1'=> (isset($cprice['price1']) ? $cprice['price1'] : 0),
+							'currency'=> (isset($cprice['currency']) ? $cprice['currency'] : 1),
+							'number_of_day'=>isset($cdays['number_of_day']) ? $cdays['number_of_day'] : 0,
+								
+					])->execute();
+						 
+				}else{
+						
+					$c = Yii::$app->db->createCommand()->update('tours_programs_guides_prices',[							 							
+							'quantity'=>$quantity,
+					],[
+							'type_id'=>$guide_type,
+							'item_id'=>$item_id,
+							'segment_id'=>$segment_id,
+							'supplier_id'=>$supplier_id,
+							'service_id'=>$guide_id,
+								
 					])->execute();
 				}
-				 
 			}
 		}
 		echo json_encode([
 				'event'=>'hide-modal', 
 				'callback'=>true,
-				'post'=>'',
+				'post'=>$quantity,
 				'callback_function'=>'console.log(data);reloadAutoPlayFunction();'
 		]); exit;
 		break;
@@ -3346,6 +3643,7 @@ change:function(event,ui){
 		//}
 		$services = \app\modules\admin\models\ToursPrograms::getProgramGuides([
 				'item_id'=>$item_id,
+				'guide_type'=>$guide_type,
 				'segment_id'=>$segment_id,
 		]);
 		$html .= '</ul>
@@ -3365,7 +3663,7 @@ change:function(event,ui){
 						<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>
 						<input value="'.$sv['package_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_package_id[]"/>
 						</div>
-								<div class="col-sm-4 col-index-2"><input type="text" class="form-control center number-format selected_quantity" name="selected_quantity[]" data-name="selected_quantity[]" placeholder="Số lượng" value="'.$sv['quantity'].'"/></div>
+						<div class="col-sm-4 col-index-2"><input type="number" class="form-control center number-format selected_quantity" name="selected_quantity[]" data-name="selected_quantity[]" placeholder="Số lượng" value="'.$sv['quantity'].'"/></div>
 								
 								</li>';
 			}
@@ -3432,7 +3730,7 @@ receive:function(event,ui){
 				$package_id = ui.item.attr(\'data-package_id\');
 				(ui.item).addClass(\'ui-state-highlight\')
 				.removeClass(\'ui-state-default\')
-				.find(\'input\').remove();
+				.find(\'input, .col-removed\').remove();
 				(ui.item).addClass(\'ui-state-highlight\')
 				.append(\'<input value="\'+$package_id+\'" type="hidden" class="removed_value_\'+$type_id+\'" name="removed_package_id[]"/>\')
 				.append(\'<input value="\'+$id+\'" type="hidden" class="removed_value_\'+$type_id+\'" name="removed_item_id[]"/>\')
@@ -3446,8 +3744,14 @@ receive:function(event,ui){
 				$type_id = ui.item.attr(\'data-type_id\');
 				$id = ui.item.attr(\'data-id\');
 				$package_id = ui.item.attr(\'data-package_id\');
+				$ap = \'<input value="\'+$package_id+\'" type="hidden" class="selected_value_\'+$type_id+\'" name="selected_package_id[]"/><input value="\'+$id+\'" type="hidden" class="selected_value_\'+$type_id+\' selected_value_\'+$type_id+\'_'.$day.'_'.$time.' " name="selected_value[]"/><input value="\'+$type_id+\'" type="hidden" class="selected_value_\'+$type_id+\'" name="selected_type_id[]"/>\';
+				$ap += \'<div class="col-sm-4 col-index-2 col-removed"><input type="number" class="form-control required center number-format selected_quantity" name="selected_quantity[]" data-name="selected_quantity[]" placeholder="Số lượng" value="'.(\app\modules\admin\models\ToursPrograms::getNumberOfGuides([
+						'item_id'=>$item_id,
+						'segment_id'=>$segment_id,
+						 
+				])).'"/></div>\';
 				ui.item.removeClass(\'ui-state-highlight\').addClass(\'ui-state-default\')
-				.append(\'<input value="\'+$package_id+\'" type="hidden" class="selected_value_\'+$type_id+\'" name="selected_package_id[]"/><input value="\'+$id+\'" type="hidden" class="selected_value_\'+$type_id+\' selected_value_\'+$type_id+\'_'.$day.'_'.$time.' " name="selected_value[]"/><input value="\'+$type_id+\'" type="hidden" class="selected_value_\'+$type_id+\'" name="selected_type_id[]"/>\');
+				.append($ap);
 				ui.item.find(\'.removed_value_\'+$type_id).remove();
 },
 change:function(event,ui){
@@ -3697,7 +4001,7 @@ change:function(event,ui){
 		$selected_value = post('selected_value',[]);
 		$selected_quantity = post('selected_quantity');
 		$supplier_id = post('supplier_id');
-		$item_id = post('item_id');
+		$item_id = post('item_id'); 
 		$segment_id = post('segment_id',0);
 		//
 		$l1 = (new Query())->from('tours_programs_suppliers_vehicles')->where(['and',[
@@ -3753,7 +4057,11 @@ change:function(event,ui){
 							'vehicle_id'=>$v])->execute(); 
 				}
 			}
-		}
+		}// 
+		loadTourProgramGuides($item_id,[
+				'loadDefault'=>true,
+				'updateDatabase'=>true,
+		]);
 		//
 		echo json_encode([
 			'event'=>'hide-modal',
@@ -3782,7 +4090,7 @@ change:function(event,ui){
 				$sv['type_id'] = TYPE_CODE_VEHICLE;
 				$html .= '<li style="background:gold" data-type_id="'.$sv['type_id'].'" data-id="'.$sv['id'].'" class="ui-state-default li_child_item_id_'.$sv['id'].'">
 				<div class="col-sm-8 col-index-1 col-border-right">Chọn tự động: '.uh($sv['title']).' <i class="underline font-normal green">['.uh($sv['maker_title']).']</i></div>
-				<div class="col-sm-4 col-index-2"><input type="text" class="form-control center number-format selected_quantity" name="selected_quantity[]" data-name="selected_quantity[]" placeholder="Số lượng" value="'.$sv['quantity'].'"/></div>
+				<div class="col-sm-4 col-index-2"><input type="number" class="form-control center number-format selected_quantity" name="selected_quantity[]" data-name="selected_quantity[]" placeholder="Số lượng" value="'.$sv['quantity'].'"/></div>
 				<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_0_0" name="selected_value[]"/>
 				<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>	
 				</li>';
@@ -3838,7 +4146,7 @@ change:function(event,ui){
 				$html .= '<li data-type_id="'.$sv['type_id'].'" data-id="'.$sv['id'].'" class="ui-state-default">
 						
 						<div class="col-sm-8 col-index-1 col-border-right">'.uh($sv['title']).' <i class="underline font-normal green">['.uh($sv['maker_title']).']</i></div>
-								<div class="col-sm-4 col-index-2"><input type="text" class="form-control center number-format selected_quantity" name="selected_quantity[]" data-name="selected_quantity[]" placeholder="Số lượng" value="'.$sv['quantity'].'"/></div>
+								<div class="col-sm-4 col-index-2"><input type="number" class="form-control center number-format selected_quantity" name="selected_quantity[]" data-name="selected_quantity[]" placeholder="Số lượng" value="'.$sv['quantity'].'"/></div>
 								
 									<input value="'.$sv['id'].'" type="hidden" class="selected_value_'.$sv['type_id'].' selected_value_'.$sv['type_id'].'_'.$day.'_'.$time.'" name="selected_value[]"/>
 									<input value="'.$sv['type_id'].'" type="hidden" class="selected_value_'.$sv['type_id'].'" name="selected_type_id[]"/>											
@@ -4191,6 +4499,8 @@ change:function(event,ui){
 				'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
 				//'package_id'=>0,
 				'group_id'=>isset($groups['id']) ? $groups['id'] : 0,
+				'loadDefault'=>true,
+				'updateDatabase'=>false,
 		]);
 		echo json_encode($prices);exit;
 		break;

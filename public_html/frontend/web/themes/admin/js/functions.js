@@ -315,8 +315,10 @@ function load_select2($t){
 	});
 }
 function validate_form_before_submit($t){
-	$submit = true;
-	jQuery('.error.check_error').each(function(i,e){
+	var $this = jQuery($t);
+	var $target = $this.attr('data-target') ? jQuery($this.attr('data-target')) : $this; 
+	var $submit = true;
+	$target.find('.error.check_error').each(function(i,e){
 		$submit = false; jQuery(e).focus();
         $er = jQuery(e).parent().find('.error_field');
         if($er.length == 0){$er = jQuery('<div class="error_field"></div>');jQuery(e).parent().append($er);}
@@ -325,9 +327,11 @@ function validate_form_before_submit($t){
         $er.html($erText);return false;
 	});
 	if($submit){
-		jQuery('.error').removeClass('error');
-		jQuery('.required').each(function(i,e){			
-         	$input = jQuery(e); var $val = $input.val();
+		var $error = $target.find('.error');
+		var $required = $target.find('.required');
+		$error.removeClass('error');
+		$required.each(function(i,e){			
+         	var $input = jQuery(e); var $val = $input.val();
          	var $type = $input.attr('data-type') ;//? jQuery(e).attr('data-select') : false;
          	$num = $input.attr('data-num') ? $input.attr('data-num') : false;
 			//console.log($val)
@@ -374,8 +378,11 @@ function validate_form_before_submit($t){
      		   		$submit = false;return false;
      		   	}
  		    }
- 		   if(jQuery('.input_password').length>0 && jQuery('.input_repassword').length>0){
-     		  $j1 = jQuery('.input_password');$j2 = jQuery('.input_repassword');
+ 		    
+ 		    var $j1 = $target.find('.input_password');
+ 		    var $j2 = $target.find('.input_repassword');
+ 		   if($j1.length>0 && $j2.length>0){
+     		 // $j1 = jQuery('.input_password');$j2 = jQuery('.input_repassword');
      		  
      		  $val1 = $j1.val();$val2 = $j2.val();       
      		  if($val1.length > 0){
@@ -3025,13 +3032,10 @@ function addNewTab($t){
  	    	 // showLoading();
  	    	 // showFullLoading();
  	      },
- 	      success: function (data) {
- 	    	   	//alert(data)
- 	    	  $html = data;  
- 	    	// $html = '<div role="tabpanel" class="tab-pane" id="'+$tab+'"><div class="p-content"><div class="row"><div class="col-sm-6"><div class="form-group"><label   class="col-sm-2 control-label">Tiêu đề</label><div class="col-sm-10"><input data-id="0" type="text" name="tab['+$role+'][title]" class="form-control" id="inputTitleTab'+$role+'" placeholder="Title" value="Tab '+$role+'" /><input type="hidden" name="tab['+$role+'][id]" class="form-control" value="0" />   </div> </div>';
- 	        
- 	        //$html += $c_type ? '<div class="form-group"><label class="col-sm-2 control-label">Kiểu form</label><div class="col-sm-10">'+(jQuery('#default_formstyle_'+$role).html())+'</div></div>' : '';
- 	        
+ 	      success: function (data) { 	    	
+ 	    	$html = data;  
+ 	    	// $html = '<div role="tabpanel" class="tab-pane" id="'+$tab+'"><div class="p-content"><div class="row"><div class="col-sm-6"><div class="form-group"><label   class="col-sm-2 control-label">Tiêu đề</label><div class="col-sm-10"><input data-id="0" type="text" name="tab['+$role+'][title]" class="form-control" id="inputTitleTab'+$role+'" placeholder="Title" value="Tab '+$role+'" /><input type="hidden" name="tab['+$role+'][id]" class="form-control" value="0" />   </div> </div>'; 	        
+ 	        //$html += $c_type ? '<div class="form-group"><label class="col-sm-2 control-label">Kiểu form</label><div class="col-sm-10">'+(jQuery('#default_formstyle_'+$role).html())+'</div></div>' : ''; 	        
  	        //$html += '</div><div class="col-sm-6"></div><div class="col-sm-10"><div class="form-group"><div class="col-sm-10 ajax_result_form_change'+$role+'"><textarea data-id="0" name="tab_biz['+$role+'][text]" class="form-control" id="xckc_'+$tab+'"  ></textarea>  </div> </div></div></div></div></div>';
  	        jQuery('#append-etabs').append($html);
  	        jQuery('a[href="#'+$tab+'"]').tab('show'); 
@@ -4834,6 +4838,7 @@ function reloadDistanceServicePriceAuto($t){
 	    	  $this.addClass('fa-spin fa-refresh').removeClass('green fa-check-square-o')
 	      },
 	      success: function (data) {
+	    	  console.log(data) 
 	    	  $d = JSON.parse(data);
 	    	  jQuery('.input-distance-service-price').val($d.price1).addClass('green');
 	    	  jQuery('.input-distance-service-distance').val($d.quantity).addClass('green');
@@ -5578,6 +5583,39 @@ function changeLiveChatVendor($t){
 	return false;
 }
 
-
+function call_ajax_function($t){	 
+	 var $this = jQuery($t);
+	 var $data = getAttributes($this);	 
+	 if($this.val() != undefined){
+		 $data['value'] = $this.val();
+	 }
+	 $state = true;	  	 
+	 if($state){
+		 
+	 jQuery.ajax({
+	      type: 'post',
+	      datatype: 'json',
+		  url: $cfg.adminUrl  + '/ajax',						 		 
+	      data: $data,
+	      beforeSend:function(){
+	    	  showFullLoading();
+	      },
+	      success: function (data) {
+//	    	  console.log(data)
+	    	  hideFullLoading();
+	    	  $d = JSON.parse(data);
+	    	   
+	    	  if($d.callback){
+	    		  eval($d.callback_function);
+	    	  }
+	      },
+	      complete: function(){
+	    	  hideFullLoading();
+	      },
+	      error : function(err, req) {showModal('Thông báo','Đã xảy ra lỗi, vui lòng thử lại.'); hideFullLoading();}
+	 });
+	 }
+	 return false;
+}
 
 

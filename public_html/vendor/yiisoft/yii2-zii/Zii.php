@@ -89,7 +89,8 @@ class Zii extends yii\base\Object
 		$updateDatabase = isset($o['updateDatabase']) ? $o['updateDatabase'] : true;
 		//
 		$distance_item = \app\modules\admin\models\Distances::getItem($distance_id);
-		 
+		//echo json_encode($distance_item);
+		//view($o,true);
 		$quotation_id = isset($o['quotation_id']) ? $o['quotation_id'] : 0;
 		$nationality_id = isset($o['nationality_id']) ? $o['nationality_id'] : 0;
 		$season_id = isset($o['season_id']) ? $o['season_id'] : 0;
@@ -297,8 +298,9 @@ class Zii extends yii\base\Object
 		//->andWhere(['b.item_id'=>$id])
 		;
 		if(isset($segment_id) && $segment_id>0){
-			$query->andWhere(['segment_id'=>$segment_id]);
+			$query->andWhere(['b.segment_id'=>$segment_id]);
 		}
+		///view($query->createCommand()->getRawSql());
 		return $query->orderBy(['b.position'=>SORT_ASC, 'a.name'=>SORT_ASC])->all();
 	}
 	
@@ -367,6 +369,7 @@ class Zii extends yii\base\Object
 			])		 
 			->select(['a.*','c.quantity','maker_title'=>(new Query())->select('title')->from('vehicles_makers')->where('id=a.maker_id')])
 			->orderBy(['a.pmax'=>SORT_DESC]);
+			//view($query->createCommand()->getRawSql());
 			$r = $query->all();
 			 
 		}
@@ -811,6 +814,9 @@ class Zii extends yii\base\Object
 		$key = isset($o['key']) ? $o['key'] : false;
 		$maxLevel = isset($o['maxLevel']) && $o['maxLevel'] > 0 && $o['maxLevel'] < 8 ? $o['maxLevel'] : 8;
 		$attrs = isset($o['attribute']) ? $o['attribute'] : (isset($o['attrs']) ? $o['attrs'] : []); 
+		$showIconClass = isset($o['showIconClass']) && $o['showIconClass'] == false ? false : true;
+		$showIconClass2 = isset($o['showIconClass2']) && $o['showIconClass2'] == false ? false : true; 
+		$a1Class = isset($o['a1Class']) ? $o['a1Class'] : ''; 
 		$listItem = isset($o['listItem']) ? $o['listItem'] : 
 		\app\models\SiteMenu::getList([
 				'key'=>$key
@@ -837,9 +843,9 @@ class Zii extends yii\base\Object
 				$aActive = isset($o['activeClass']) && isset($o['activeClass']['a']) && in_array($v['url'],Yii::$app->request->get()) ? $o['activeClass']['a'] : '';
 				$m .= '<li data-id="'.$v['id'].'" data-child="'.count($l1).'" class="li-child li-child-'.$k.' li-level-'.$cLevel.' '. $liActive.' '.(isset($o['li1Class']) ? $o['li1Class'] : '').' '.$li1Class.'">';
 				$link = $v['type'] == 'link' ? $v['link_target'] : cu([DS.$v['url']]);				
-				$m .= '<a '.(isset($v['rel']) ? ' rel="'.$v['rel'].'"' : '').' '.(isset($v['target']) ? ' target="'.$v['target'].'"' : '').' '.($link != '#' ? 'href="'.$link.'"' : 'role="none"').'  class="'.$aActive.'">';
+				$m .= '<a '.(isset($v['rel']) ? ' rel="'.$v['rel'].'"' : '').' '.(isset($v['target']) ? ' target="'.$v['target'].'"' : '').' '.($link != '#' ? 'href="'.$link.'"' : 'role="none"').'  class="'.$aActive.' '.$a1Class.'">';
 				
-				if(isset($v['icon_class']) && $v['icon_class'] != ""){
+				if($showIconClass && isset($v['icon_class']) && $v['icon_class'] != ""){
 					$m .= '<i class="'.$v['icon_class'].'"></i> ';
 				}
 				
@@ -867,6 +873,11 @@ class Zii extends yii\base\Object
 						$m .= '<li data-id="'.$v1['id'].'" data-child="'.count($l2).'" class="li-child li-child-'.$k1.' li-level-'.$cLevel.' '.(isset($o['li2Class']) ? $o['li2Class'] : '').'">';
 						$m .= '<a '.(isset($v1['rel']) ? ' rel="'.$v1['rel'].'"' : '').' '.(isset($v1['target']) ? ' target="'.$v1['target'].'"' : '').' '.($link != '#' ? 'href="'.$link.'"' : 'role="none"').'>';
 						$m .= isset($o['a2Pre']) ? $o['a2Pre'] : '';
+						
+						if($showIconClass2 && isset($v1['icon_class']) && $v1['icon_class'] != ""){
+							$m .= '<i class="'.$v1['icon_class'].'"></i> ';
+						}
+						
 						$m .= uh($v1['title']);
 						$m .= isset($o['a2After']) ? $o['a2After'] : '';
 						//$m .= $eTag[0];
@@ -1425,7 +1436,7 @@ class Zii extends yii\base\Object
 		$query->addSelect(['post_by_name'=>'concat(z.lname, \' \' , z.fname)']);
 		$query->leftJoin(['z'=>'{{%users}}'],'a.owner=z.id');
 		
-		 
+		//view($query->createCommand()->getRawSql());  
 		$query->offset($offset);
 		if($limit>0) $query->limit($limit);
 		
@@ -1590,6 +1601,9 @@ class Zii extends yii\base\Object
 	}
 	public function sendEmail($o=[]){
 		return Yii::$app->sendEmail($o);
+	}
+	public function sentEmail($o=[]){
+		return Yii::$app->sentEmail($o); 
 	}
 	public function getConfigs($code = false, $lang = __LANG__,$sid=__SID__,$cached=true){
 		return Yii::$app->getConfigs($code,$lang,$sid,$cached);
@@ -1885,7 +1899,7 @@ class Zii extends yii\base\Object
 		$supplier_id = isset($o['supplier_id']) ? $o['supplier_id'] : 0;
 		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
 		$service_id = isset($o['service_id']) ? $o['service_id'] : 0;
-		$type_id = isset($o['type_id']) ? $o['type_id'] : 0;
+		$type_id = isset($o['type_id']) ? $o['type_id'] : TYPE_ID_GUIDES;
 		$state = isset($o['state']) ? $o['state'] : 1;
 		$package_id = isset($o['package_id']) ? $o['package_id'] : 0;
 		$sub_item_id = isset($o['sub_item_id']) ? $o['sub_item_id'] : 0;
@@ -1895,8 +1909,11 @@ class Zii extends yii\base\Object
 		$nationality_id = isset($o['nationality_id']) ? $o['nationality_id'] : $nationality;
 		$loadDefault = isset($o['loadDefault']) ? $o['loadDefault'] : false;
 		$updateDatabase = isset($o['updateDatabase']) ? $o['updateDatabase'] : true;
+		$guide_type = isset($o['guide_type']) ? $o['guide_type'] : 2;
+		$root_guide_type = isset($o['root_guide_type']) ? $o['root_guide_type'] : 2;
+		$item = \app\modules\admin\models\ToursPrograms::getItem($item_id);
 		if($from_date === false && $item_id>0){
-			$item = \app\modules\admin\models\ToursPrograms::getItem($item_id);
+			
 			$from_date = date('Y-m-d', mktime(0,0,0,
 					date('m',strtotime($item['from_date'])),
 					date('d',strtotime($item['from_date']))+$day_id,
@@ -1906,32 +1923,44 @@ class Zii extends yii\base\Object
 		$supplier_id = $this->getSupplierIDFromService($service_id,$type_id);
 		//$supplier_id = $supplier_id > 0 ? $supplier_id : $service_id;
 		//\\//\\ *.* //\\//\\
-		$quotation = \app\modules\admin\models\Suppliers::getQuotation([
-				'supplier_id'=>$supplier_id,
-				'date'=>$from_date
-		]);
-		//view($quotation);
-		//view($from_date);
-		//
-		$nationality_group = \app\modules\admin\models\Suppliers::getNationalityGroup([
-				'supplier_id'=>$supplier_id,
-				'nationality_id'=>$nationality_id,
-		]);
-		//
-		$seasons = \app\modules\admin\models\Suppliers::getSeasons([
-				'supplier_id'=>$supplier_id,
-				'date'=>$from_date,
-				'time_id'=>$time_id
-		]);
-		//	view($seasons);
-		$groups = \app\modules\admin\models\Suppliers::getGuestGroup([
-				'supplier_id'=>$supplier_id,
-					
-				'date'=>$from_date,
-				'time_id'=>$time_id
-		]);
-		
-		//
+		if(isset($o['quotation']) && !empty($o['quotation'])){
+			$quotation = $o['quotation'];
+		}else{
+			$quotation = \app\modules\admin\models\Suppliers::getQuotation([
+					'supplier_id'=>$supplier_id,
+					'date'=>$from_date
+			]);
+		}
+		if(isset($o['nationality_group']) && !empty($o['nationality_group'])){
+			$nationality_group = $o['nationality_group'];
+		}else{
+			if(!($nationality_id>0)){
+				$nationality_id = $item['nationality'];
+			}
+			$nationality_group = \app\modules\admin\models\Suppliers::getNationalityGroup([
+					'supplier_id'=>$supplier_id,
+					'nationality_id'=>$nationality_id,
+			]);
+		}
+		if(isset($o['seasons']) && !empty($o['seasons'])){
+			$seasons = $o['seasons'];
+		}else{
+			$seasons = \app\modules\admin\models\Suppliers::getSeasons([
+					'supplier_id'=>$supplier_id,
+					'date'=>$from_date,
+					'time_id'=>$time_id
+			]);
+		}
+		if(isset($o['groups']) && !empty($o['groups'])){
+			$groups = $o['groups'];
+		}else{
+			$groups = \app\modules\admin\models\Suppliers::getGuestGroup([
+					'supplier_id'=>$supplier_id,
+						
+					'date'=>$from_date,
+					'time_id'=>$time_id
+			]);
+		}
 		if(!$loadDefault && $item_id>0){
 			// Lấy giá đã lưu riêng
 				
@@ -1943,7 +1972,7 @@ class Zii extends yii\base\Object
 					//'day'=>$day,
 					//'time'=>$time,
 					'a.package_id'=>$package_id,
-					//'a.type_id'=>$type_id
+					'a.type_id'=>$guide_type
 			]);
 			//
 			if($segment_id > 0){
@@ -1960,27 +1989,140 @@ class Zii extends yii\base\Object
 			if($supplier_id>0){
 				$query->andWhere(['a.supplier_id'=>$supplier_id]);
 			}
-				
+			//	view($query->createCommand()->getRawSql());
 			//
-			$r = $service_id > 0 ? $query->one() : $query->all();
+			$r = $query->one();
 		
 			if(!empty($r)){
 				$loadDefault = false;
-				if($service_id > 0 && $r['state'] == 2){
-					$loadDefault = true;
+				if($service_id > 0 ){
+					//$loadDefault = true; $updateDatabase = true;
 				}
 			}else{
-				$loadDefault = true;
+				$loadDefault = true; $updateDatabase = true;
 			}
+			//
+			//view($r); 
 		}
+		if($loadDefault){
+			$number_of_day = isset($o['number_of_day']) ? $o['number_of_day'] : 0;
+			$number_of_day = \app\modules\admin\models\ProgramSegments::countDayOfParent($item_id, $segment_id, ['guide_type'=>$guide_type]);
+			$quantity = isset($o['quantity']) ? $o['quantity'] : 0;
+			
+			$x = \app\modules\admin\models\ToursPrograms::getAutoGuideQuantity([
+					'item_id'=>$item_id,
+					'segment_id'=>$segment_id
+			]);
+			
+			$r = $this->getDefaultServicePrices([
+					'controller_code'=>TYPE_ID_GUIDES,
+					'quotation_id'=>$quotation['id'],
+					'nationality_id'=>$nationality_group['id'],
+					'season_id'=>isset($seasons['seasons_prices']['id']) ? $seasons['seasons_prices']['id'] : 0,
+					'supplier_id'=>$supplier_id,
+					'total_pax'=>$total_pax,
+					'weekend_id'=>isset($seasons['week_day_prices']['id']) ? $seasons['week_day_prices']['id'] : 0,
+					'time_id'=>isset($seasons['time_day_prices']['id']) ? $seasons['time_day_prices']['id'] : -1,
+					'package_id'=>$package_id,
+					'item_id'=>$service_id,
+					//'item_id'=>$service_id,
+					'season_time_id'=>$season_time_id,
+					'seasons'=>$seasons,
+			]);
+			
+			if(!empty($r)){
+				$r['quantity'] = $x['quantity'];			 
+				$r['number_of_day'] = $x['number_of_day'];
+			}
+			 
+			if($updateDatabase && !empty($r)){
+				 
+				 
+				if((new Query())->from('tours_programs_guides')->where([
+						'item_id'=>$item_id,
+						'supplier_id'=>$supplier_id,
+						'segment_id'=>$segment_id,
+						'guide_id'=>$service_id,
+						'package_id'=>$package_id,
+						'type_id'=>$guide_type
+				])->count(1) == 0){
+					Yii::$app->db->createCommand()->insert('tours_programs_guides', [
+							'item_id'=>$item_id,
+							'supplier_id'=>$supplier_id,
+							'segment_id'=>$segment_id,
+							'guide_id'=>$service_id,
+							'package_id'=>$package_id,
+							'quantity'=>$r['quantity'],
+							'type_id'=>$guide_type
+							
+							
+					])->execute();
+				}else{
+					Yii::$app->db->createCommand()->update('tours_programs_guides', [
+							'quantity'=>$r['quantity'],							 
+					],[
+							'item_id'=>$item_id,
+							'supplier_id'=>$supplier_id,
+							'segment_id'=>$segment_id,
+							'guide_id'=>$service_id,
+							'package_id'=>$package_id,
+							'type_id'=>$guide_type
+					])->execute();
+				}
+				///////////////////////////////////////////
+				if((new Query())->from('tours_programs_guides_prices')->where([
+						'item_id'=>$item_id,
+						'supplier_id'=>$supplier_id,
+						'segment_id'=>$segment_id,
+						'service_id'=>$service_id,
+						'package_id'=>$package_id,
+						'type_id'=>$guide_type
+				])->count(1) == 0){
+					Yii::$app->db->createCommand()->insert('tours_programs_guides_prices', [
+							'item_id'=>$item_id,
+							'supplier_id'=>$supplier_id,
+							'segment_id'=>$segment_id,
+							'service_id'=>$service_id,
+							'package_id'=>$package_id,
+							'quantity'=>$r['quantity'],
+							'number_of_day'=>$r['number_of_day']>0 ? $r['number_of_day'] : 0,
+							'price1'=>$r['price1'],
+							'currency'=>$r['currency'],
+							'type_id'=>$guide_type
+							
+							
+					])->execute();
+				}else{
+					Yii::$app->db->createCommand()->update('tours_programs_guides_prices', [
+							'quantity'=>$r['quantity'],
+							'number_of_day'=>$r['number_of_day']>0 ? $r['number_of_day'] : 0,
+							'price1'=>$r['price1'],
+							'currency'=>$r['currency'],
+					],[
+							'item_id'=>$item_id,
+							'supplier_id'=>$supplier_id,
+							'segment_id'=>$segment_id,
+							'service_id'=>$service_id,
+							'package_id'=>$package_id,
+							'type_id'=>$guide_type
+					])->execute();
+				} 
+				
+			}
+			
+		}
+		return $r;
 	}
+	
+	
+	
 	
 	public function getServiceDetailPrices($o = []){
 		//\\//\\ *.* //\\//\\
 		$from_date = isset($o['from_date']) && check_date_string($o['from_date']) ? $o['from_date'] : false;
 		$day = isset($o['day']) ? $o['day'] : -1;
 		$time = isset($o['time']) ? $o['time'] : -1;
-		
+		//$service_id
 		$day_id = isset($o['day_id']) ? $o['day_id'] : $day;
 		$time_id = isset($o['time_id']) ? $o['time_id'] : $time;
 		$season_time_id = isset($o['season_time_id']) ? $o['season_time_id'] : $time_id;
@@ -2160,6 +2302,8 @@ class Zii extends yii\base\Object
 							'item_id'=>$sub_item_id,
 							'season_time_id'=>$season_time_id,
 							'seasons'=>$seasons,
+							'service_id'=>$service_id
+							
 					]);
 					//view($type_id);
 					//view($r,true); exit;
@@ -2212,10 +2356,10 @@ class Zii extends yii\base\Object
 				$item = \app\modules\admin\models\Tickets::getItem($service_id);
 				break;
 			case TYPE_ID_GUIDES:
-				$item = \app\modules\admin\models\Guides::getItem($this->getSupplierIDFromService($service_id,TYPE_ID_GUIDES));
+				$item = \app\modules\admin\models\Guides::getItem($this->getSupplierIDFromService($service_id,$type_id));
 				break;
 			case TYPE_ID_SHIP:
-				$item = \app\modules\admin\models\Customers::getItem($this->getSupplierIDFromService($service_id,TYPE_ID_SHIP));
+				$item = \app\modules\admin\models\Customers::getItem($this->getSupplierIDFromService($service_id,$type_id));
 				///$item['aaaaaa'] = json_encode($this->getSupplierIDFromService($service_id));
 				break;
 			default: $item = \app\modules\admin\models\Customers::getItem($supplier_id); break;
@@ -2363,6 +2507,7 @@ class Zii extends yii\base\Object
 		$total_pax = isset($o['total_pax']) ? $o['total_pax'] : 0;
 		$controller_code = isset($o['controller_code']) ? $o['controller_code'] : '';
 		$item_id = isset($o['item_id']) ? $o['item_id'] : 0;
+		$service_id = isset($o['service_id']) ? $o['service_id'] : 0;
 		$seasons = isset($o['seasons']) ? $o['seasons'] : [];
 		$a = [
 				'quotation_id',
@@ -2387,6 +2532,7 @@ class Zii extends yii\base\Object
 		
 		foreach ($seasons['season_direct_prices'] as $season){
 		// lấy item default
+		$default = true;
 		switch ($controller_code){
 			case TYPE_ID_REST:
 				$t1 = \app\modules\admin\models\Menus::tableToPrice();
@@ -2399,7 +2545,7 @@ class Zii extends yii\base\Object
 			case TYPE_ID_SHIP:
 				$t1 = \app\modules\admin\models\Distances::table_to_prices();
 				$t2 = \app\modules\admin\models\Distances::tableName();
-				
+				$default = false;
 				$c = Yii::$app->zii->getVehicleAuto([
 						'total_pax'=>$total_pax,
 						'nationality_id'=>$nationality_id,
@@ -2407,6 +2553,7 @@ class Zii extends yii\base\Object
 						'auto'=>true,
 							
 				]);
+				 
 				if(!empty($c)){
 					$total_pax = $c[0]['quantity']; 
 				}
@@ -2426,7 +2573,7 @@ class Zii extends yii\base\Object
 		$query = (new Query())->from(['a'=>$t1])
 		->innerJoin(['b'=>$t2],'a.item_id=b.id')
 		->where([
-				'a.is_default'=>1,
+				
 				'a.quotation_id'=>$quotation_id,
 				'a.package_id'=>$package_id,
 				'a.supplier_id'=>$supplier_id,
@@ -2439,8 +2586,20 @@ class Zii extends yii\base\Object
 	
 		])
 		->select(['b.*','a.price1','a.currency']);
+		
+		if($default){
+			$query->andWhere(['a.is_default'=>1,]);
+		}
+		switch ($controller_code){
+			case TYPE_ID_SHIP:
+				if($service_id>0){
+					$query->andWhere(['b.id'=>$service_id]);
+				}
+				break;
+		}
 		$item = $query->one(); 
 		}
+		//view($item);
 		//view($query->createCommand()->getRawSql());
 		
 		if(!empty($item)){ 
@@ -2518,7 +2677,7 @@ class Zii extends yii\base\Object
 			
 				}
 			}
-			
+			//view($result);
 			return $result;
 	}
 	private function getPriceInfoFromDate($supplier_id, $date){
@@ -3026,6 +3185,8 @@ class Zii extends yii\base\Object
 		}
 	 
 	}
+	
+	
 	
 }
  

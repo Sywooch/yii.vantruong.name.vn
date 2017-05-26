@@ -48,7 +48,7 @@ switch (getParam('action')){
 		break;
 	case 'load_js':
 $r = [
-Yii::getAlias('@admin') . '/js/functions.js',
+Yii::getAlias('@admin') . '/js/functions.js?'.time(),
 Yii::getAlias('@libs') . '/jquery-ui-1.12.1/jquery-ui.min.js',
 Yii::getAlias('@libs') . '/ckeditor/ckeditor.js',
 Yii::getAlias('@libs') . '/onoff/jquery.switchButton.js',
