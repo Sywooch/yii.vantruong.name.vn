@@ -485,15 +485,11 @@ switch (post('action')){
 		exit;
 		break;
 	
-	case 'changeLanguage':
-		 
-		$language = \app\modules\admin\models\AdLanguage::getLanguage(post('lang'));
-		 
-		$config = Yii::$app->session['config'];
-		$config['language'] = $language;
-		// view(post('lang'));
-		Yii::$app->session->set('config',$config);		
-		//view(Yii::$app->session->get('config'));
+	case 'changeLanguage':		 
+		$language = \app\modules\admin\models\AdLanguage::getLanguage(post('lang'));		 
+		$config = Yii::$app->session->get('config');
+		$config['language'] = $language;		
+		Yii::$app->session->set('config',$config);
 		exit;
 		break;
 		

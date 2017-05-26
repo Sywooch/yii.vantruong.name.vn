@@ -68,6 +68,7 @@ class Slugs extends \yii\db\ActiveRecord
     					'item_type'=>$item_type,
     					'route'=>$route,
     					'rel'=>$rel,
+    					'lang'=>__LANG__,
     					'sid'=>__SID__]
     			)->execute();
     		}else{

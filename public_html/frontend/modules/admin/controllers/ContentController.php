@@ -81,6 +81,7 @@ class ContentController extends CrsController
     		FormActive::$jsonFields = $this->model->jsonFields();
     		$f = FormActive::getFormSubmit();    		    		
     		$f['sid'] = __SID__;
+    		$f['lang'] = __LANG__;
     		$f['owner'] = Yii::$app->user->id;
     		if(isset($f['time'])){
     			$f['time'] = ctime(['string'=>$f['time']]);

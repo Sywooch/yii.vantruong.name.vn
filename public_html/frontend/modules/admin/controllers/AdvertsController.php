@@ -78,6 +78,7 @@ class AdvertsController extends CrsController
     		if(isset($_POST['f']['is_active']) && in_array($_POST['f']['is_active'], [-1])){
     			unset($f['is_active']);
     		}
+    		$f['lang'] = __LANG__;
     		$f['set_language'] = $this->model->getSetLanguage($f['type']);
     		Yii::$app->db->createCommand()->insert(getParam('child') == 'list' ? $this->model->tableName() :  Adverts::tableCategory(),$f)->execute();
     		$id = Yii::$app->db->createCommand("select max(id) from ".(getParam('child') == 'list' ? $this->model->tableName() :  Adverts::tableCategory()))->queryScalar();

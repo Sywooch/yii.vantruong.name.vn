@@ -664,6 +664,7 @@ class Application extends \yii\base\Application
 	}
 	protected function getTemplete(){		 		 
 		// Get templete
+		$config = Yii::$app->session->get('config');
 		$TEMP = $this->getTempleteName();		
 		
 		switch (SHOP_STATUS){
@@ -691,7 +692,7 @@ class Application extends \yii\base\Application
 		}else{
 			Yii::$device = $config['device'];
 		}
-		Yii::$app->session['config'] = $config;
+		Yii::$app->session->set('config', $config);
 		if(Yii::$device != 'desktop' && $TEMP['is_mobile'] == 1){
 			define('__IS_MOBILE_TEMPLETE__' , true );
 			define('__MOBILE_TEMPLETE__' , Yii::$device . DIRECTORY_SEPARATOR );
@@ -906,15 +907,20 @@ class Application extends \yii\base\Application
 			defined('__LANG__') or define("__LANG__",__URL_LANG__);
 			defined('DEFAULT_LANG') or define("DEFAULT_LANG",__URL_LANG__);
 		}else{
-			$default_lang = \app\modules\admin\models\AdLanguage::getUserDefaultLanguage();
-			if(empty($default_lang)){
-				$default_lang = ['code'=>'vi_VN','name'=>'Tiếng Việt','country_code'=>'vn'];
+			if(!isset($config['language'])){
+				$default_lang = \app\modules\admin\models\AdLanguage::getUserDefaultLanguage();
+				if(empty($default_lang)){
+					$default_lang = ['code'=>'vi_VN','name'=>'Tiếng Việt','country_code'=>'vn'];
+				}
+				$language = ['language'=>$default_lang,'default_language'=>$default_lang];
+				$config = $language;
+				Yii::$app->session->set('config', $config);
+			}else{
+				//$config = $language;
 			}
-			$language = ['language'=>$default_lang,'default_language'=>$default_lang];
-			$config = $language;
 			defined('__LANG__') or define("__LANG__",$config['language']['code']);
 			defined('DEFAULT_LANG') or define("DEFAULT_LANG", isset($config['default_language']['code']) ? $config['default_language']['code'] : SYSTEM_LANG);
-			Yii::$app->session->set('config', $config);
+				
 		}
 		return __LANG__;
 	}

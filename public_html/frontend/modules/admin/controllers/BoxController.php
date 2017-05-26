@@ -75,6 +75,7 @@ class BoxController extends CrsController
     		FormActive::setBooleanFields($this->model->getBooleanFields());
     		$f = FormActive::getFormSubmit();    		
     		$f['code'] = $this->model->getBoxCode($f['code'],0);
+    		$f['lang'] = __LANG__;
     		$f['sid'] = __SID__;
     		Yii::$app->db->createCommand()->insert(Box::tableName(),$f)->execute();
     		$id = Yii::$app->db->createCommand("select max(id) from ".Box::tableName())->queryScalar();

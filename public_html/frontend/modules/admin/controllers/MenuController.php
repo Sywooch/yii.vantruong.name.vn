@@ -86,7 +86,7 @@ class MenuController extends CrsController
     			$f['type'] = (new Query())->select('type')->from(Menu::tableName())->where(['id'=>$f['parent_id']])->scalar();
     		}
     		$f['route'] = isset($f['route']) ? $f['route'] : $f['type'];
-    		
+    		$f['lang'] = __LANG__;
     		$f['sid'] = __SID__; $id = 0;
     		$biz = post('biz',[]);
     		$f['type'] = $f['type'] == 'manual' && isset($biz['link_target']) ? $biz['link_target'] : $f['type'];
