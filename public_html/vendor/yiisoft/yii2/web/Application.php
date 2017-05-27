@@ -14,12 +14,12 @@ use yii\base\InvalidRouteException;
 use yii\db\Query;
 
 
-if(!in_array($_SERVER['HTTP_HOST'], [
-		'demo3.dalaco.travel',
-		'demo2.intranet.dalaco.travel' 
-])){
-	include 'App.bak.php';
-}else{
+//if(!in_array($_SERVER['HTTP_HOST'], [
+//		'demo3.dalaco.travel',
+//		'demo2.intranet.dalaco.travel' 
+//])){
+//	include 'App.bak.php';
+//}else{
 /**
  * Application is the base class for all web application classes.
  *
@@ -127,7 +127,8 @@ class Application extends \yii\base\Application
 		$check_database = false;
 		$this->setHttpsMethod();
 		//$this->_router = $this->_router;
-		$this->getTemplete(); 
+		$private_temp = 0;
+		$controller_style = 0;
 		if(strlen(__DETAIL_URL__)>0 && !__IS_SUSPENDED__ && !empty($r)){
 			//if(!empty($r)){
 				$check_database = true;
@@ -154,6 +155,15 @@ class Application extends \yii\base\Application
 							$item = (new Query())->from('{{%articles}}')->where([
 									'id'=>__ITEM_ID__
 							])->one();
+							
+							if(isset($item['temp_id']) && $item['temp_id']>0){
+								$private_temp = $item['temp_id'];
+							}
+							//
+							//
+							if(isset($item['style']) && $item['style']>0){
+								$controller_style = $item['style'];
+							}
 								
 							Yii::$site['seo']['title'] = isset($item['seo']['title']) && $item['seo']['title'] != "" ? $item['seo']['title'] : $item['title'];
 							Yii::$site['seo']['description'] = isset($item['seo']['description']) && $item['seo']['description'] != "" ? $item['seo']['description'] : (isset(Yii::$site['seo']['description']) ? Yii::$site['seo']['description'] : '');
@@ -192,6 +202,15 @@ class Application extends \yii\base\Application
 								$r['route'] = $r['link_target'];
 							}
 							//
+							if(isset($r['temp_id']) && $r['temp_id']>0){
+								$private_temp = $r['temp_id'];
+							}
+							//
+							//
+							if(isset($r['style']) && $r['style']>0){
+								$controller_style = $r['style'];
+							}
+							//
 							if(isset($r['parent_id']) && $r['parent_id'] == 0){
 								$root = $r;
 							}else{
@@ -228,7 +247,11 @@ class Application extends \yii\base\Application
 			$this->defaultRoute = 'site';
 			$this->_router = ['suspended'];
 		}
-	
+		
+		defined('PRIVATE_TEMPLETE') or define('PRIVATE_TEMPLETE',$private_temp);
+		defined('CONTROLLER_STYLE') or define('CONTROLLER_STYLE',$controller_style);
+		$this->getTemplete();
+		
 		defined('__IS_DETAIL__') or define('__IS_DETAIL__', false);
 		defined('__ITEM_ID__') or define('__ITEM_ID__', 0);
 		define('CONTROLLER_ID', isset($r['id']) ? $r['id'] : -1);	
@@ -925,4 +948,4 @@ class Application extends \yii\base\Application
 		return __LANG__;
 	}
 }
-}
+//}

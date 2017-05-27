@@ -24,6 +24,7 @@ $query->andFilterWhere([
 
   <li role="presentation" class="active"><a href="#tab-genaral" role="tab" data-toggle="tab">Thông tin chung</a></li>
 <?php 
+if(Yii::$app->controller->action->id == 'edit'){
 switch (CONTROLLER_CODE){
 	case 5:
 		if(isset($v['id']) && $v['id']>0){
@@ -42,7 +43,7 @@ switch (CONTROLLER_CODE){
 		
 		break;	
 		
-}
+}}
 ?> 
  
   <li role="presentation" class="hide"><a href="#tab-help" role="tab" data-toggle="tab">Hướng dẫn</a></li>

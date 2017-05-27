@@ -27,17 +27,18 @@ AppAsset::register($this);
 <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 <meta name="msnbot" content="NOODP" />
 <meta http-equiv="Cache-control" content="public" />
-<meta http-equiv="expires" content="<?php echo date("D, j M Y G:i:s ",time()+3600);?> GMT"/>
+<meta http-equiv="expires" content="<?php echo date("D, j M Y G:i:s ",time()+15552000);?> GMT"/>
 <meta http-equiv="pragma" content="public"/>
 <meta name="author" content="<?php echo MAIN_DOMAIN;?>"/>
 <meta name="description" content="<?php echo get_site_value('seo/description'); ?>" />
 <meta name="keywords" content="<?php echo get_site_value('seo/keyword'); ?>" />
-<meta name="Title" content="<?= Html::encode(get_site_value('seo/title')) ?>" />
+<meta name="title" content="<?= Html::encode(get_site_value('seo/title')) ?>" />
 <link rel="shortcut icon" href="<?php echo isset(Yii::$site['logo']['favicon']['image']) ? Yii::$site['logo']['favicon']['image'] : ''; ?>" type="image/x-icon" />
 <?php
 $og_image = isset(Yii::$site['seo']['og_image']) ? Yii::$site['seo']['og_image'] : '';
 $html = $og_image != "" ? '<meta property="og:image" content="'.getImage(['src'=>$og_image,'w'=>550,'save'=>true,'output'=>'src','absolute'=>true],true).'"/>' : '';
 $html .= '<meta property="og:url" content="'.URL_WITH_PATH.'" />
+<meta http-equiv="Content-Language" content="'.Yii::$app->language.'">
 <meta property="og:type" content="website" />
 <meta property="og:locale" content="vi_VN" />
 <meta property="og:site_name" content="'.get_site_value('seo/site_name').'" />		
@@ -46,8 +47,9 @@ $html .= '<meta property="og:url" content="'.URL_WITH_PATH.'" />
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:description" content="'.get_site_value('seo/description').'" />
 <meta name="twitter:title" content="'.get_site_value('seo/title').'" />
-<meta name="copyright" content="'.(get_site_value('seo/copyright') != "" ? get_site_value('seo/copyright') : '').'" />
-<meta name="author" content="'.(get_site_value('seo/author') != "" ? get_site_value('seo/author') : '').'" />
+<meta name="copyright" content="'.(get_site_value('seo/copyright') != "" ? get_site_value('seo/copyright') : get_site_value('seo/site_name')).'" />
+<meta name="author" content="'.(get_site_value('seo/author') != "" ? get_site_value('seo/author') : 'IziWeb').'" />
+<meta name="designer" content="'.(get_site_value('seo/author') != "" ? get_site_value('seo/author') : 'IziWeb').'">
 <meta name="revisit-after" content="1 days" />';
 echo $html;
 //$this->registerCssFile(__LIBS_DIR__ . '/themes/css/base.css');

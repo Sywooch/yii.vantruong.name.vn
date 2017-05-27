@@ -3185,8 +3185,10 @@ class Zii extends yii\base\Object
 		}
 	 
 	}
-	
-	
+	 
+	public function getFilters($o = []){ 
+		return Filters::getFilters($o);
+	}
 	
 }
  

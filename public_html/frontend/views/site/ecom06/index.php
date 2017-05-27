@@ -3,8 +3,8 @@ $this->registerCssFile(__RSDIR__.'/css/slider.css');
 $this->registerCssFile(__RSDIR__.'/css/global2.css');
 $this->registerCssFile(__RSDIR__.'/css/global3.css');
 ?>
-<div class="wapper_home">
-    <div class="top_top"></div>
+<div class="container">
+ 
     <div class="row">
         <div class="left_home col-sm-3">
 <div class="DefaultModule">
@@ -69,7 +69,7 @@ if(!empty($lb)){
 		echo '<div class="product_title">
 <div class="DefaultModule">
     <div class="title">
-<h2 class="title-name"><a class="title-main" href="'.$link_box.'" title="'.uh($b['title']).'">'.uh($b['title']).' <span class="category-arrow">&nbsp;</span> </a></h2>';
+<h2 class="title-name"><a class="title-main" href="'.$link_box.'" title="'.uh($b['title']).'"><i class="fa fa-shopping-bag "></i>&nbsp; '.uh($b['title']).' <span class="category-arrow">&nbsp;</span> </a></h2>';
 		if(isset($vb['listSubMenu']) && !empty($vb['listSubMenu'])){
 			echo '<ul class="title-link">';
 			foreach ($vb['listSubMenu'] as $s){
@@ -144,26 +144,28 @@ if(!empty($vb['listItem'])){
 echo '</div></div></div><!--col-9-->';	
 
 echo '<div class="product_right col-sm-3">';
-$l = Yii::$app->zii->getBoxCode('bestseller');
-if(!empty($l['listItem'])){
-	echo '<div class="TopSellers Moveable Panel DefaultModule">
+switch ($b['style']){
+	case 1:
+		$l = Yii::$app->zii->getBoxCode('bestseller');
+		if(!empty($l['listItem'])){
+			echo '<div id="SideTopSeller" class="TopSellers Moveable Panel DefaultModule">
     <div class="defaultTitle SideTopSeller-Title">
         <span> '.uh($l['box']['title']).'</span></div>
     <div class="defaultContent SideTopSeller-content">
-        <div class="BlockContent"><ul class="ProductList">';
-	foreach ($l['listItem'] as $k=>$v){
-		echo '<li class="'.($k%2==0 ? 'Odd' : 'Event').' pr pdt15">
+        <div class="BlockContent"><ul class="ProductList mgl5">';
+			foreach ($l['listItem'] as $k=>$v){
+				echo '<li class="'.($k%2==0 ? 'Odd' : 'Event').' pr pdt15 ">
                             <div class="TopSellerNumber1">'.($k+1).'</div>
                             <div class="ProductImage" style="display: block">
                                 <a href="'.$v['url_link'].'" >
                                    '.  getImage([
-				'src'=>$v['icon'], 
-				'w'=>400,
-				'attrs'=>[
-						'alt'=>uh($v['title']),
-						 
-				]
-		]).'
+                                   		'src'=>$v['icon'],
+                                   		'w'=>400,
+                                   		'attrs'=>[
+                                   				'alt'=>uh($v['title']),
+                                   				
+                                   		]
+                                   ]).'
                                 </a>
                             </div>
                             <div class="ProductDetails">
@@ -183,14 +185,40 @@ if(!empty($l['listItem'])){
                             </div>
                             <hr class="Clear">
                         </li>';
-	}
-	echo '</ul></div><div class="Clear"></div></div></div>';
+			}
+			echo '</ul></div><div class="Clear"></div></div></div>';
+		}
+		break;
+	case 2:
+		/*
+		echo '<div class="DefaultModule">
+    <div class="content-sidebar">
+<ul class="sidebar-logo">
+	<li class="sidebar_logo_item"><a class="sidebar_logo_link " href="#" target="_blank" title="APPLE"><img alt="APPLE" class="img-responsive apple" src="http://media.bizwebmedia.net/Sites/94839/data/upload/anhgiaodien/1.png?1" style="width: 95px; height: 21px;"> </a></li>
+	<li class="sidebar_logo_item"><a class="sidebar_logo_link " href="#" target="_blank" title="ASUS"><img alt="ASUS" class="img-responsive asus" src="http://media.bizwebmedia.net/Sites/94839/data/upload/anhgiaodien/2.png?1" style="width: 105px; height: 27px;"> </a></li>
+	<li class="sidebar_logo_item"><a class="sidebar_logo_link " href="#" target="_blank" title="HTC"><img alt="HTC" class="img-responsive htc" src="http://media.bizwebmedia.net/Sites/94839/data/upload/anhgiaodien/3.png?1" style="width: 96px; height: 19px;"> </a></li>
+	<li class="sidebar_logo_item"><a class="sidebar_logo_link " href="#" target="_blank" title="LG"><img alt="LG" class="img-responsive lg" src="http://media.bizwebmedia.net/Sites/94839/data/upload/anhgiaodien/4.png?1" style="width: 69px; height: 30px;"> </a></li>
+	<li class="sidebar_logo_item"><a class="sidebar_logo_link " href="#" target="_blank" title="Nokia"><img alt="Nokia" class="img-responsive nokia" src="http://media.bizwebmedia.net/Sites/94839/data/upload/anhgiaodien/5.png?1" style="width: 93px; height: 42px;"> </a></li>
+	<li class="sidebar_logo_item"><a class="sidebar_logo_link " href="#" target="_blank" title="Samsung"><img alt="Samsung" class="img-responsive samsung" src="http://media.bizwebmedia.net/Sites/94839/data/upload/anhgiaodien/6.png?1" style="width: 106px; height: 41px;"> </a></li>
+	<li class="sidebar_logo_item"><a class="sidebar_logo_link " href="#" target="_blank" title="Sony"><img alt="Sony" class="img-responsive sony" src="http://media.bizwebmedia.net/Sites/94839/data/upload/anhgiaodien/7.png?1" style="width: 99px; height: 25px;"> </a></li>
+	<li class="sidebar_logo_item"><a class="sidebar_logo_all" href="#" target="_blank"><span class="sidebar_logo_text">Xem tất cả </span> </a></li>
+</ul>
+ 
+</div>
+     
+</div>';
+*/
+		break;
 }
+
+
+
+
 $advs = Yii::$app->zii->getAdvert(['code'=>'ADV_INDEX_RIGHT','box_id'=>$b['id']]);
 if(!empty($advs)){
 	echo '<div class="DefaultModule">';
 	foreach ($advs as $adv){
-		echo '<div class="sidebar-img"><a target="'.$adv['target'].'" href="'.$adv['link'].'"><img alt="wabafun" src="'.$adv['image'].'" title="'.$adv['title'].'"></a></div>';
+		echo '<div class="sidebar-img"><a target="'.$adv['target'].'" href="'.$adv['link'].'"><img alt="'.$adv['title'].'" class="w100" src="'.$adv['image'].'" title="'.$adv['title'].'"></a></div>';
 	}
 
 	echo '</div>';

@@ -39,8 +39,9 @@ class Siteconfigs extends \yii\db\ActiveRecord
     	);
     }
     public static function getList($key = CONTROLLER_CODE){
+    	//view(CONTROLLER_CODE);
     	$v = self::getItem('SITE_CONFIGS');
-    	//view($v);
+    	 
     	if(!empty($v) && isset($v[$key])) return $v[$key];
     }
     
@@ -64,6 +65,8 @@ class Siteconfigs extends \yii\db\ActiveRecord
     public static function updateSiteConfigs($key,$value){
     	$b = (new Query())->from(['a'=>self::tableName()])->where(['a.code'=>'SITE_CONFIGS','a.sid'=>__SID__,'a.lang'=>__LANG__])->one();    	
     	$crm = explode('/', $key);
+    	//view($value);
+    	//view($b,true); 
     	switch (count($crm)){
     		case 2:
     			$b[$crm[0]][$crm[1]] = $value;
@@ -75,9 +78,16 @@ class Siteconfigs extends \yii\db\ActiveRecord
     			$b[$key] = $value;
     			break;
     	}    	
-    	$biz = cjson($b);    	 
-    	if((new Query())->from(['a'=>self::tableName()])->where(['a.code'=>'SITE_CONFIGS','a.sid'=>__SID__,'a.lang'=>__LANG__])->count(1) > 0){    		
-    		Yii::$app->db->createCommand()->update(self::tableName(),['bizrule'=>$biz],['code'=>'SITE_CONFIGS','sid'=>__SID__,'lang'=>__LANG__])->execute();
+    	//view($b,true);
+    	$biz = cjson($b);  
+    	//view($biz,true);
+    	if((new Query())->from(['a'=>self::tableName()])->where([
+    			'a.code'=>'SITE_CONFIGS',
+    			'a.sid'=>__SID__,
+    			'a.lang'=>__LANG__    			
+    	])->count(1) > 0){    		
+    		$a = Yii::$app->db->createCommand()->update(self::tableName(),['bizrule'=>$biz],['code'=>'SITE_CONFIGS','sid'=>__SID__,'lang'=>__LANG__])->execute();
+    		 
     	}else{
     		Yii::$app->db->createCommand()->insert(self::tableName(),['bizrule'=>$biz,'code'=>'SITE_CONFIGS','sid'=>__SID__,'lang'=>__LANG__])->execute();
     	}

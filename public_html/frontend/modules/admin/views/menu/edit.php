@@ -193,8 +193,9 @@ if(!empty($l1)){
         </div>
         
         <div class="form-group">
-          <label class="col-sm-12 control-label">Action</label>
+          
           <div class="col-sm-2">
+          <label class="fl100 control-label">Action</label>
             <select data-minimum-results-for-search="Infinity" class="form-control input-sm select2" name="biz[action]">
             <option value="">[-- Không sử dụng --]</option>
             <option <?php echo isset($v['action']) && $v['action'] == 'onclick' ? 'selected' : '';?> value="onclick" >+&nbsp;&nbsp;&nbsp;onClick</option>
@@ -203,11 +204,27 @@ if(!empty($l1)){
             </select>
 
           </div>
-          <div class="col-sm-6"> 
+          
+          
+          
+          <div class="col-sm-5"> 
+          <label class="fl100 control-label">&nbsp;</label>
             <input type="text" name="biz[action_detail]" class="form-control input-sm" placeholder="Return action function" value="<?php echo isset($v['action_detail']) ? $v['action_detail'] : '';?>" />
           </div>
           
-          <div class="col-sm-4"> 
+          <div class="col-sm-3"> 
+          <label class="fl100 control-label">Giao diện</label>
+            <select data-placeholder="Giao diện" data-minimum-results-for-search="Infinity" class="form-control input-sm select2" name="f[temp_id]">
+             <optgroup label="Lựa chọn giao diện"><option value="0">[Mặc định]</option>
+            <?php 
+            foreach (\app\modules\admin\models\Mytemplete::getAll() as $i){
+            	echo '<option '.(isset($v['temp_id']) && $v['temp_id'] == $i['id'] ? 'selected' : '' ).' value="'.$i['id'].'">'.$i['title'].'</option>';	
+            }
+            ?></optgroup>
+            </select>
+          </div>          
+           <div class="col-sm-2"> 
+          <label class="fl100 control-label">Style</label>
             <select data-placeholder="Style" data-minimum-results-for-search="Infinity" class="form-control input-sm select2" name="biz[style]">
              <optgroup label="Style"><option value="0">--</option>
             <?php 
@@ -216,8 +233,7 @@ if(!empty($l1)){
             }
             ?></optgroup>
             </select>
-          </div>          
-           
+          </div> 
           
         </div> 
         <div class="form-group">

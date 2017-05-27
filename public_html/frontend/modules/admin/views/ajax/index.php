@@ -677,6 +677,12 @@ switch (Yii::$app->request->post('action')){
 				if($n['title'] != ""){
 				$n['sid'] = __SID__;
 				$n['type_id'] = post('controller_code');
+				if(isset($n['distance'])){
+					$n['distance'] = cprice($n['distance']);
+				}
+				if(isset($n['overnight'])){
+					$n['overnight'] = cprice($n['overnight']);
+				}
 				$f[] = Yii::$app->zii->insert('distances',$n);
 				}
 			}
@@ -6613,10 +6619,10 @@ $r['html'] .= '</div>';
 				}
 			}
 		}
-		//$r['event'] = 'reload';
+		$r['event'] = 'hide-modal';
 		//$r['delay'] = 2000;
-		$r['modal'] = true;
-		$r['modal_content'] = 'Thao tác thành công.';
+		$r['callback'] = true;
+		$r['callback_function'] = 'show_left_small_loading(\'hide\');';
 		echo json_encode($r);exit;
 		break;
 	case 'add-more-nationality-group-to-tickets':

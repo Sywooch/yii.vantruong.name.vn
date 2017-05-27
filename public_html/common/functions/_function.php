@@ -989,6 +989,11 @@ function getImage($o = array(),$absolute = false){
 	$src = isset($o['src'])  ?   $o['src'] : false;
 	$src = str_replace(" ",'%20',$src);
 	if($src === false || $src == "") return false;
+	//
+	if(substr($src, 0,2) == '//'){
+		$src = SCHEME . ':' . $src; 
+	}
+	//
 	$op = isset($o['img_attr']) ?  $o['img_attr'] : 
 	(isset($o['attr']) ?  $o['attr'] : (isset($o['attrs']) ?  $o['attrs'] : false));
 	$output = isset($o['output']) ? $o['output'] : 'img';
